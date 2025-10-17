@@ -16,10 +16,14 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BookAssetController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\AssetAssignmentController;
+use App\Http\Controllers\PublicVerificationController;
 use Illuminate\Support\Facades\Route;
 
 // Rute untuk halaman publik
 Route::get('/aset/{asset_code_ypt}', [PublicAssetController::class, 'show'])->name('public.assets.show');
+
+// Rute Verifikasi Dokumen Publik
+Route::get('/verify/document/{docNumber}', [PublicVerificationController::class, 'verify'])->name('public.verify');
 
 Route::get('/', function () {
     return view('welcome');

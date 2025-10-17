@@ -15,6 +15,8 @@ class AssetAssignment extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'checkout_doc_number',
+        'return_doc_number',
         'asset_id',
         'employee_id',
         'assigned_date',
