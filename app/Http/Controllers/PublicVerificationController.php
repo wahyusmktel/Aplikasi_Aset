@@ -17,6 +17,6 @@ class PublicVerificationController extends Controller
         $isReturn = ($assignment->return_doc_number === $docNumber);
         $documentType = $isReturn ? 'Berita Acara Pengembalian' : 'Berita Acara Serah Terima';
 
-        return view('public.verification', compact('assignment', 'documentType'));
+        return view('public.verification', compact('assignment', 'documentType', 'isReturn'));
     }
 }

@@ -8,6 +8,8 @@ use App\Models\Employee;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
 
 class AssetAssignmentController extends Controller
 {
@@ -70,6 +72,18 @@ class AssetAssignmentController extends Controller
         // Update status aset
         $asset->update(['current_status' => 'Dipinjam']);
 
+        $verificationUrl = route('public.verify', $docNumber);
+
+        $options = new QROptions([
+            'outputType' => QRCode::OUTPUT_IMAGE_PNG,
+            'eccLevel'   => QRCode::ECC_L,
+            'scale'      => 5,
+            'imageBase64' => true,
+        ]);
+
+        // Buat QR code dan langsung dapatkan sebagai data URI (base64)
+        $qrCode = (new QRCode($options))->render($verificationUrl);
+
         // Generate PDF
         $headmaster = Employee::where('position', 'Kepala Sekolah')->first();
         $employee = Employee::find($request->employee_id);
@@ -81,6 +95,7 @@ class AssetAssignmentController extends Controller
             'employee' => $employee,
             'headmaster' => $headmaster,
             'isReturn' => false,
+            'qrCode' => $qrCode,
         ]);
 
         $safeFilename = str_replace('/', '-', $docNumber);
@@ -113,6 +128,16 @@ class AssetAssignmentController extends Controller
         $asset = $assignment->asset;
         $asset->update(['current_status' => 'Tersedia']);
 
+        $verificationUrl = route('public.verify', $docNumber);
+        $options = new QROptions([
+            'outputType' => QRCode::OUTPUT_IMAGE_PNG,
+            'eccLevel'   => QRCode::ECC_L,
+            'scale'      => 5,
+            'imageBase64' => true,
+        ]);
+
+        $qrCode = (new QRCode($options))->render($verificationUrl);
+
         // Generate PDF
         $headmaster = Employee::where('position', 'Kepala Sekolah')->first();
         $employee = $assignment->employee;
@@ -124,6 +149,7 @@ class AssetAssignmentController extends Controller
             'employee' => $employee,
             'headmaster' => $headmaster,
             'isReturn' => true,
+            'qrCode' => $qrCode,
         ]);
 
         $safeFilename = str_replace('/', '-', $docNumber);

@@ -134,10 +134,8 @@
     </div>
 
     <div class="qr-code">
-        {{-- Generate QR code sebagai PNG, lalu encode ke Base64 dan tampilkan di dalam tag <img> --}}
-        <img src="data:image/png;base64, {!! base64_encode(
-            QrCode::format('png')->size(80)->generate(route('public.verify', $assignment->checkout_doc_number ?? $assignment->return_doc_number)),
-        ) !!} ">
+        {{-- $qrCode sudah berisi string "data:image/png;base64,..." --}}
+        <img src="{{ $qrCode }}" width="80px" height="80px">
     </div>
 </body>
 

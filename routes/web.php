@@ -23,7 +23,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/aset/{asset_code_ypt}', [PublicAssetController::class, 'show'])->name('public.assets.show');
 
 // Rute Verifikasi Dokumen Publik
-Route::get('/verify/document/{docNumber}', [PublicVerificationController::class, 'verify'])->name('public.verify');
+Route::get('/verify/document/{docNumber}', [PublicVerificationController::class, 'verify'])
+    ->where('docNumber', '.*') // <-- TAMBAHKAN BARIS INI
+    ->name('public.verify');
 
 Route::get('/', function () {
     return view('welcome');
