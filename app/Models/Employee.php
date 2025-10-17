@@ -14,4 +14,9 @@ class Employee extends Model
         'nip',
         'position',
     ];
+
+    public function assignments()
+    {
+        return $this->hasMany(AssetAssignment::class);
+    }
 }

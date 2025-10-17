@@ -15,6 +15,7 @@ use App\Http\Controllers\PublicAssetController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BookAssetController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\AssetAssignmentController;
 use Illuminate\Support\Facades\Route;
 
 // Rute untuk halaman publik
@@ -82,6 +83,9 @@ Route::middleware('auth')->group(function () {
     // Route untuk CRUD Pegawai <-- Tambahkan ini
     Route::resource('employees', EmployeeController::class)->except(['show']);
     Route::post('/employees/import', [EmployeeController::class, 'import'])->name('employees.import');
+    // Route untuk proses serah terima aset
+    Route::post('/assets/{asset}/assign', [AssetAssignmentController::class, 'store'])->name('assets.assign');
+    Route::post('/assets/assignment/{assignment}/return', [AssetAssignmentController::class, 'returnAsset'])->name('assets.return');
 });
 
 require __DIR__ . '/auth.php';

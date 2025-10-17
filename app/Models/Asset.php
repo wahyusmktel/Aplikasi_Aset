@@ -31,6 +31,7 @@ class Asset extends Model
         'asset_function_id',
         'funding_source_id',
         'status',
+        'current_status',
     ];
 
     /**
@@ -103,5 +104,15 @@ class Asset extends Model
     public function fundingSource(): BelongsTo
     {
         return $this->belongsTo(FundingSource::class);
+    }
+
+    public function assignments()
+    {
+        return $this->hasMany(AssetAssignment::class);
+    }
+
+    public function currentAssignment()
+    {
+        return $this->hasOne(AssetAssignment::class)->whereNull('returned_date');
     }
 }
