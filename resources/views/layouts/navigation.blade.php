@@ -27,6 +27,24 @@
                     <x-nav-link :href="route('faculties.index')" :active="request()->routeIs('faculties.index')">
                         {{ __('Fakultas') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('departments.index')" :active="request()->routeIs('departments.index')">
+                        {{ __('Prodi/Unit') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('persons-in-charge.index')" :active="request()->routeIs('persons-in-charge.index')">
+                        {{ __('Penanggung Jawab') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('asset-functions.index')" :active="request()->routeIs('asset-functions.index')">
+                        {{ __('Fungsi Barang') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('funding-sources.index')" :active="request()->routeIs('funding-sources.index')">
+                        {{ __('Jenis Pendanaan') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('institutions.index')" :active="request()->routeIs('institutions.index')">
+                        {{ __('Lembaga') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('assets.index')" :active="request()->routeIs('assets.*')">
+                        {{ __('Aset') }}
+                    </x-nav-link>
                 </div>
             </div>
 

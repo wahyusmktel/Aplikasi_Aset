@@ -5,7 +5,17 @@ use App\Http\Controllers\BuildingController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FacultyController;
+use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\PersonInChargeController;
+use App\Http\Controllers\AssetFunctionController;
+use App\Http\Controllers\FundingSourceController;
+use App\Http\Controllers\InstitutionController;
+use App\Http\Controllers\AssetController;
+use App\Http\Controllers\PublicAssetController;
 use Illuminate\Support\Facades\Route;
+
+// Rute untuk halaman publik
+Route::get('/aset/{asset_code_ypt}', [PublicAssetController::class, 'show'])->name('public.assets.show');
 
 Route::get('/', function () {
     return view('welcome');
@@ -33,6 +43,31 @@ Route::middleware('auth')->group(function () {
     // Route untuk CRUD Fakultas
     Route::resource('faculties', FacultyController::class)->except(['show', 'create', 'edit']);
     Route::post('/faculties/import', [FacultyController::class, 'import'])->name('faculties.import');
+    // Route untuk CRUD Prodi/Unit
+    Route::resource('departments', DepartmentController::class)->except(['show', 'create', 'edit']);
+    Route::post('/departments/import', [DepartmentController::class, 'import'])->name('departments.import');
+    // Route untuk CRUD Penanggung Jawab
+    Route::resource('persons-in-charge', PersonInChargeController::class)
+        ->parameters(['persons-in-charge' => 'personInCharge'])
+        ->except(['show', 'create', 'edit']);
+    Route::post('/persons-in-charge/import', [PersonInChargeController::class, 'import'])->name('persons-in-charge.import');
+    // Route untuk CRUD Fungsi Barang
+    Route::resource('asset-functions', AssetFunctionController::class)
+        ->parameters(['asset-functions' => 'assetFunction'])
+        ->except(['show', 'create', 'edit']);
+    Route::post('/asset-functions/import', [AssetFunctionController::class, 'import'])->name('asset-functions.import');
+    // Route untuk CRUD Jenis Pendanaan
+    Route::resource('funding-sources', FundingSourceController::class)
+        ->parameters(['funding-sources' => 'fundingSource'])
+        ->except(['show', 'create', 'edit']);
+    Route::post('/funding-sources/import', [FundingSourceController::class, 'import'])->name('funding-sources.import');
+    // Route untuk CRUD Lembaga
+    Route::resource('institutions', InstitutionController::class)->except(['show', 'create', 'edit']);
+    Route::post('/institutions/import', [InstitutionController::class, 'import'])->name('institutions.import');
+    // Route untuk CRUD Aset
+    Route::resource('assets', AssetController::class);
+    // Route untuk menangani halaman cetak label
+    Route::get('/assets-print-labels', [AssetController::class, 'printLabels'])->name('assets.printLabels');
 });
 
 require __DIR__ . '/auth.php';
