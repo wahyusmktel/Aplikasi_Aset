@@ -20,6 +20,10 @@
                         {{ __('Aset') }}
                     </x-nav-link>
 
+                    <x-nav-link :href="route('books.index')" :active="request()->routeIs('books.index')">
+                        {{ __('Aset Buku') }}
+                    </x-nav-link>
+
                     @php
                         $isDataReferensiActive = request()->routeIs([
                             'institutions.index',

@@ -13,6 +13,7 @@ use App\Http\Controllers\InstitutionController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\PublicAssetController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\BookAssetController;
 use Illuminate\Support\Facades\Route;
 
 // Rute untuk halaman publik
@@ -73,6 +74,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/assets/batch/store', [AssetController::class, 'batchStore'])->name('assets.batchStore');
     // Route baru untuk Impor Batch Aset
     Route::post('/assets/import-batch', [AssetController::class, 'importBatch'])->name('assets.importBatch');
+    // Book Asset Management Routes <-- ADD THIS BLOCK
+    Route::get('/books', [BookAssetController::class, 'index'])->name('books.index');
+    Route::get('/books/export-excel', [BookAssetController::class, 'exportExcel'])->name('books.exportExcel');
+    Route::get('/books/download-pdf', [BookAssetController::class, 'downloadPDF'])->name('books.downloadPDF');
 });
 
 require __DIR__ . '/auth.php';
