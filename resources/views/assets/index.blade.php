@@ -5,16 +5,32 @@
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div x-data="{ selectedIds: [] }" class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
 
                     <div class="flex flex-wrap gap-2 justify-between items-center mb-6">
-                        <a href="{{ route('assets.create') }}"
-                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                            Tambah Aset
-                        </a>
+                        <div class="flex flex-wrap gap-2">
+                            <a href="{{ route('assets.create') }}"
+                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                Tambah Aset
+                            </a>
+                            <a href="{{ route('assets.batchCreate') }}"
+                                class="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded">
+                                Tambah Massal (Batch)
+                            </a>
+                            {{-- Tombol Cetak Terpilih --}}
+                            <button @click="printSelected" :disabled="selectedIds.length === 0"
+                                class="bg-purple-500 text-white font-bold py-2 px-4 rounded disabled:bg-purple-300 disabled:cursor-not-allowed">
+                                Cetak Terpilih (<span x-text="selectedIds.length"></span>)
+                            </button>
+                            {{-- Tombol Cetak Semua --}}
+                            <a href="{{ route('assets.printLabels') }}" target="_blank"
+                                class="bg-gray-600 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded">
+                                Cetak Semua
+                            </a>
+                        </div>
                         <form action="{{ route('assets.index') }}" method="GET">
                             <div class="flex items-center">
                                 <input type="text" name="search" placeholder="Cari nama atau kode aset..."
@@ -33,6 +49,7 @@
                             <thead
                                 class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
+                                    <th scope="col" class="p-4"></th>
                                     <th scope="col" class="py-3 px-6">No</th>
                                     <th scope="col" class="py-3 px-6">Kode Aset YPT</th>
                                     <th scope="col" class="py-3 px-6">Nama Barang</th>
@@ -46,6 +63,11 @@
                                 @forelse ($assets as $index => $asset)
                                     <tr
                                         class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                        <td class="p-4">
+                                            {{-- Checkbox untuk setiap baris --}}
+                                            <input type="checkbox" :value="{{ $asset->id }}" x-model="selectedIds"
+                                                class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800">
+                                        </td>
                                         <td class="py-4 px-6">
                                             {{ ($assets->currentPage() - 1) * $assets->perPage() + $index + 1 }}</td>
                                         <td class="py-4 px-6 font-mono text-xs">{{ $asset->asset_code_ypt }}</td>
@@ -92,6 +114,15 @@
 </x-app-layout>
 
 <script>
+    // Fungsi untuk membuka tab baru dengan ID yang dipilih
+    function printSelected() {
+        const ids = this.selectedIds.join(',');
+        if (ids) {
+            const url = `{{ route('assets.printLabels') }}?ids=${ids}`;
+            window.open(url, '_blank');
+        }
+    }
+
     function confirmDelete(id) {
         Swal.fire({
             title: 'Anda yakin?',

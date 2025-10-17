@@ -254,4 +254,101 @@ class AssetController extends Controller
 
         return view('assets.print-labels', compact('assets'));
     }
+
+    /**
+     * Menampilkan form untuk batch entry aset.
+     */
+    public function batchCreate()
+    {
+        // Logikanya sama persis dengan method create()
+        $institutions = Institution::orderBy('name')->get();
+        $categories = Category::orderBy('name')->get();
+        $buildings = Building::orderBy('name')->get();
+        $rooms = Room::orderBy('name')->get();
+        $faculties = Faculty::orderBy('name')->get();
+        $departments = Department::orderBy('name')->get();
+        $personsInCharge = PersonInCharge::orderBy('name')->get();
+        $assetFunctions = AssetFunction::orderBy('name')->get();
+        $fundingSources = FundingSource::orderBy('name')->get();
+
+        return view('assets.batch-create', compact(
+            'institutions',
+            'categories',
+            'buildings',
+            'rooms',
+            'faculties',
+            'departments',
+            'personsInCharge',
+            'assetFunctions',
+            'fundingSources'
+        ));
+    }
+
+    /**
+     * Menyimpan beberapa aset baru (batch) ke database.
+     */
+    public function batchStore(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'quantity' => 'required|integer|min:1', // Validasi untuk jumlah
+            'start_sequence_number' => 'required|digits:4', // Validasi untuk nomor urut mulai
+            'purchase_year' => 'required|digits:4|integer|min:1900',
+            'institution_id' => 'required|exists:institutions,id',
+            'category_id' => 'required|exists:categories,id',
+            'building_id' => 'required|exists:buildings,id',
+            'room_id' => 'required|exists:rooms,id',
+            'faculty_id' => 'required|exists:faculties,id',
+            'department_id' => 'required|exists:departments,id',
+            'person_in_charge_id' => 'required|exists:persons_in_charge,id',
+            'asset_function_id' => 'required|exists:asset_functions,id',
+            'funding_source_id' => 'required|exists:funding_sources,id',
+        ]);
+
+        // Ambil data master sekali saja untuk efisiensi di dalam loop
+        $institution = Institution::find($request->institution_id);
+        $year = substr($request->purchase_year, -2);
+        $category = Category::find($request->category_id);
+        $building = Building::find($request->building_id);
+        $room = Room::find($request->room_id);
+        $faculty = Faculty::find($request->faculty_id);
+        $department = Department::find($request->department_id);
+        $personInCharge = PersonInCharge::find($request->person_in_charge_id);
+        $assetFunction = AssetFunction::find($request->asset_function_id);
+        $fundingSource = FundingSource::find($request->funding_source_id);
+
+        $quantity = $request->quantity;
+        $startSequence = intval($request->start_sequence_number);
+
+        // Loop untuk membuat aset sebanyak quantity
+        for ($i = 0; $i < $quantity; $i++) {
+            $currentSequence = $startSequence + $i;
+            $formattedSequence = sprintf('%04d', $currentSequence);
+
+            // Buat aset baru
+            $asset = Asset::create(array_merge($request->except(['quantity', 'start_sequence_number']), [
+                'sequence_number' => $formattedSequence,
+            ]));
+
+            // Generate Kode Aset YPT unik untuk setiap aset
+            $asset_code_ypt = implode('.', [
+                $institution->code,
+                $year,
+                $category->code,
+                $building->code,
+                $room->code,
+                $faculty->code,
+                $department->code,
+                $personInCharge->code,
+                $assetFunction->code,
+                $fundingSource->code,
+                $formattedSequence
+            ]);
+
+            $asset->update(['asset_code_ypt' => $asset_code_ypt, 'status' => 'Aktif']);
+        }
+
+        alert()->success('Berhasil!', "{$quantity} data aset berhasil ditambahkan.");
+        return redirect()->route('assets.index');
+    }
 }
