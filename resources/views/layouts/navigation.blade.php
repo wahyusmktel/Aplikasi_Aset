@@ -64,6 +64,9 @@
                                 <x-dropdown-link :href="route('institutions.index')">
                                     {{ __('Lembaga') }}
                                 </x-dropdown-link>
+                                <x-dropdown-link :href="route('employees.index')">
+                                    {{ __('Pegawai') }}
+                                </x-dropdown-link>
                                 <x-dropdown-link :href="route('buildings.index')">
                                     {{ __('Gedung') }}
                                 </x-dropdown-link>

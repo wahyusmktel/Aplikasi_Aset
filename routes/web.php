@@ -14,6 +14,7 @@ use App\Http\Controllers\AssetController;
 use App\Http\Controllers\PublicAssetController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BookAssetController;
+use App\Http\Controllers\EmployeeController;
 use Illuminate\Support\Facades\Route;
 
 // Rute untuk halaman publik
@@ -78,6 +79,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/books', [BookAssetController::class, 'index'])->name('books.index');
     Route::get('/books/export-excel', [BookAssetController::class, 'exportExcel'])->name('books.exportExcel');
     Route::get('/books/download-pdf', [BookAssetController::class, 'downloadPDF'])->name('books.downloadPDF');
+    // Route untuk CRUD Pegawai <-- Tambahkan ini
+    Route::resource('employees', EmployeeController::class)->except(['show']);
+    Route::post('/employees/import', [EmployeeController::class, 'import'])->name('employees.import');
 });
 
 require __DIR__ . '/auth.php';
