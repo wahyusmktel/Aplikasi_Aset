@@ -14,6 +14,9 @@ use App\Models\Room;
 use App\Models\AssetFunction;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\Imports\AssetsBatchImport;
+use Maatwebsite\Excel\Validators\ValidationException;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AssetController extends Controller
 {
@@ -78,7 +81,7 @@ class AssetController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'purchase_year' => 'required|digits:4|integer|min:1900',
-            'sequence_number' => 'required|digits:4',
+            // 'sequence_number' => 'required|digits:4',
             'institution_id' => 'required|exists:institutions,id',
             'category_id' => 'required|exists:categories,id',
             'building_id' => 'required|exists:buildings,id',
@@ -90,7 +93,13 @@ class AssetController extends Controller
             'funding_source_id' => 'required|exists:funding_sources,id',
         ]);
 
-        $asset = Asset::create($request->all());
+        $latestAsset = Asset::orderBy('id', 'desc')->first();
+        $newSequenceNumber = $latestAsset ? intval($latestAsset->sequence_number) + 1 : 1;
+        $formattedSequence = sprintf('%04d', $newSequenceNumber);
+
+        $asset = Asset::create(array_merge($request->all(), [
+            'sequence_number' => $formattedSequence // Tambahkan sequence number otomatis
+        ]));
 
         // Logika Generate Kode Aset YPT (akan kita sempurnakan nanti)
         // Contoh: TL.25.101.G01.1101.SP.U01.P01.IK.1.0001
@@ -116,7 +125,7 @@ class AssetController extends Controller
             $personInCharge->code,
             $assetFunction->code,
             $fundingSource->code,
-            $request->sequence_number
+            $formattedSequence
         ]);
 
         $asset->update(['asset_code_ypt' => $asset_code_ypt, 'status' => 'Aktif']);
@@ -165,7 +174,7 @@ class AssetController extends Controller
             'name' => 'required|string|max:255',
             'purchase_year' => 'required|digits:4|integer|min:1900',
             // Pastikan sequence_number unik untuk kombinasi tertentu jika perlu
-            'sequence_number' => ['required', 'digits:4'],
+            // 'sequence_number' => ['required', 'digits:4'],
             'institution_id' => 'required|exists:institutions,id',
             'category_id' => 'required|exists:categories,id',
             'building_id' => 'required|exists:buildings,id',
@@ -177,7 +186,7 @@ class AssetController extends Controller
             'funding_source_id' => 'required|exists:funding_sources,id',
         ]);
 
-        $asset->update($request->all());
+        $asset->update($request->except('sequence_number'));
 
         // Regenerate Kode Aset YPT setelah update
         $institution = Institution::find($request->institution_id);
@@ -202,7 +211,7 @@ class AssetController extends Controller
             $personInCharge->code,
             $assetFunction->code,
             $fundingSource->code,
-            $request->sequence_number
+            $asset->sequence_number
         ]);
 
         $asset->update(['asset_code_ypt' => $asset_code_ypt]);
@@ -292,7 +301,7 @@ class AssetController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'quantity' => 'required|integer|min:1', // Validasi untuk jumlah
-            'start_sequence_number' => 'required|digits:4', // Validasi untuk nomor urut mulai
+            // 'start_sequence_number' => 'required|digits:4', // Validasi untuk nomor urut mulai
             'purchase_year' => 'required|digits:4|integer|min:1900',
             'institution_id' => 'required|exists:institutions,id',
             'category_id' => 'required|exists:categories,id',
@@ -318,7 +327,8 @@ class AssetController extends Controller
         $fundingSource = FundingSource::find($request->funding_source_id);
 
         $quantity = $request->quantity;
-        $startSequence = intval($request->start_sequence_number);
+        $latestAsset = Asset::orderBy('id', 'desc')->first();
+        $startSequence = $latestAsset ? intval($latestAsset->sequence_number) + 1 : 1;
 
         // Loop untuk membuat aset sebanyak quantity
         for ($i = 0; $i < $quantity; $i++) {
@@ -326,7 +336,7 @@ class AssetController extends Controller
             $formattedSequence = sprintf('%04d', $currentSequence);
 
             // Buat aset baru
-            $asset = Asset::create(array_merge($request->except(['quantity', 'start_sequence_number']), [
+            $asset = Asset::create(array_merge($request->except(['quantity']), [
                 'sequence_number' => $formattedSequence,
             ]));
 
@@ -349,6 +359,33 @@ class AssetController extends Controller
         }
 
         alert()->success('Berhasil!', "{$quantity} data aset berhasil ditambahkan.");
+        return redirect()->route('assets.index');
+    }
+
+    /**
+     * Menangani proses impor data aset secara massal dari file Excel.
+     */
+    public function importBatch(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        try {
+            Excel::import(new AssetsBatchImport, $request->file('file'));
+            alert()->success('Berhasil!', 'Data aset massal berhasil diimpor.');
+        } catch (ValidationException $e) {
+            $failures = $e->failures();
+            $errorMessages = [];
+            foreach ($failures as $failure) {
+                $errorMessages[] = "Baris " . $failure->row() . ": " . implode(', ', $failure->errors());
+            }
+            alert()->error('Impor Gagal!', 'Terdapat kesalahan pada data: <br>' . implode('<br>', $errorMessages));
+        } catch (\Exception $e) {
+            // Menangkap error umum lainnya
+            alert()->error('Impor Gagal!', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+
         return redirect()->route('assets.index');
     }
 }

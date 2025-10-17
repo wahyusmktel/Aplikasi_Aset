@@ -26,14 +26,14 @@
                                         value="{{ old('purchase_year', date('Y')) }}"
                                         class="mt-1 block w-full rounded-md dark:bg-gray-700" required>
                                 </div>
-                                <div class="mb-4">
+                                {{-- <div class="mb-4">
                                     <label for="sequence_number" class="block text-sm font-medium">No Urut Barang (4
                                         Digit)</label>
                                     <input type="text" name="sequence_number" id="sequence_number"
                                         value="{{ old('sequence_number') }}"
                                         class="mt-1 block w-full rounded-md dark:bg-gray-700" required maxlength="4"
                                         placeholder="0001">
-                                </div>
+                                </div> --}}
                                 <div class="mb-4">
                                     <label for="institution_id" class="block text-sm font-medium">Lembaga</label>
                                     <select name="institution_id" id="institution_id"

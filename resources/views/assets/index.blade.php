@@ -5,7 +5,7 @@
         </h2>
     </x-slot>
 
-    <div x-data="{ selectedIds: [] }" class="py-12">
+    <div x-data="{ selectedIds: [], showImportBatchModal: false }" class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
@@ -20,6 +20,10 @@
                                 class="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded">
                                 Tambah Massal (Batch)
                             </a>
+                            <button @click="showImportBatchModal = true"
+                                class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
+                                Impor Massal
+                            </button>
                             {{-- Tombol Cetak Terpilih --}}
                             <button @click="printSelected" :disabled="selectedIds.length === 0"
                                 class="bg-purple-500 text-white font-bold py-2 px-4 rounded disabled:bg-purple-300 disabled:cursor-not-allowed">
@@ -108,6 +112,34 @@
                         {{ $assets->appends(['search' => request('search')])->links() }}
                     </div>
                 </div>
+            </div>
+        </div>
+        <div x-show="showImportBatchModal" x-cloak
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            @keydown.escape.window="showImportBatchModal = false">
+            <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md"
+                @click.away="showImportBatchModal = false">
+                <h2 class="text-2xl font-bold mb-6">Impor Aset Massal</h2>
+                <form action="{{ route('assets.importBatch') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="mb-4">
+                        <label for="file" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Pilih
+                            File Excel</label>
+                        <input type="file" name="file" id="file"
+                            class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0"
+                            required>
+                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                            Gunakan template yang sesuai. Pastikan nama-nama data master (gedung, ruangan, dll) sudah
+                            benar.
+                        </p>
+                    </div>
+                    <div class="flex justify-end space-x-4">
+                        <button type="button" @click="showImportBatchModal = false"
+                            class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Batal</button>
+                        <button type="submit"
+                            class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Impor</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

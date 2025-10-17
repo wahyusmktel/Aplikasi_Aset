@@ -15,36 +15,81 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('buildings.index')" :active="request()->routeIs('buildings.index')">
-                        {{ __('Gedung') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('rooms.index')" :active="request()->routeIs('rooms.index')">
-                        {{ __('Ruangan') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('categories.index')" :active="request()->routeIs('categories.index')">
-                        {{ __('Kategori') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('faculties.index')" :active="request()->routeIs('faculties.index')">
-                        {{ __('Fakultas') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('departments.index')" :active="request()->routeIs('departments.index')">
-                        {{ __('Prodi/Unit') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('persons-in-charge.index')" :active="request()->routeIs('persons-in-charge.index')">
-                        {{ __('Penanggung Jawab') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('asset-functions.index')" :active="request()->routeIs('asset-functions.index')">
-                        {{ __('Fungsi Barang') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('funding-sources.index')" :active="request()->routeIs('funding-sources.index')">
-                        {{ __('Jenis Pendanaan') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('institutions.index')" :active="request()->routeIs('institutions.index')">
-                        {{ __('Lembaga') }}
-                    </x-nav-link>
+
                     <x-nav-link :href="route('assets.index')" :active="request()->routeIs('assets.*')">
                         {{ __('Aset') }}
                     </x-nav-link>
+
+                    @php
+                        $isDataReferensiActive = request()->routeIs([
+                            'institutions.index',
+                            'buildings.index',
+                            'rooms.index',
+                            'categories.index',
+                            'faculties.index',
+                            'departments.index',
+                            'persons-in-charge.index',
+                            'asset-functions.index',
+                            'funding-sources.index',
+                        ]);
+                    @endphp
+
+
+                    <div class="hidden sm:flex sm:items-center sm:ms-6">
+                        <x-dropdown align="right" width="48">
+                            <x-slot name="trigger">
+                                <button @class([
+                                    'inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none',
+                                    'border-indigo-400 dark:border-indigo-600 text-gray-900 dark:text-gray-100 focus:border-indigo-700' => $isDataReferensiActive,
+                                    'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-700 focus:text-gray-700 dark:focus:text-gray-300 focus:border-gray-300 dark:focus:border-gray-700' => !$isDataReferensiActive,
+                                ])>
+                                    <div>Data Referensi</div>
+
+                                    <div class="ms-1">
+                                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd"
+                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                </button>
+                            </x-slot>
+
+                            <x-slot name="content">
+                                <x-dropdown-link :href="route('institutions.index')">
+                                    {{ __('Lembaga') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('buildings.index')">
+                                    {{ __('Gedung') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('rooms.index')">
+                                    {{ __('Ruangan') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('categories.index')">
+                                    {{ __('Kategori') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('faculties.index')">
+                                    {{ __('Fakultas') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('departments.index')">
+                                    {{ __('Prodi/Unit') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('persons-in-charge.index')">
+                                    {{ __('Penanggung Jawab') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('asset-functions.index')">
+                                    {{ __('Fungsi Barang') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('funding-sources.index')">
+                                    {{ __('Jenis Pendanaan') }}
+                                </x-dropdown-link>
+                            </x-slot>
+                        </x-dropdown>
+                    </div>
+
+
+
                 </div>
             </div>
 

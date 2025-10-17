@@ -71,6 +71,8 @@ Route::middleware('auth')->group(function () {
     // Route baru untuk Batch Entry
     Route::get('/assets/batch/create', [AssetController::class, 'batchCreate'])->name('assets.batchCreate');
     Route::post('/assets/batch/store', [AssetController::class, 'batchStore'])->name('assets.batchStore');
+    // Route baru untuk Impor Batch Aset
+    Route::post('/assets/import-batch', [AssetController::class, 'importBatch'])->name('assets.importBatch');
 });
 
 require __DIR__ . '/auth.php';

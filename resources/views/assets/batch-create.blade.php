@@ -29,14 +29,14 @@
                                 </div>
 
                                 {{-- Input Nomor Urut Mulai --}}
-                                <div class="mb-4">
+                                {{-- <div class="mb-4">
                                     <label for="start_sequence_number" class="block text-sm font-medium">Nomor Urut
                                         Mulai (4 Digit)</label>
                                     <input type="text" name="start_sequence_number" id="start_sequence_number"
                                         value="{{ old('start_sequence_number') }}"
                                         class="mt-1 block w-full rounded-md dark:bg-gray-700" required maxlength="4"
                                         placeholder="0001">
-                                </div>
+                                </div> --}}
 
                                 <div class="mb-4">
                                     <label for="purchase_year" class="block text-sm font-medium">Tahun Pembelian
@@ -49,7 +49,7 @@
                                 <div class="mb-4">
                                     <label for="institution_id" class="block text-sm font-medium">Lembaga</label>
                                     <select name="institution_id" id="institution_id"
-                                        class="mt-1 block w-full rounded-md dark:bg-gray-700" required>
+                                        class="select2 mt-1 block w-full rounded-md dark:bg-gray-700" required>
                                         <option value="">Pilih Lembaga</option>
                                         @foreach ($institutions as $item)
                                             <option value="{{ $item->id }}" @selected(old('institution_id') == $item->id)>
@@ -61,7 +61,7 @@
                                 <div class="mb-4">
                                     <label for="category_id" class="block text-sm font-medium">Kategori Barang</label>
                                     <select name="category_id" id="category_id"
-                                        class="mt-1 block w-full rounded-md dark:bg-gray-700" required>
+                                        class="select2 mt-1 block w-full rounded-md dark:bg-gray-700" required>
                                         <option value="">Pilih Kategori</option>
                                         @foreach ($categories as $item)
                                             <option value="{{ $item->id }}" @selected(old('category_id') == $item->id)>
@@ -72,7 +72,7 @@
                                 <div class="mb-4">
                                     <label for="building_id" class="block text-sm font-medium">Gedung</label>
                                     <select name="building_id" id="building_id"
-                                        class="mt-1 block w-full rounded-md dark:bg-gray-700" required>
+                                        class="select2 mt-1 block w-full rounded-md dark:bg-gray-700" required>
                                         <option value="">Pilih Gedung</option>
                                         @foreach ($buildings as $item)
                                             <option value="{{ $item->id }}" @selected(old('building_id') == $item->id)>
@@ -87,7 +87,7 @@
                                 <div class="mb-4">
                                     <label for="room_id" class="block text-sm font-medium">Ruangan</label>
                                     <select name="room_id" id="room_id"
-                                        class="mt-1 block w-full rounded-md dark:bg-gray-700" required>
+                                        class="select2 mt-1 block w-full rounded-md dark:bg-gray-700" required>
                                         <option value="">Pilih Ruangan</option>
                                         @foreach ($rooms as $item)
                                             <option value="{{ $item->id }}" @selected(old('room_id') == $item->id)>
@@ -99,7 +99,7 @@
                                     <label for="faculty_id" class="block text-sm font-medium">Fakultas /
                                         Direktorat</label>
                                     <select name="faculty_id" id="faculty_id"
-                                        class="mt-1 block w-full rounded-md dark:bg-gray-700" required>
+                                        class=" select2 mt-1 block w-full rounded-md dark:bg-gray-700" required>
                                         <option value="">Pilih Fakultas/Direktorat</option>
                                         @foreach ($faculties as $item)
                                             <option value="{{ $item->id }}" @selected(old('faculty_id') == $item->id)>
@@ -110,7 +110,7 @@
                                 <div class="mb-4">
                                     <label for="department_id" class="block text-sm font-medium">Prodi / Unit</label>
                                     <select name="department_id" id="department_id"
-                                        class="mt-1 block w-full rounded-md dark:bg-gray-700" required>
+                                        class="select2 mt-1 block w-full rounded-md dark:bg-gray-700" required>
                                         <option value="">Pilih Prodi/Unit</option>
                                         @foreach ($departments as $item)
                                             <option value="{{ $item->id }}" @selected(old('department_id') == $item->id)>
@@ -122,7 +122,7 @@
                                     <label for="person_in_charge_id" class="block text-sm font-medium">Penanggung
                                         Jawab</label>
                                     <select name="person_in_charge_id" id="person_in_charge_id"
-                                        class="mt-1 block w-full rounded-md dark:bg-gray-700" required>
+                                        class="select2 mt-1 block w-full rounded-md dark:bg-gray-700" required>
                                         <option value="">Pilih Penanggung Jawab</option>
                                         @foreach ($personsInCharge as $item)
                                             <option value="{{ $item->id }}" @selected(old('person_in_charge_id') == $item->id)>
@@ -134,7 +134,7 @@
                                     <label for="asset_function_id" class="block text-sm font-medium">Fungsi
                                         Barang</label>
                                     <select name="asset_function_id" id="asset_function_id"
-                                        class="mt-1 block w-full rounded-md dark:bg-gray-700" required>
+                                        class="select2 mt-1 block w-full rounded-md dark:bg-gray-700" required>
                                         <option value="">Pilih Fungsi Barang</option>
                                         @foreach ($assetFunctions as $item)
                                             <option value="{{ $item->id }}" @selected(old('asset_function_id') == $item->id)>
@@ -146,7 +146,7 @@
                                     <label for="funding_source_id" class="block text-sm font-medium">Jenis
                                         Pendanaan</label>
                                     <select name="funding_source_id" id="funding_source_id"
-                                        class="mt-1 block w-full rounded-md dark:bg-gray-700" required>
+                                        class="select2 mt-1 block w-full rounded-md dark:bg-gray-700" required>
                                         <option value="">Pilih Jenis Pendanaan</option>
                                         @foreach ($fundingSources as $item)
                                             <option value="{{ $item->id }}" @selected(old('funding_source_id') == $item->id)>
@@ -172,4 +172,17 @@
             </div>
         </div>
     </div>
+
+    {{-- Script untuk inisialisasi Select2 --}}
+    {{-- @push('scripts')
+        <script>
+            $(document).ready(function() {
+                // Inisialisasi Select2 pada semua elemen dengan class 'select2'
+                $('.select2').select2({
+                    // Opsi ini membantu agar Select2 terlihat lebih baik dengan tema Tailwind/dark mode
+                    theme: "classic"
+                });
+            });
+        </script>
+    @endpush --}}
 </x-app-layout>

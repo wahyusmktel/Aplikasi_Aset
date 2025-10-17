@@ -14,6 +14,10 @@
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 </head>
 
 <body class="font-sans antialiased">
@@ -36,6 +40,19 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.26.2/dist/sweetalert2.all.min.js"></script>
     @include('sweetalert::alert')
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.full.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Inisialisasi Select2 pada semua elemen dengan class 'select2'
+            $('.select2').select2({
+                // Opsi ini membantu agar Select2 terlihat lebih baik dengan tema Tailwind/dark mode
+                theme: "bootstrap-5"
+            });
+        });
+    </script>
 </body>
 
 </html>
