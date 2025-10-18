@@ -80,9 +80,17 @@
                                         <td class="py-4 px-6 text-xs">{{ $asset->building->name ?? '' }} /
                                             {{ $asset->room->name ?? '' }}</td>
                                         <td class="py-4 px-6">
-                                            <span
-                                                class="px-2 py-1 font-semibold leading-tight text-green-700 bg-green-100 rounded-full dark:bg-green-700 dark:text-green-100">
-                                                {{ $asset->status }}
+                                            <span @class([
+                                                'px-2 py-1 font-semibold leading-tight text-xs rounded-full',
+                                                'text-green-700 bg-green-100 dark:bg-green-700 dark:text-green-100' =>
+                                                    $asset->current_status == 'Tersedia',
+                                                'text-yellow-700 bg-yellow-100 dark:bg-yellow-700 dark:text-yellow-100' =>
+                                                    $asset->current_status == 'Dipinjam' ||
+                                                    $asset->current_status == 'Digunakan',
+                                                'text-red-700 bg-red-100 dark:bg-red-700 dark:text-red-100' =>
+                                                    $asset->current_status == 'Rusak',
+                                            ])>
+                                                {{ $asset->current_status }}
                                             </span>
                                         </td>
                                         <td class="py-4 px-6 flex flex-wrap gap-2">

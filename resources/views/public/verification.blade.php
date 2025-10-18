@@ -18,38 +18,35 @@
                         <dl class="space-y-2 text-sm">
                             <div class="flex">
                                 <dt class="w-1/3 font-semibold text-gray-500">Nomor Surat</dt>
-                                {{-- BENAR: Gunakan $docNumber yang selalu ada --}}
                                 <dd class="w-2/3 font-mono">{{ $docNumber }}</dd>
                             </div>
                             <div class="flex">
                                 <dt class="w-1/3 font-semibold text-gray-500">Nama Aset</dt>
-                                {{-- BENAR: Gunakan $assetName yang selalu ada --}}
                                 <dd class="w-2/3">{{ $assetName }}</dd>
                             </div>
                             <div class="flex">
                                 <dt class="w-1/3 font-semibold text-gray-500">
-                                    {{-- BENAR: Label dinamis cek semua kemungkinan --}}
                                     @if (isset($inspection))
                                         Pemeriksa
                                     @elseif(isset($vehicleLog))
                                         Pengguna
                                     @elseif(isset($assignment))
                                         Pegawai
+                                    @elseif(isset($asset))
+                                        Penanggung Jawab {{-- Label untuk BAPh --}}
                                     @else
                                         Pihak Terlibat
                                     @endif
                                 </dt>
-                                {{-- BENAR: Gunakan $employeeName yang selalu ada --}}
                                 <dd class="w-2/3">{{ $employeeName }}</dd>
                             </div>
                             <div class="flex">
                                 <dt class="w-1/3 font-semibold text-gray-500">Tanggal Transaksi</dt>
-                                {{-- BENAR: Gunakan $transactionDate yang selalu ada --}}
                                 <dd class="w-2/3">
                                     {{ \Carbon\Carbon::parse($transactionDate)->isoFormat('D MMMM YYYY') }}</dd>
                             </div>
 
-                            {{-- BENAR: Tampilkan detail spesifik pakai isset() untuk setiap tipe --}}
+                            {{-- Tampilkan detail spesifik pakai isset() untuk setiap tipe --}}
                             @if (isset($inspection))
                                 <div class="flex">
                                     <dt class="w-1/3 font-semibold text-gray-500">Kondisi Tercatat</dt>
@@ -79,6 +76,24 @@
                                         {{ $isReturn ? $assignment->condition_on_return : $assignment->condition_on_assign }}
                                     </dd>
                                 </div>
+                                {{-- === TAMBAHAN UNTUK BAPh (Disposal) === --}}
+                            @elseif(isset($asset))
+                                <div class="flex">
+                                    <dt class="w-1/3 font-semibold text-gray-500">Metode Disposal</dt>
+                                    <dd class="w-2/3">{{ $asset->disposal_method }}</dd>
+                                </div>
+                                <div class="flex">
+                                    <dt class="w-1/3 font-semibold text-gray-500">Alasan Disposal</dt>
+                                    <dd class="w-2/3">{{ $asset->disposal_reason }}</dd>
+                                </div>
+                                @if ($asset->disposal_method == 'Dijual')
+                                    <div class="flex">
+                                        <dt class="w-1/3 font-semibold text-gray-500">Nilai Jual</dt>
+                                        <dd class="w-2/3">Rp
+                                            {{ number_format($asset->disposal_value ?? 0, 0, ',', '.') }}</dd>
+                                    </div>
+                                @endif
+                                {{-- === AKHIR TAMBAHAN === --}}
                             @endif
                         </dl>
                     </div>

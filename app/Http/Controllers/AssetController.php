@@ -33,6 +33,7 @@ class AssetController extends Controller
             'building',
             'room'
         ])
+            ->whereNull('disposal_date')
             ->when($search, function ($query, $search) {
                 // Pencarian berdasarkan nama aset atau kode YPT
                 return $query->where('name', 'like', "%{$search}%")

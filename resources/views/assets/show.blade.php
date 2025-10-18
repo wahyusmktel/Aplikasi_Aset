@@ -61,10 +61,25 @@
                             class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-2">
                             Kembali
                         </a>
-                        <a href="{{ route('assets.edit', $asset->id) }}"
-                            class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">
-                            Edit
-                        </a>
+
+                        {{-- Tampilkan tombol Edit & Disposal hanya jika aset belum dihapus --}}
+                        @if (!$asset->disposal_date)
+                            <a href="{{ route('assets.edit', $asset->id) }}"
+                                class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded mr-2">
+                                Edit
+                            </a>
+                            {{-- Tombol Disposal Baru --}}
+                            <a href="{{ route('disposals.create', $asset->id) }}"
+                                class="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 rounded">
+                                Proses Disposal
+                            </a>
+                        @else
+                            {{-- Jika sudah di-dispose, tampilkan tombol download BAPh --}}
+                            <a href="{{ route('disposals.downloadBaph', $asset->id) }}" target="_blank"
+                                class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
+                                Unduh Ulang BAPh
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>

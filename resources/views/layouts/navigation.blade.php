@@ -20,29 +20,64 @@
                         {{ __('Aset') }}
                     </x-nav-link>
 
-                    <x-nav-link :href="route('books.index')" :active="request()->routeIs('books.index')">
-                        {{ __('Aset Buku') }}
-                    </x-nav-link>
+                    @php
+                        // Cek apakah salah satu route inventaris sedang aktif
+                        $isInventarisActive = request()->routeIs([
+                            'assignedAssets.index',
+                            'inventory.history',
+                            'maintenance.history',
+                            'inspection.history',
+                            'vehicleLogs.index',
+                            'books.index', // Masukkan juga Aset Buku ke sini jika relevan
+                        ]);
+                    @endphp
 
-                    <x-nav-link :href="route('assignedAssets.index')" :active="request()->routeIs('assignedAssets.index')">
-                        {{ __('Inventaris Pegawai') }}
-                    </x-nav-link>
+                    <div class="hidden sm:flex sm:items-center sm:ms-6">
+                        <x-dropdown align="right" width="48">
+                            {{-- Trigger Dropdown --}}
+                            <x-slot name="trigger">
+                                <button @class([
+                                    'inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none',
+                                    'border-indigo-400 dark:border-indigo-600 text-gray-900 dark:text-gray-100 focus:border-indigo-700' => $isInventarisActive, // Gunakan variabel $isInventarisActive
+                                    'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-700 focus:text-gray-700 dark:focus:text-gray-300 focus:border-gray-300 dark:focus:border-gray-700' => !$isInventarisActive,
+                                ])>
+                                    <div>Inventaris</div> {{-- Judul Dropdown --}}
 
-                    <x-nav-link :href="route('inventory.history')" :active="request()->routeIs('inventory.history')">
-                        {{ __('Riwayat Inventaris') }}
-                    </x-nav-link>
+                                    <div class="ms-1">
+                                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd"
+                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                </button>
+                            </x-slot>
 
-                    <x-nav-link :href="route('maintenance.history')" :active="request()->routeIs('maintenance.history')">
-                        {{ __('Riwayat Maintenance') }}
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('inspection.history')" :active="request()->routeIs('inspection.history')">
-                        {{ __('Riwayat Inspeksi') }}
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('vehicleLogs.index')" :active="request()->routeIs('vehicleLogs.index')">
-                        {{ __('Log Kendaraan') }}
-                    </x-nav-link>
+                            {{-- Konten Dropdown --}}
+                            <x-slot name="content">
+                                <x-dropdown-link :href="route('assignedAssets.index')">
+                                    {{ __('Inventaris Pegawai') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('inventory.history')">
+                                    {{ __('Riwayat Inventaris') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('vehicleLogs.index')">
+                                    {{ __('Log Kendaraan') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('maintenance.history')">
+                                    {{ __('Riwayat Maintenance') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('inspection.history')">
+                                    {{ __('Riwayat Inspeksi') }}
+                                </x-dropdown-link>
+                                {{-- Pindahkan Aset Buku ke sini jika dianggap bagian dari inventaris --}}
+                                <x-dropdown-link :href="route('books.index')">
+                                    {{ __('Aset Buku') }}
+                                </x-dropdown-link>
+                            </x-slot>
+                        </x-dropdown>
+                    </div>
 
                     @php
                         $isDataReferensiActive = request()->routeIs([

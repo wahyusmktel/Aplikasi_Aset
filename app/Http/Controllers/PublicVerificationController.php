@@ -6,6 +6,7 @@ use App\Models\AssetAssignment;
 use App\Models\AssetMaintenance;
 use App\Models\AssetInspection;
 use App\Models\VehicleLog;
+use App\Models\Asset;
 use Illuminate\Http\Request;
 
 class PublicVerificationController extends Controller
@@ -25,6 +26,7 @@ class PublicVerificationController extends Controller
             $employeeName = $assignment->employee->name ?? 'Pegawai Tidak Ditemukan';
             $transactionDate = $isReturn ? $assignment->returned_date : $assignment->assigned_date;
 
+            // Kirim variabel $assignment agar view bisa cek detail spesifik jika perlu
             return view('public.verification', compact('assignment', 'documentType', 'isReturn', 'assetName', 'employeeName', 'transactionDate', 'docNumber'));
         }
 
@@ -40,6 +42,7 @@ class PublicVerificationController extends Controller
             $transactionDate = $inspection->inspection_date;
             $isReturn = null; // Tidak relevan
 
+            // Kirim variabel $inspection
             return view('public.verification', compact('inspection', 'documentType', 'isReturn', 'assetName', 'employeeName', 'transactionDate', 'docNumber'));
         }
 
@@ -47,17 +50,34 @@ class PublicVerificationController extends Controller
         $vehicleLog = VehicleLog::where('checkout_doc_number', $docNumber)
             ->orWhere('checkin_doc_number', $docNumber)
             ->with(['asset', 'employee'])
-            ->firstOrFail(); // Jika tidak ketemu di sini, akan 404
+            ->first(); // Ubah dari firstOrFail() ke first()
 
-        // Jika ketemu di VehicleLog (firstOrFail memastikan $vehicleLog pasti ada di sini)
-        $isReturn = ($vehicleLog->checkin_doc_number === $docNumber); // Tentukan apakah ini checkin
-        $documentType = $isReturn ? 'Berita Acara Pengembalian Kendaraan' : 'Berita Acara Penggunaan Kendaraan';
-        $assetName = $vehicleLog->asset->name ?? 'Kendaraan Tidak Ditemukan';
-        $employeeName = $vehicleLog->employee->name ?? 'Pegawai Tidak Ditemukan';
-        $transactionDate = $isReturn ? $vehicleLog->return_time : $vehicleLog->departure_time;
+        if ($vehicleLog) {
+            $isReturn = ($vehicleLog->checkin_doc_number === $docNumber);
+            $documentType = $isReturn ? 'Berita Acara Pengembalian Kendaraan' : 'Berita Acara Penggunaan Kendaraan';
+            $assetName = $vehicleLog->asset->name ?? 'Kendaraan Tidak Ditemukan';
+            $employeeName = $vehicleLog->employee->name ?? 'Pegawai Tidak Ditemukan';
+            $transactionDate = $isReturn ? $vehicleLog->return_time : $vehicleLog->departure_time;
 
-        // Kirim data yang relevan ke view
-        return view('public.verification', compact('vehicleLog', 'documentType', 'isReturn', 'assetName', 'employeeName', 'transactionDate', 'docNumber'));
+            // Kirim variabel $vehicleLog
+            return view('public.verification', compact('vehicleLog', 'documentType', 'isReturn', 'assetName', 'employeeName', 'transactionDate', 'docNumber'));
+        }
+
+        // 4. Jika masih tidak ketemu, cari di Asset (untuk BAPh)
+        $asset = Asset::where('disposal_doc_number', $docNumber)
+            ->with(['personInCharge']) // Load PJ Aset
+            ->firstOrFail(); // Gunakan firstOrFail() di sini sebagai fallback terakhir
+
+        // Jika ketemu di Asset (artinya BAPh)
+        $documentType = 'Berita Acara Penghapusan Aset';
+        $assetName = $asset->name;
+        // Kita bisa asumsikan employeeName adalah Penanggung Jawab Aset untuk BAPh
+        $employeeName = $asset->personInCharge->name ?? 'Penanggung Jawab Tidak Ditemukan';
+        $transactionDate = $asset->disposal_date;
+        $isReturn = null; // Tidak relevan
+
+        // Kirim variabel $asset
+        return view('public.verification', compact('asset', 'documentType', 'isReturn', 'assetName', 'employeeName', 'transactionDate', 'docNumber'));
     }
 
     public function verifyMaintenance(string $docNumber)

@@ -15,10 +15,13 @@ class PublicAssetController extends Controller
         // Cari aset berdasarkan kode unik, jika tidak ada maka tampilkan halaman 404
         $asset = Asset::where('asset_code_ypt', $asset_code_ypt)->firstOrFail();
 
+        // Cek apakah aset sudah di-dispose
+        $isDisposed = !is_null($asset->disposal_date);
+
         // Load semua relasi yang dibutuhkan
         $asset->load('institution', 'category', 'building', 'room', 'faculty', 'department', 'personInCharge', 'assetFunction', 'fundingSource');
-        
+
         // Kembalikan view publik baru
-        return view('public.asset-detail', compact('asset'));
+        return view('public.asset-detail', compact('asset', 'isDisposed'));
     }
 }

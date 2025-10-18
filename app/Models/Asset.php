@@ -32,6 +32,15 @@ class Asset extends Model
         'funding_source_id',
         'status',
         'current_status',
+        'disposal_date',
+        'disposal_method',
+        'disposal_reason',
+        'disposal_value',
+        'disposal_doc_number',
+    ];
+
+    protected $casts = [
+        'disposal_date' => 'date',
     ];
 
     /**

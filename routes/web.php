@@ -24,6 +24,7 @@ use App\Http\Controllers\MaintenanceHistoryController;
 use App\Http\Controllers\AssetInspectionController;
 use App\Http\Controllers\InspectionHistoryController;
 use App\Http\Controllers\VehicleLogController;
+use App\Http\Controllers\AssetDisposalController;
 use Illuminate\Support\Facades\Route;
 
 // Rute untuk halaman publik
@@ -137,6 +138,10 @@ Route::middleware('auth')->group(function () {
         ->name('vehicleLogs.downloadBast');
     Route::get('/vehicle-logs/export-excel', [VehicleLogController::class, 'exportExcel'])->name('vehicleLogs.exportExcel');
     Route::get('/vehicle-logs/download-pdf', [VehicleLogController::class, 'downloadPDF'])->name('vehicleLogs.downloadPDF');
+    // Route untuk Disposal Aset <-- TAMBAHKAN BLOK INI
+    Route::get('/assets/{asset}/dispose', [AssetDisposalController::class, 'create'])->name('disposals.create');
+    Route::post('/assets/{asset}/dispose', [AssetDisposalController::class, 'store'])->name('disposals.store');
+    Route::get('/disposal/{asset}/download-baph', [AssetDisposalController::class, 'downloadBaph'])->name('disposals.downloadBaph'); // Nanti pakai ID asset
 });
 
 require __DIR__ . '/auth.php';
