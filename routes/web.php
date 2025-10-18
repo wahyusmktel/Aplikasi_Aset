@@ -25,6 +25,7 @@ use App\Http\Controllers\AssetInspectionController;
 use App\Http\Controllers\InspectionHistoryController;
 use App\Http\Controllers\VehicleLogController;
 use App\Http\Controllers\AssetDisposalController;
+use App\Http\Controllers\DisposedAssetController;
 use Illuminate\Support\Facades\Route;
 
 // Rute untuk halaman publik
@@ -129,7 +130,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/inspection-history', [InspectionHistoryController::class, 'index'])->name('inspection.history');
     Route::get('/inspection-history/export-excel', [InspectionHistoryController::class, 'exportExcel'])->name('inspection.exportExcel');
     Route::get('/inspection-history/download-pdf', [InspectionHistoryController::class, 'downloadPDF'])->name('inspection.downloadPDF');
-    // Route untuk Log Kendaraan <-- TAMBAHKAN BLOK INI
+    // Route untuk Log Kendaraan
     Route::get('/vehicle-logs', [VehicleLogController::class, 'index'])->name('vehicleLogs.index');
     Route::post('/vehicles/{asset}/checkout', [VehicleLogController::class, 'storeCheckout'])->name('vehicles.checkout');
     Route::post('/vehicle-logs/{log}/checkin', [VehicleLogController::class, 'storeCheckin'])->name('vehicleLogs.checkin');
@@ -138,10 +139,14 @@ Route::middleware('auth')->group(function () {
         ->name('vehicleLogs.downloadBast');
     Route::get('/vehicle-logs/export-excel', [VehicleLogController::class, 'exportExcel'])->name('vehicleLogs.exportExcel');
     Route::get('/vehicle-logs/download-pdf', [VehicleLogController::class, 'downloadPDF'])->name('vehicleLogs.downloadPDF');
-    // Route untuk Disposal Aset <-- TAMBAHKAN BLOK INI
+    // Route untuk Disposal Aset
     Route::get('/assets/{asset}/dispose', [AssetDisposalController::class, 'create'])->name('disposals.create');
     Route::post('/assets/{asset}/dispose', [AssetDisposalController::class, 'store'])->name('disposals.store');
     Route::get('/disposal/{asset}/download-baph', [AssetDisposalController::class, 'downloadBaph'])->name('disposals.downloadBaph'); // Nanti pakai ID asset
+    // Route untuk Riwayat Aset Dihapus <-- TAMBAHKAN BLOK INI
+    Route::get('/disposed-assets', [DisposedAssetController::class, 'index'])->name('disposedAssets.index');
+    Route::get('/disposed-assets/export-excel', [DisposedAssetController::class, 'exportExcel'])->name('disposedAssets.exportExcel');
+    Route::get('/disposed-assets/download-pdf', [DisposedAssetController::class, 'downloadPDF'])->name('disposedAssets.downloadPDF');
 });
 
 require __DIR__ . '/auth.php';

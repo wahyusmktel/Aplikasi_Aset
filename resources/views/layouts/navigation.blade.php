@@ -20,6 +20,10 @@
                         {{ __('Aset') }}
                     </x-nav-link>
 
+                    <x-nav-link :href="route('disposedAssets.index')" :active="request()->routeIs('disposedAssets.index')">
+                        {{ __('Riwayat Disposal') }}
+                    </x-nav-link>
+
                     @php
                         // Cek apakah salah satu route inventaris sedang aktif
                         $isInventarisActive = request()->routeIs([
