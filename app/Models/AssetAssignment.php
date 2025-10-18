@@ -27,6 +27,16 @@ class AssetAssignment extends Model
     ];
 
     /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'assigned_date' => 'datetime', // <-- Tambahkan ini
+        'returned_date' => 'datetime', // <-- Tambahkan ini
+    ];
+
+    /**
      * Get the asset associated with the assignment.
      */
     public function asset()

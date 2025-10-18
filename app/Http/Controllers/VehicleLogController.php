@@ -13,6 +13,9 @@ use chillerlan\QRCode\QROptions;
 use App\Exports\VehicleLogsExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\VehicleLogNotification;
+use Illuminate\Support\Facades\Log;
 
 class VehicleLogController extends Controller
 {
@@ -163,6 +166,15 @@ class VehicleLogController extends Controller
         // Generate PDF
         $pdf = $this->generateBastPdf($log, 'checkout');
 
+        // === KIRIM NOTIFIKASI ===
+        try {
+            Notification::route('telegram', env('TELEGRAM_CHAT_ID'))
+                ->notify(new VehicleLogNotification($log, 'checkout')); // <-- Panggil notifikasi baru
+        } catch (\Exception $e) {
+            Log::error('Telegram notification failed (Vehicle Checkout): ' . $e->getMessage());
+        }
+        // =======================
+
         alert()->success('Berhasil!', 'Kendaraan telah dicatat keluar. PDF BAST akan diunduh.');
         return $pdf->download(str_replace('/', '-', $docNumber) . '.pdf');
     }
@@ -193,6 +205,15 @@ class VehicleLogController extends Controller
 
         // Generate PDF
         $pdf = $this->generateBastPdf($log, 'checkin');
+
+        // === KIRIM NOTIFIKASI ===
+        try {
+            Notification::route('telegram', env('TELEGRAM_CHAT_ID'))
+                ->notify(new VehicleLogNotification($log, 'checkin')); // <-- Panggil notifikasi baru
+        } catch (\Exception $e) {
+            Log::error('Telegram notification failed (Vehicle Checkin): ' . $e->getMessage());
+        }
+        // =======================
 
         alert()->success('Berhasil!', 'Kendaraan telah dicatat kembali. PDF BAP akan diunduh.');
         return $pdf->download(str_replace('/', '-', $docNumber) . '.pdf');

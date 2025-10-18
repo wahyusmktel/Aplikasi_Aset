@@ -10,6 +10,9 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\AssetAssignmentNotification;
+use Illuminate\Support\Facades\Log;
 
 class AssetAssignmentController extends Controller
 {
@@ -100,6 +103,17 @@ class AssetAssignmentController extends Controller
 
         $safeFilename = str_replace('/', '-', $docNumber);
 
+        // === KIRIM NOTIFIKASI ===
+        try {
+            // Kirim notifikasi via channel 'telegram' ke Chat ID yang ada di .env
+            Notification::route('telegram', env('TELEGRAM_CHAT_ID'))
+                ->notify(new AssetAssignmentNotification($assignment, 'checkout'));
+        } catch (\Exception $e) {
+            // Log error jika pengiriman gagal, tapi jangan hentikan proses
+            Log::error('Telegram notification failed: ' . $e->getMessage());
+        }
+        // =======================
+
         alert()->success('Berhasil!', 'Aset telah diserahkan. PDF Berita Acara akan diunduh.');
         return $pdf->download($safeFilename . '.pdf');
     }
@@ -153,6 +167,15 @@ class AssetAssignmentController extends Controller
         ]);
 
         $safeFilename = str_replace('/', '-', $docNumber);
+
+        // === KIRIM NOTIFIKASI ===
+        try {
+            Notification::route('telegram', env('TELEGRAM_CHAT_ID'))
+                ->notify(new AssetAssignmentNotification($assignment, 'checkin'));
+        } catch (\Exception $e) {
+            Log::error('Telegram notification failed: ' . $e->getMessage());
+        }
+        // =======================
 
         alert()->success('Berhasil!', 'Aset telah dikembalikan. PDF Berita Acara akan diunduh.');
         return $pdf->download($safeFilename . '.pdf');
