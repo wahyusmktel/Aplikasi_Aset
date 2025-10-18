@@ -115,4 +115,25 @@ class Asset extends Model
     {
         return $this->hasOne(AssetAssignment::class)->whereNull('returned_date');
     }
+
+    public function maintenances()
+    {
+        return $this->hasMany(AssetMaintenance::class)->orderBy('maintenance_date', 'desc');
+    }
+
+    public function inspections()
+    {
+        return $this->hasMany(AssetInspection::class)->orderBy('inspection_date', 'desc');
+    }
+
+    public function vehicleLogs()
+    {
+        return $this->hasMany(VehicleLog::class)->orderBy('departure_time', 'desc');
+    }
+
+    // Relasi untuk mendapatkan log penggunaan yang aktif saat ini
+    public function currentVehicleLog()
+    {
+        return $this->hasOne(VehicleLog::class)->whereNull('return_time');
+    }
 }

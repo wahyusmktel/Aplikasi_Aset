@@ -157,4 +157,57 @@ class AssetAssignmentController extends Controller
         alert()->success('Berhasil!', 'Aset telah dikembalikan. PDF Berita Acara akan diunduh.');
         return $pdf->download($safeFilename . '.pdf');
     }
+
+    /**
+     * Menangani download PDF BAST untuk assignment tertentu, berdasarkan jenisnya.
+     */
+    public function downloadBast(AssetAssignment $assignment, string $type) // Tambahkan $type
+    {
+        // Tentukan jenis BAST berdasarkan parameter $type
+        $isReturn = ($type === 'return');
+
+        // Ambil nomor surat yang sesuai
+        $docNumber = $isReturn ? $assignment->return_doc_number : $assignment->checkout_doc_number;
+
+        // Jika nomor surat belum ada, beri error
+        if (!$docNumber) {
+            $bastType = $isReturn ? 'Pengembalian' : 'Serah Terima';
+            alert()->error('Gagal!', "Dokumen BAST {$bastType} untuk riwayat ini tidak ditemukan.");
+            return back();
+        }
+
+        // Tentukan judul PDF
+        $title = $isReturn ? 'Berita Acara Pengembalian Aset' : 'Berita Acara Serah Terima Aset';
+
+        // Generate QR Code (URL tetap sama, mengarah ke nomor surat yang relevan)
+        $verificationUrl = route('public.verify', $docNumber);
+        $options = new QROptions([
+            'outputType' => QRCode::OUTPUT_IMAGE_PNG,
+            'imageBase64' => true,
+            'scale' => 5,
+        ]);
+        $qrCode = (new QRCode($options))->render($verificationUrl);
+
+        // Load data yang dibutuhkan
+        $asset = $assignment->asset()->with('personInCharge')->first();
+        $employee = $assignment->employee;
+        $headmaster = Employee::where('position', 'Kepala Sekolah')->first();
+
+        // Generate PDF
+        $pdf = Pdf::loadView('assets.bast-pdf', [
+            'title' => $title,
+            'assignment' => $assignment,
+            'asset' => $asset,
+            'employee' => $employee,
+            'headmaster' => $headmaster,
+            'isReturn' => $isReturn, // Gunakan $isReturn yang sudah ditentukan
+            'qrCode' => $qrCode,
+        ]);
+
+        // Buat nama file yang aman
+        $safeFilename = str_replace('/', '-', $docNumber);
+
+        // Langsung download
+        return $pdf->download($safeFilename . '.pdf');
+    }
 }

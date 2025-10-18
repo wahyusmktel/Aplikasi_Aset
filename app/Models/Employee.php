@@ -19,4 +19,9 @@ class Employee extends Model
     {
         return $this->hasMany(AssetAssignment::class);
     }
+
+    public function vehicleLogs()
+    {
+        return $this->hasMany(VehicleLog::class)->orderBy('departure_time', 'desc');
+    }
 }

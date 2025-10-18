@@ -17,6 +17,13 @@ use App\Http\Controllers\BookAssetController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\AssetAssignmentController;
 use App\Http\Controllers\PublicVerificationController;
+use App\Http\Controllers\AssetAssignmentHistoryController;
+use App\Http\Controllers\AssignedAssetController;
+use App\Http\Controllers\AssetMaintenanceController;
+use App\Http\Controllers\MaintenanceHistoryController;
+use App\Http\Controllers\AssetInspectionController;
+use App\Http\Controllers\InspectionHistoryController;
+use App\Http\Controllers\VehicleLogController;
 use Illuminate\Support\Facades\Route;
 
 // Rute untuk halaman publik
@@ -24,8 +31,12 @@ Route::get('/aset/{asset_code_ypt}', [PublicAssetController::class, 'show'])->na
 
 // Rute Verifikasi Dokumen Publik
 Route::get('/verify/document/{docNumber}', [PublicVerificationController::class, 'verify'])
-    ->where('docNumber', '.*') // <-- TAMBAHKAN BARIS INI
+    ->where('docNumber', '.*')
     ->name('public.verify');
+
+// Rute Verifikasi Dokumen Publik Maintenance
+Route::get('/verify/maintenance/{docNumber}', [PublicVerificationController::class, 'verifyMaintenance'])
+    ->where('docNumber', '.*')->name('public.verifyMaintenance');
 
 Route::get('/', function () {
     return view('welcome');
@@ -82,16 +93,50 @@ Route::middleware('auth')->group(function () {
     Route::post('/assets/batch/store', [AssetController::class, 'batchStore'])->name('assets.batchStore');
     // Route baru untuk Impor Batch Aset
     Route::post('/assets/import-batch', [AssetController::class, 'importBatch'])->name('assets.importBatch');
-    // Book Asset Management Routes <-- ADD THIS BLOCK
+    // Book Asset Management Routes
     Route::get('/books', [BookAssetController::class, 'index'])->name('books.index');
     Route::get('/books/export-excel', [BookAssetController::class, 'exportExcel'])->name('books.exportExcel');
     Route::get('/books/download-pdf', [BookAssetController::class, 'downloadPDF'])->name('books.downloadPDF');
-    // Route untuk CRUD Pegawai <-- Tambahkan ini
+    // Route untuk CRUD Pegawai
     Route::resource('employees', EmployeeController::class)->except(['show']);
     Route::post('/employees/import', [EmployeeController::class, 'import'])->name('employees.import');
     // Route untuk proses serah terima aset
     Route::post('/assets/{asset}/assign', [AssetAssignmentController::class, 'store'])->name('assets.assign');
     Route::post('/assets/assignment/{assignment}/return', [AssetAssignmentController::class, 'returnAsset'])->name('assets.return');
+    Route::get('/assets/assignment/{assignment}/download-bast/{type}', [AssetAssignmentController::class, 'downloadBast'])
+        ->whereIn('type', ['checkout', 'return']) // Hanya izinkan 'checkout' atau 'return'
+        ->name('assignments.downloadBast');
+    // Route untuk Riwayat Inventaris
+    Route::get('/inventory-history', [AssetAssignmentHistoryController::class, 'index'])->name('inventory.history');
+    Route::get('/inventory-history/export-excel', [AssetAssignmentHistoryController::class, 'exportExcel'])->name('inventory.exportExcel');
+    Route::get('/inventory-history/download-pdf', [AssetAssignmentHistoryController::class, 'downloadPDF'])->name('inventory.downloadPDF');
+    // Route untuk Halaman Aset Terpasang/Inventaris Pegawai
+    Route::get('/assigned-assets', [AssignedAssetController::class, 'index'])->name('assignedAssets.index');
+    // Route untuk Maintenance Aset
+    Route::post('/assets/{asset}/maintenance', [AssetMaintenanceController::class, 'store'])->name('maintenance.store');
+    Route::delete('/maintenance/{maintenance}', [AssetMaintenanceController::class, 'destroy'])->name('maintenance.destroy');
+    Route::get('/maintenance/{maintenance}/download-report', [AssetMaintenanceController::class, 'downloadReport'])->name('maintenance.downloadReport');
+    // Route untuk Riwayat Maintenance
+    Route::get('/maintenance-history', [MaintenanceHistoryController::class, 'index'])->name('maintenance.history');
+    Route::get('/maintenance-history/export-excel', [MaintenanceHistoryController::class, 'exportExcel'])->name('maintenance.exportExcel');
+    Route::get('/maintenance-history/download-pdf', [MaintenanceHistoryController::class, 'downloadPDF'])->name('maintenance.downloadPDF');
+    // Route untuk Inspeksi Aset
+    Route::post('/assets/{asset}/inspection', [AssetInspectionController::class, 'store'])->name('inspections.store');
+    // Route::delete('/inspection/{inspection}', [AssetInspectionController::class, 'destroy'])->name('inspections.destroy'); // Aktifkan jika perlu hapus
+    Route::get('/inspection/{inspection}/download-bast', [AssetInspectionController::class, 'downloadBast'])->name('inspections.downloadBast');
+    // Route untuk Riwayat Inspeksi
+    Route::get('/inspection-history', [InspectionHistoryController::class, 'index'])->name('inspection.history');
+    Route::get('/inspection-history/export-excel', [InspectionHistoryController::class, 'exportExcel'])->name('inspection.exportExcel');
+    Route::get('/inspection-history/download-pdf', [InspectionHistoryController::class, 'downloadPDF'])->name('inspection.downloadPDF');
+    // Route untuk Log Kendaraan <-- TAMBAHKAN BLOK INI
+    Route::get('/vehicle-logs', [VehicleLogController::class, 'index'])->name('vehicleLogs.index');
+    Route::post('/vehicles/{asset}/checkout', [VehicleLogController::class, 'storeCheckout'])->name('vehicles.checkout');
+    Route::post('/vehicle-logs/{log}/checkin', [VehicleLogController::class, 'storeCheckin'])->name('vehicleLogs.checkin');
+    Route::get('/vehicle-logs/{log}/download-bast/{type}', [VehicleLogController::class, 'downloadBast'])
+        ->whereIn('type', ['checkout', 'checkin'])
+        ->name('vehicleLogs.downloadBast');
+    Route::get('/vehicle-logs/export-excel', [VehicleLogController::class, 'exportExcel'])->name('vehicleLogs.exportExcel');
+    Route::get('/vehicle-logs/download-pdf', [VehicleLogController::class, 'downloadPDF'])->name('vehicleLogs.downloadPDF');
 });
 
 require __DIR__ . '/auth.php';

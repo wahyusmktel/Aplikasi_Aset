@@ -18,27 +18,74 @@
                         <dl class="space-y-2 text-sm">
                             <div class="flex">
                                 <dt class="w-1/3 font-semibold text-gray-500">Nomor Surat</dt>
-                                <dd class="w-2/3 font-mono">
-                                    {{ $isReturn ? $assignment->return_doc_number : $assignment->checkout_doc_number }}
-                                </dd>
+                                {{-- BENAR: Gunakan $docNumber yang selalu ada --}}
+                                <dd class="w-2/3 font-mono">{{ $docNumber }}</dd>
                             </div>
                             <div class="flex">
                                 <dt class="w-1/3 font-semibold text-gray-500">Nama Aset</dt>
-                                <dd class="w-2/3">{{ $assignment->asset->name }}</dd>
+                                {{-- BENAR: Gunakan $assetName yang selalu ada --}}
+                                <dd class="w-2/3">{{ $assetName }}</dd>
                             </div>
                             <div class="flex">
-                                <dt class="w-1/3 font-semibold text-gray-500">Pegawai</dt>
-                                <dd class="w-2/3">{{ $assignment->employee->name }}</dd>
+                                <dt class="w-1/3 font-semibold text-gray-500">
+                                    {{-- BENAR: Label dinamis cek semua kemungkinan --}}
+                                    @if (isset($inspection))
+                                        Pemeriksa
+                                    @elseif(isset($vehicleLog))
+                                        Pengguna
+                                    @elseif(isset($assignment))
+                                        Pegawai
+                                    @else
+                                        Pihak Terlibat
+                                    @endif
+                                </dt>
+                                {{-- BENAR: Gunakan $employeeName yang selalu ada --}}
+                                <dd class="w-2/3">{{ $employeeName }}</dd>
                             </div>
                             <div class="flex">
                                 <dt class="w-1/3 font-semibold text-gray-500">Tanggal Transaksi</dt>
+                                {{-- BENAR: Gunakan $transactionDate yang selalu ada --}}
                                 <dd class="w-2/3">
-                                    {{ \Carbon\Carbon::parse($isReturn ? $assignment->returned_date : $assignment->assigned_date)->isoFormat('D MMMM YYYY') }}
-                                </dd>
+                                    {{ \Carbon\Carbon::parse($transactionDate)->isoFormat('D MMMM YYYY') }}</dd>
                             </div>
+
+                            {{-- BENAR: Tampilkan detail spesifik pakai isset() untuk setiap tipe --}}
+                            @if (isset($inspection))
+                                <div class="flex">
+                                    <dt class="w-1/3 font-semibold text-gray-500">Kondisi Tercatat</dt>
+                                    <dd class="w-2/3">{{ $inspection->condition }}</dd>
+                                </div>
+                            @elseif(isset($vehicleLog))
+                                <div class="flex">
+                                    <dt class="w-1/3 font-semibold text-gray-500">Tujuan</dt>
+                                    <dd class="w-2/3">{{ $vehicleLog->destination }}</dd>
+                                </div>
+                                <div class="flex">
+                                    <dt class="w-1/3 font-semibold text-gray-500">Keperluan</dt>
+                                    <dd class="w-2/3">{{ $vehicleLog->purpose }}</dd>
+                                </div>
+                                <div class="flex">
+                                    <dt class="w-1/3 font-semibold text-gray-500">KM {{ $isReturn ? 'Akhir' : 'Awal' }}
+                                    </dt>
+                                    <dd class="w-2/3">
+                                        {{ number_format($isReturn ? $vehicleLog->end_odometer : $vehicleLog->start_odometer) }}
+                                        KM</dd>
+                                </div>
+                            @elseif(isset($assignment))
+                                <div class="flex">
+                                    <dt class="w-1/3 font-semibold text-gray-500">Kondisi
+                                        {{ $isReturn ? 'Kembali' : 'Pinjam' }}</dt>
+                                    <dd class="w-2/3">
+                                        {{ $isReturn ? $assignment->condition_on_return : $assignment->condition_on_assign }}
+                                    </dd>
+                                </div>
+                            @endif
                         </dl>
                     </div>
                 </div>
+            </div>
+            <div class="text-center mt-6 text-sm text-gray-500">
+                Powered by {{ config('app.name', 'Laravel') }}
             </div>
         </div>
     </div>

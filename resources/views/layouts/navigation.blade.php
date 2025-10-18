@@ -24,6 +24,26 @@
                         {{ __('Aset Buku') }}
                     </x-nav-link>
 
+                    <x-nav-link :href="route('assignedAssets.index')" :active="request()->routeIs('assignedAssets.index')">
+                        {{ __('Inventaris Pegawai') }}
+                    </x-nav-link>
+
+                    <x-nav-link :href="route('inventory.history')" :active="request()->routeIs('inventory.history')">
+                        {{ __('Riwayat Inventaris') }}
+                    </x-nav-link>
+
+                    <x-nav-link :href="route('maintenance.history')" :active="request()->routeIs('maintenance.history')">
+                        {{ __('Riwayat Maintenance') }}
+                    </x-nav-link>
+
+                    <x-nav-link :href="route('inspection.history')" :active="request()->routeIs('inspection.history')">
+                        {{ __('Riwayat Inspeksi') }}
+                    </x-nav-link>
+
+                    <x-nav-link :href="route('vehicleLogs.index')" :active="request()->routeIs('vehicleLogs.index')">
+                        {{ __('Log Kendaraan') }}
+                    </x-nav-link>
+
                     @php
                         $isDataReferensiActive = request()->routeIs([
                             'institutions.index',
