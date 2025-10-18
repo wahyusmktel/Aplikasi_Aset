@@ -92,6 +92,9 @@ class AssetController extends Controller
             'person_in_charge_id' => 'required|exists:persons_in_charge,id',
             'asset_function_id' => 'required|exists:asset_functions,id',
             'funding_source_id' => 'required|exists:funding_sources,id',
+            'purchase_cost' => 'required|numeric|min:0',
+            'useful_life' => 'required|integer|min:1',
+            'salvage_value' => 'required|numeric|min:0|lte:purchase_cost', // Nilai sisa <= Harga beli
         ]);
 
         $latestAsset = Asset::orderBy('id', 'desc')->first();
@@ -185,6 +188,9 @@ class AssetController extends Controller
             'person_in_charge_id' => 'required|exists:persons_in_charge,id',
             'asset_function_id' => 'required|exists:asset_functions,id',
             'funding_source_id' => 'required|exists:funding_sources,id',
+            'purchase_cost' => 'required|numeric|min:0',
+            'useful_life' => 'required|integer|min:1',
+            'salvage_value' => 'required|numeric|min:0|lte:purchase_cost',
         ]);
 
         $asset->update($request->except('sequence_number'));

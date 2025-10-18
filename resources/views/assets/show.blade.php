@@ -26,10 +26,17 @@
                         {{-- Kolom Detail Aset --}}
                         <div class="md:col-span-2 space-y-4">
                             <div>
-                                <h4 class="font-bold">Informasi Dasar</h4>
+                                <h4 class="font-bold">Informasi Dasar & Finansial</h4>
                                 <ul class="list-disc list-inside text-sm space-y-1 mt-1">
                                     <li><strong>Nama Barang:</strong> {{ $asset->name }}</li>
                                     <li><strong>Tahun Pembelian:</strong> {{ $asset->purchase_year }}</li>
+                                    <li><strong>Harga Beli:</strong> Rp
+                                        {{ number_format($asset->purchase_cost, 0, ',', '.') }}</li>
+                                    <li><strong>Masa Manfaat:</strong> {{ $asset->useful_life ?? '-' }} Tahun</li>
+                                    <li><strong>Nilai Sisa:</strong> Rp
+                                        {{ number_format($asset->salvage_value, 0, ',', '.') }}</li>
+                                    <li class="font-semibold"><strong>Nilai Buku Saat Ini:</strong> Rp
+                                        {{ number_format($asset->book_value, 0, ',', '.') }}</li> {{-- Tampilkan nilai buku --}}
                                     <li><strong>No Urut:</strong> {{ $asset->sequence_number }}</li>
                                     <li><strong>Status Awal:</strong> {{ $asset->status }}</li> {{-- Status awal saat input --}}
                                 </ul>

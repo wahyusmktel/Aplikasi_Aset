@@ -28,6 +28,28 @@
                                         value="{{ old('purchase_year', $asset->purchase_year) }}"
                                         class="mt-1 block w-full rounded-md dark:bg-gray-700" required>
                                 </div>
+                                <div class="mb-4">
+                                    <label for="purchase_cost" class="block text-sm font-medium">Harga Beli (Rp)</label>
+                                    <input type="number" name="purchase_cost" id="purchase_cost"
+                                        value="{{ old('purchase_cost', $asset->purchase_cost) }}"
+                                        class="mt-1 block w-full rounded-md dark:bg-gray-700" required min="0"
+                                        step="any">
+                                </div>
+                                <div class="mb-4">
+                                    <label for="useful_life" class="block text-sm font-medium">Masa Manfaat
+                                        (Tahun)</label>
+                                    <input type="number" name="useful_life" id="useful_life"
+                                        value="{{ old('useful_life', $asset->useful_life) }}"
+                                        class="mt-1 block w-full rounded-md dark:bg-gray-700" required min="1">
+                                </div>
+                                <div class="mb-4">
+                                    <label for="salvage_value" class="block text-sm font-medium">Nilai Sisa/Residu
+                                        (Rp)</label>
+                                    <input type="number" name="salvage_value" id="salvage_value"
+                                        value="{{ old('salvage_value', $asset->salvage_value) }}"
+                                        class="mt-1 block w-full rounded-md dark:bg-gray-700" required min="0"
+                                        step="any">
+                                </div>
                                 {{-- <div class="mb-4">
                                     <label for="sequence_number" class="block text-sm font-medium">No Urut Barang (4
                                         Digit)</label>

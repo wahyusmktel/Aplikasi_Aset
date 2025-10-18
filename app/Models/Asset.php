@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Carbon\Carbon;
 
 class Asset extends Model
 {
@@ -19,6 +20,9 @@ class Asset extends Model
     protected $fillable = [
         'name',
         'purchase_year',
+        'purchase_cost', // Baru
+        'useful_life',   // Baru
+        'salvage_value', // Baru
         'asset_code_ypt',
         'sequence_number',
         'institution_id',
@@ -41,7 +45,34 @@ class Asset extends Model
 
     protected $casts = [
         'disposal_date' => 'date',
+        'purchase_cost' => 'decimal:2', // Baru
+        'salvage_value' => 'decimal:2', // Baru
     ];
+
+    // Method Accessor untuk menghitung Nilai Buku (Book Value)
+    public function getBookValueAttribute(): float
+    {
+        if (!$this->purchase_cost || !$this->useful_life || $this->useful_life <= 0) {
+            return $this->purchase_cost ?? 0; // Jika data tidak lengkap, kembalikan harga beli
+        }
+
+        // Hitung penyusutan tahunan (Metode Garis Lurus)
+        $depreciableCost = $this->purchase_cost - $this->salvage_value;
+        $annualDepreciation = $depreciableCost / $this->useful_life;
+
+        // Hitung umur aset dalam tahun (dengan pecahan)
+        $purchaseDate = Carbon::createFromDate($this->purchase_year, 1, 1); // Asumsi beli awal tahun
+        $ageInYears = $purchaseDate->diffInYears(Carbon::now()); // Bisa diganti Carbon::today()
+
+        // Hitung total akumulasi penyusutan
+        $accumulatedDepreciation = min($annualDepreciation * $ageInYears, $depreciableCost); // Jangan sampai minus
+
+        // Nilai buku = Harga Beli - Akumulasi Penyusutan
+        $bookValue = $this->purchase_cost - $accumulatedDepreciation;
+
+        // Nilai buku tidak boleh lebih rendah dari nilai sisa
+        return max($bookValue, $this->salvage_value);
+    }
 
     /**
      * Mendapatkan data lembaga yang memiliki aset ini.
