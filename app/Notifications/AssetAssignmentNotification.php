@@ -59,7 +59,7 @@ class AssetAssignmentNotification extends Notification
         }
 
         return TelegramMessage::create()
-            ->to(env('TELEGRAM_CHAT_ID')) // Kirim ke Chat ID dari .env
+            ->to(config('services.telegram-bot-api.chat_id'))
             ->content("{$actionText}\n\n*Aset:* {$asset->name} (`{$asset->asset_code_ypt}`)\n*Pegawai:* {$employee->name}\n*Tanggal:* {$date}\n*Kondisi:* {$condition}\n*No. Dokumen:* `{$docNumber}`")
             ->button('Lihat Detail Aset', $url); // Tambahkan tombol
     }

@@ -62,7 +62,7 @@ class VehicleLogNotification extends Notification
         }
 
         return TelegramMessage::create()
-            ->to(env('TELEGRAM_CHAT_ID'))
+            ->to(config('services.telegram-bot-api.chat_id'))
             ->content("{$actionText}\n\n*Kendaraan:* {$asset->name} (`{$asset->asset_code_ypt}`)\n*Pengguna:* {$employee->name}\n*Waktu:* {$date}\n*Tujuan:* {$log->destination}\n*{$odometerLabel}:* {$odometer} KM\n*Kondisi:* {$condition}\n*No. Dokumen:* `{$docNumber}`")
             ->button('Lihat Detail Kendaraan', $url);
     }
