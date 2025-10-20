@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Laporan Daftar Aset Aktif</title>
+    <title>Laporan Daftar Aset Aktif {{ $categoryName ? '- Kategori: ' . $categoryName : '' }}</title>
     <style>
         /* CSS mirip report-pdf maintenance/disposal */
         body {
@@ -20,15 +20,17 @@
 
         .header h1 {
             margin: 0;
-            font-size: 16px;
+            font-size: 14px;
             text-transform: uppercase;
         }
 
+        /* Ukuran font judul disesuaikan */
         .header p {
             margin: 2px 0;
-            font-size: 12px;
+            font-size: 10px;
         }
 
+        /* Ukuran font subjudul disesuaikan */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -50,7 +52,7 @@
         }
 
         .signatures {
-            margin-top: 40px;
+            margin-top: 30px;
             width: 100%;
             page-break-inside: avoid;
         }
@@ -64,24 +66,22 @@
             border: none;
             text-align: center;
             width: 50%;
-            padding-top: 60px;
+            padding-top: 50px;
         }
 
+        /* Jarak tanda tangan dikurangi */
         .footer {
             position: fixed;
-            bottom: -20px;
+            bottom: -15px;
             left: 0;
             right: 0;
             text-align: center;
             font-size: 8px;
         }
 
+        /* Posisi footer disesuaikan */
         .no-wrap {
             white-space: nowrap;
-        }
-
-        .currency {
-            text-align: right;
         }
     </style>
 </head>
@@ -89,6 +89,10 @@
 <body>
     <div class="header">
         <h1>Laporan Daftar Aset Aktif</h1>
+        {{-- Tampilkan nama kategori jika difilter --}}
+        @if ($categoryName)
+            <p>Kategori: <strong>{{ $categoryName }}</strong></p>
+        @endif
         <p>{{ $activeAssets->first()->institution->name ?? 'Institusi Aset' }}</p>
         <p>Tanggal Cetak: {{ date('d F Y') }}</p>
     </div>
@@ -97,15 +101,16 @@
         <thead>
             <tr>
                 <th class="no-wrap">No</th>
-                <th>Kode Aset</th>
+                <th>Kode Aset YPT</th>
                 <th>Nama Barang</th>
-                <th class="no-wrap">Tahun</th>
-                <th class="currency">Harga Beli</th>
-                <th class="currency">Nilai Buku</th>
-                <th>Kategori</th>
-                <th>Lokasi</th>
-                <th>Status</th>
-                <th>PJ</th>
+                <th class="no-wrap">Thn</th> {{-- Singkat --}}
+                <th>Gedung</th>
+                <th>Ruangan</th>
+                <th>Unit</th>
+                <th>PJ</th> {{-- Singkat --}}
+                <th>Fungsi</th>
+                <th>Dana</th> {{-- Singkat --}}
+                <th class="no-wrap">No Urut</th>
             </tr>
         </thead>
         <tbody>
@@ -115,12 +120,13 @@
                     <td>{{ $asset->asset_code_ypt ?? '-' }}</td>
                     <td>{{ $asset->name ?? '-' }}</td>
                     <td class="no-wrap">{{ $asset->purchase_year ?? '-' }}</td>
-                    <td class="currency">{{ number_format($asset->purchase_cost ?? 0, 0, ',', '.') }}</td>
-                    <td class="currency">{{ number_format($asset->book_value ?? 0, 0, ',', '.') }}</td>
-                    <td>{{ $asset->category->name ?? '-' }}</td>
-                    <td>{{ $asset->building->name ?? '' }} / {{ $asset->room->name ?? '' }}</td>
-                    <td>{{ $asset->current_status ?? '-' }}</td>
+                    <td>{{ $asset->building->name ?? '-' }}</td>
+                    <td>{{ $asset->room->name ?? '-' }}</td>
+                    <td>{{ $asset->department->name ?? '-' }}</td>
                     <td>{{ $asset->personInCharge->name ?? '-' }}</td>
+                    <td>{{ $asset->assetFunction->name ?? '-' }}</td>
+                    <td>{{ $asset->fundingSource->name ?? '-' }}</td>
+                    <td class="no-wrap">{{ $asset->sequence_number ?? '-' }}</td>
                 </tr>
             @endforeach
         </tbody>

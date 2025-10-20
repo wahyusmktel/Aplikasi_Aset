@@ -10,7 +10,20 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
 
-                    <div class="flex flex-wrap gap-2 justify-between items-center mb-6">
+                    <div class="flex flex-wrap gap-4 justify-between items-center mb-6">
+                        {{-- Filter Kategori --}}
+                        <div class="flex items-center space-x-2">
+                            <label for="category_filter" class="text-sm font-medium">Filter Kategori:</label>
+                            <select id="category_filter" x-model="selectedCategory"
+                                @change="window.location = `{{ route('assets.index') }}?category_id=${selectedCategory}`"
+                                class="rounded-md dark:bg-gray-700 text-sm">
+                                <option value="all">Semua Kategori Aktif</option>
+                                @foreach ($categories as $category)
+                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
                         <div class="flex flex-wrap gap-2">
                             <a href="{{ route('assets.create') }}"
                                 class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
@@ -45,18 +58,18 @@
                                 Laporan PDF (Aktif)
                             </a>
                         </div>
-                        <form action="{{ route('assets.index') }}" method="GET">
-                            <div class="flex items-center">
-                                <input type="text" name="search" placeholder="Cari nama atau kode aset..."
-                                    class="form-input rounded-l-md dark:bg-gray-700 dark:text-gray-300 w-64"
-                                    value="{{ request('search') }}">
-                                <button type="submit"
-                                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-r-md">
-                                    Cari
-                                </button>
-                            </div>
-                        </form>
                     </div>
+                    <form action="{{ route('assets.index') }}" method="GET">
+                        <div class="flex items-center">
+                            <input type="text" name="search" placeholder="Cari nama atau kode aset..."
+                                class="form-input rounded-l-md dark:bg-gray-700 dark:text-gray-300 w-64"
+                                value="{{ request('search') }}">
+                            <button type="submit"
+                                class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-r-md">
+                                Cari
+                            </button>
+                        </div>
+                    </form>
 
                     <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
                         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">

@@ -21,6 +21,7 @@ use App\Exports\ActiveAssetsExport;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use App\Models\Employee;
+use Illuminate\Support\Str;
 
 class AssetController extends Controller
 {
@@ -30,6 +31,7 @@ class AssetController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
+        $categoryId = $request->input('category_id');
 
         $assets = Asset::with([
             'category',
@@ -38,15 +40,21 @@ class AssetController extends Controller
             'room'
         ])
             ->whereNull('disposal_date')
+            ->when($categoryId && $categoryId !== 'all', function ($query) use ($categoryId) {
+                return $query->where('category_id', $categoryId);
+            })
             ->when($search, function ($query, $search) {
                 // Pencarian berdasarkan nama aset atau kode YPT
                 return $query->where('name', 'like', "%{$search}%")
                     ->orWhere('asset_code_ypt', 'like', "%{$search}%");
             })
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
-        return view('assets.index', compact('assets'));
+        $categories = Category::orderBy('name')->get();
+
+        return view('assets.index', compact('assets', 'categories'));
     }
 
     /**
@@ -403,33 +411,61 @@ class AssetController extends Controller
     /**
      * Menangani ekspor semua aset aktif ke Excel.
      */
-    public function exportActiveExcel()
+    public function exportActiveExcel(Request $request) // Tambahkan Request
     {
-        return Excel::download(new ActiveAssetsExport, 'daftar-aset-aktif.xlsx');
+        $categoryId = $request->input('category_id'); // Ambil category_id dari request
+        $fileName = 'daftar-aset-aktif';
+        if ($categoryId && $categoryId !== 'all') {
+            $category = Category::find($categoryId);
+            if ($category) $fileName .= '-' . Str::slug($category->name); // Tambahkan nama kategori ke nama file
+        }
+        $fileName .= '.xlsx';
+
+        // Kirim categoryId ke class Export
+        return Excel::download(new ActiveAssetsExport($categoryId), $fileName);
     }
 
     /**
      * Menangani download laporan PDF semua aset aktif.
      */
-    public function downloadActivePDF()
+    public function downloadActivePDF(Request $request)
     {
-        $activeAssets = Asset::whereNull('disposal_date') // Ambil hanya aset yg belum di-dispose
-            ->with(['category', 'institution', 'building', 'room', 'personInCharge'])
-            ->orderBy('asset_code_ypt', 'asc') // Urutkan berdasarkan kode
-            ->get();
+        $categoryId = $request->input('category_id');
+
+        $query = Asset::whereNull('disposal_date')
+            // Load SEMUA relasi yang dibutuhkan di PDF
+            ->with(['category', 'institution', 'building', 'room', 'department', 'personInCharge', 'assetFunction', 'fundingSource']);
+
+        // Terapkan filter kategori
+        if ($categoryId && $categoryId !== 'all') {
+            $query->where('category_id', $categoryId);
+        }
+
+        $activeAssets = $query->orderBy('asset_code_ypt', 'asc')->get();
 
         if ($activeAssets->isEmpty()) {
             alert()->info('Info', 'Tidak ada data aset aktif untuk dilaporkan.');
             return redirect()->route('assets.index');
         }
 
+        // Ambil nama kategori untuk judul PDF
+        $categoryName = null;
+        if ($categoryId && $categoryId !== 'all') {
+            $category = Category::find($categoryId);
+            if ($category) $categoryName = $category->name;
+        }
+
         $pj = Employee::where('position', 'Kaur Sarpras')->first();
         $ks = Employee::where('position', 'Kepala Sekolah')->first();
         $kota = "Bandar Lampung"; // Ganti jika perlu
 
-        $pdf = Pdf::loadView('assets.report-all-pdf', compact('activeAssets', 'pj', 'ks', 'kota'))
-            ->setPaper('a4', 'landscape'); // Atur ke landscape
+        $pdf = Pdf::loadView('assets.report-all-pdf', compact('activeAssets', 'pj', 'ks', 'kota', 'categoryName')) // Kirim categoryName
+            ->setPaper('a4', 'landscape');
 
-        return $pdf->download('laporan-daftar-aset-aktif.pdf');
+        $fileName = 'laporan-daftar-aset-aktif';
+        if ($categoryName) $fileName .= '-' . Str::slug($categoryName);
+        $fileName .= '.pdf';
+
+        return $pdf->download($fileName);
     }
 }
