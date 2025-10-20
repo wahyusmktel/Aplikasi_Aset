@@ -34,6 +34,16 @@
                                 class="bg-gray-600 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded">
                                 Cetak Semua
                             </a>
+                            {{-- Tombol Export Excel Aktif BARU --}}
+                            <a href="{{ route('assets.exportActiveExcel') }}"
+                                class="bg-green-600 hover:bg-green-800 text-white font-bold py-2 px-4 rounded">
+                                Export Excel (Aktif)
+                            </a>
+                            {{-- Tombol Laporan PDF Aktif BARU --}}
+                            <a href="{{ route('assets.downloadActivePDF') }}" target="_blank"
+                                class="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 rounded">
+                                Laporan PDF (Aktif)
+                            </a>
                         </div>
                         <form action="{{ route('assets.index') }}" method="GET">
                             <div class="flex items-center">

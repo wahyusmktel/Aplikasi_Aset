@@ -17,6 +17,10 @@ use Illuminate\Validation\Rule;
 use App\Imports\AssetsBatchImport;
 use Maatwebsite\Excel\Validators\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ActiveAssetsExport;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use App\Models\Employee;
 
 class AssetController extends Controller
 {
@@ -394,5 +398,38 @@ class AssetController extends Controller
         }
 
         return redirect()->route('assets.index');
+    }
+
+    /**
+     * Menangani ekspor semua aset aktif ke Excel.
+     */
+    public function exportActiveExcel()
+    {
+        return Excel::download(new ActiveAssetsExport, 'daftar-aset-aktif.xlsx');
+    }
+
+    /**
+     * Menangani download laporan PDF semua aset aktif.
+     */
+    public function downloadActivePDF()
+    {
+        $activeAssets = Asset::whereNull('disposal_date') // Ambil hanya aset yg belum di-dispose
+            ->with(['category', 'institution', 'building', 'room', 'personInCharge'])
+            ->orderBy('asset_code_ypt', 'asc') // Urutkan berdasarkan kode
+            ->get();
+
+        if ($activeAssets->isEmpty()) {
+            alert()->info('Info', 'Tidak ada data aset aktif untuk dilaporkan.');
+            return redirect()->route('assets.index');
+        }
+
+        $pj = Employee::where('position', 'Kaur Sarpras')->first();
+        $ks = Employee::where('position', 'Kepala Sekolah')->first();
+        $kota = "Bandar Lampung"; // Ganti jika perlu
+
+        $pdf = Pdf::loadView('assets.report-all-pdf', compact('activeAssets', 'pj', 'ks', 'kota'))
+            ->setPaper('a4', 'landscape'); // Atur ke landscape
+
+        return $pdf->download('laporan-daftar-aset-aktif.pdf');
     }
 }
