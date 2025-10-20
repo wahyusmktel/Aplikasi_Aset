@@ -26,6 +26,7 @@ use App\Http\Controllers\InspectionHistoryController;
 use App\Http\Controllers\VehicleLogController;
 use App\Http\Controllers\AssetDisposalController;
 use App\Http\Controllers\DisposedAssetController;
+use App\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
 
 // Rute untuk halaman publik
@@ -39,6 +40,9 @@ Route::get('/verify/document/{docNumber}', [PublicVerificationController::class,
 // Rute Verifikasi Dokumen Publik Maintenance
 Route::get('/verify/maintenance/{docNumber}', [PublicVerificationController::class, 'verifyMaintenance'])
     ->where('docNumber', '.*')->name('public.verifyMaintenance');
+
+// Route untuk menerima webhook deployment
+Route::post('/deploy-webhook-p4s5w0rd', [WebhookController::class, 'handleDeploy'])->name('webhook.deploy');
 
 Route::get('/', function () {
     return view('welcome');
