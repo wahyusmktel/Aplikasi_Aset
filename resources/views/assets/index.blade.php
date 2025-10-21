@@ -5,7 +5,18 @@
         </h2>
     </x-slot>
 
-    <div x-data="{ selectedIds: [], showImportBatchModal: false }" class="py-12">
+    <div x-data="{
+        selectedIds: [],
+        showImportBatchModal: false,
+        selectedCategory: '{{ request('category_id', 'all') }}',
+        printSelected() {
+            const ids = this.selectedIds.join(',');
+            if (ids) {
+                const url = `{{ route('assets.printLabels') }}?ids=${ids}`;
+                window.open(url, '_blank');
+            }
+        }
+    }" class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
@@ -29,35 +40,44 @@
                                 class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                                 Tambah Aset
                             </a>
+
                             <a href="{{ route('assets.batchCreate') }}"
                                 class="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded">
                                 Tambah Massal (Batch)
                             </a>
+
                             <button @click="showImportBatchModal = true"
                                 class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
                                 Impor Massal
                             </button>
-                            {{-- Tombol Cetak Terpilih --}}
+
+                            {{-- Cetak Terpilih --}}
                             <button @click="printSelected" :disabled="selectedIds.length === 0"
                                 class="bg-purple-500 text-white font-bold py-2 px-4 rounded disabled:bg-purple-300 disabled:cursor-not-allowed">
                                 Cetak Terpilih (<span x-text="selectedIds.length"></span>)
                             </button>
-                            {{-- Tombol Cetak Semua --}}
-                            <a href="{{ route('assets.printLabels') }}" target="_blank"
+
+                            {{-- Cetak Semua (berdasarkan filter kategori) --}}
+                            <a :href="`{{ route('assets.printLabels') }}?category_id=${selectedCategory}`"
+                                target="_blank"
                                 class="bg-gray-600 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded">
                                 Cetak Semua
                             </a>
-                            {{-- Tombol Export Excel Aktif BARU --}}
-                            <a href="{{ route('assets.exportActiveExcel') }}"
+
+                            {{-- Export Excel (Aktif) berdasarkan kategori terpilih --}}
+                            <a :href="`{{ route('assets.exportActiveExcel') }}?category_id=${selectedCategory}&search={{ urlencode(request('search', '')) }}`"
                                 class="bg-green-600 hover:bg-green-800 text-white font-bold py-2 px-4 rounded">
                                 Export Excel (Aktif)
                             </a>
-                            {{-- Tombol Laporan PDF Aktif BARU --}}
-                            <a href="{{ route('assets.downloadActivePDF') }}" target="_blank"
+
+                            {{-- Laporan PDF (Aktif) berdasarkan kategori terpilih --}}
+                            <a :href="`{{ route('assets.downloadActivePDF') }}?category_id=${selectedCategory}&search={{ urlencode(request('search', '')) }}`"
+                                target="_blank"
                                 class="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 rounded">
                                 Laporan PDF (Aktif)
                             </a>
                         </div>
+
                     </div>
                     <form action="{{ route('assets.index') }}" method="GET">
                         <div class="flex items-center">
@@ -140,7 +160,7 @@
                         </table>
                     </div>
                     <div class="mt-4">
-                        {{ $assets->appends(['search' => request('search')])->links() }}
+                        {{ $assets->appends(['search' => request('search'), 'category_id' => request('category_id', 'all')])->links() }}
                     </div>
                 </div>
             </div>
