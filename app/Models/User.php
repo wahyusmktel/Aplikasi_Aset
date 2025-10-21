@@ -46,6 +46,12 @@ class User extends Authenticatable
         ];
     }
 
+    // Relasi ke Employee
+    public function employee()
+    {
+        return $this->hasOne(Employee::class);
+    }
+
     /**
      * Cek apakah pengguna adalah seorang admin.
      *

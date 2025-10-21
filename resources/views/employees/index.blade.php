@@ -40,6 +40,7 @@
                                         <th scope="col" class="py-3 px-6">Nama Pegawai</th>
                                         <th scope="col" class="py-3 px-6">NIP</th>
                                         <th scope="col" class="py-3 px-6">Jabatan</th>
+                                        <th scope="col" class="py-3 px-6">Status Akun</th>
                                         <th scope="col" class="py-3 px-6">Aksi</th>
                                     </tr>
                                 </thead>
@@ -52,12 +53,39 @@
                                             <td class="py-4 px-6 font-semibold">{{ $employee->name }}</td>
                                             <td class="py-4 px-6">{{ $employee->nip ?? '-' }}</td>
                                             <td class="py-4 px-6">{{ $employee->position }}</td>
+                                            {{-- Kolom Status Akun Baru dengan Tombol --}}
+                                            <td class="py-4 px-6">
+                                                @if ($employee->user)
+                                                    {{-- Cek relasi user --}}
+                                                    <div class="flex items-center space-x-2">
+                                                        <span
+                                                            class="px-2 py-1 font-semibold leading-tight text-green-700 bg-green-100 rounded-full dark:bg-green-700 dark:text-green-100 text-xs">Aktif</span>
+                                                        <a href="{{ route('employee.accounts.resetPasswordForm', $employee->user->id) }}"
+                                                            class="text-blue-500 hover:text-blue-700 text-xs"
+                                                            title="Reset Password">Reset Pass</a>
+                                                        <button @click="confirmAccountDelete({{ $employee->user->id }})"
+                                                            class="text-red-500 hover:text-red-700 text-xs"
+                                                            title="Hapus Akun">Hapus Akun</button>
+                                                    </div>
+                                                @else
+                                                    <span
+                                                        class="px-2 py-1 font-semibold leading-tight text-gray-700 bg-gray-100 rounded-full dark:bg-gray-700 dark:text-gray-100 text-xs">Belum
+                                                        Ada</span>
+                                                @endif
+                                            </td>
                                             <td class="py-4 px-6 flex space-x-2">
                                                 <button
                                                     @click="showModal = true; isEditMode = true; form.id = {{ $employee->id }}; form.name = '{{ $employee->name }}'; form.nip = '{{ $employee->nip }}'; form.position = '{{ $employee->position }}'"
                                                     class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">Edit</button>
                                                 <button @click="confirmDelete({{ $employee->id }})"
                                                     class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">Hapus</button>
+                                                {{-- Tombol Buat Akun jika belum ada --}}
+                                                @if (!$employee->user_id)
+                                                    <a href="{{ route('employee.accounts.create', $employee->id) }}"
+                                                        class="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded text-xs">
+                                                        Buat Akun
+                                                    </a>
+                                                @endif
                                             </td>
                                         </tr>
                                     @empty

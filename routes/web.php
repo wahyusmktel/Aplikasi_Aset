@@ -27,6 +27,7 @@ use App\Http\Controllers\VehicleLogController;
 use App\Http\Controllers\AssetDisposalController;
 use App\Http\Controllers\DisposedAssetController;
 use App\Http\Controllers\WebhookController;
+use App\Http\Controllers\EmployeeAccountController;
 use Illuminate\Support\Facades\Route;
 
 // Rute untuk halaman publik
@@ -150,10 +151,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/assets/{asset}/dispose', [AssetDisposalController::class, 'create'])->name('disposals.create');
     Route::post('/assets/{asset}/dispose', [AssetDisposalController::class, 'store'])->name('disposals.store');
     Route::get('/disposal/{asset}/download-baph', [AssetDisposalController::class, 'downloadBaph'])->name('disposals.downloadBaph'); // Nanti pakai ID asset
-    // Route untuk Riwayat Aset Dihapus <-- TAMBAHKAN BLOK INI
+    // Route untuk Riwayat Aset Dihapus
     Route::get('/disposed-assets', [DisposedAssetController::class, 'index'])->name('disposedAssets.index');
     Route::get('/disposed-assets/export-excel', [DisposedAssetController::class, 'exportExcel'])->name('disposedAssets.exportExcel');
     Route::get('/disposed-assets/download-pdf', [DisposedAssetController::class, 'downloadPDF'])->name('disposedAssets.downloadPDF');
+
+    // Route untuk Akun Pegawai <-- TAMBAHKAN BLOK INI
+    Route::get('/employees/{employee}/account/create', [EmployeeAccountController::class, 'create'])->name('employee.accounts.create');
+    Route::post('/employees/{employee}/account', [EmployeeAccountController::class, 'store'])->name('employee.accounts.store');
+    // Route::delete('/employees/account/{user}', [EmployeeAccountController::class, 'destroy'])->name('employee.accounts.destroy'); // Opsional: Hapus akun
+    Route::get('/employees/account/{user}/reset-password', [EmployeeAccountController::class, 'showResetPasswordForm'])->name('employee.accounts.resetPasswordForm'); // Tampilkan form reset
+    Route::put('/employees/account/{user}/reset-password', [EmployeeAccountController::class, 'updatePassword'])->name('employee.accounts.updatePassword'); // Proses update password
+    Route::delete('/employees/account/{user}', [EmployeeAccountController::class, 'destroy'])->name('employee.accounts.destroy'); // Hapus akun user
 });
 
 require __DIR__ . '/auth.php';

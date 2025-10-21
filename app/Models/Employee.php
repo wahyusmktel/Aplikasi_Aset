@@ -10,6 +10,7 @@ class Employee extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'name',
         'nip',
         'position',
@@ -23,5 +24,11 @@ class Employee extends Model
     public function vehicleLogs()
     {
         return $this->hasMany(VehicleLog::class)->orderBy('departure_time', 'desc');
+    }
+
+    // Relasi ke User
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }
