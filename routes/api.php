@@ -9,6 +9,9 @@ use App\Http\Controllers\Api\VehicleApiController;
 // Route untuk Login (Public)
 Route::post('/login', [AuthController::class, 'login']);
 
+Route::get('/public/assets/{asset_code_ypt}', [PublicAssetApiController::class, 'show'])
+    ->name('api.public.assets.show');
+
 // Route yang butuh Autentikasi (pakai middleware sanctum)
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -24,7 +27,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/vehicle-logs/{log}/download-bast/{type}', [VehicleApiController::class, 'downloadBast'])
         ->whereIn('type', ['checkout', 'checkin'])
         ->name('api.vehicleLogs.downloadBast');
-
-    Route::get('/public/assets/{asset_code_ypt}', [PublicAssetApiController::class, 'show'])
-        ->name('api.public.assets.show');
 });
