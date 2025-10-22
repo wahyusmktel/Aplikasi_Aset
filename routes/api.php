@@ -19,4 +19,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/vehicle-logs/{log}/checkin', [VehicleApiController::class, 'checkin']);
     Route::get('/vehicle-logs/my-history', [VehicleApiController::class, 'myHistory']);
     Route::get('/vehicle-logs/{log}', [VehicleApiController::class, 'logDetail']); // Detail log
+
+    Route::get('/vehicle-logs/{log}/download-bast/{type}', [VehicleApiController::class, 'downloadBast'])
+        ->whereIn('type', ['checkout', 'checkin'])
+        ->name('api.vehicleLogs.downloadBast');
 });
