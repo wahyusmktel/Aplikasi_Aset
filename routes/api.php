@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\PublicAssetApiController;
 use App\Http\Controllers\Api\VehicleApiController;
 
 // Route untuk Login (Public)
@@ -23,4 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/vehicle-logs/{log}/download-bast/{type}', [VehicleApiController::class, 'downloadBast'])
         ->whereIn('type', ['checkout', 'checkin'])
         ->name('api.vehicleLogs.downloadBast');
+
+    Route::get('/public/assets/{asset_code_ypt}', [PublicAssetApiController::class, 'show'])
+        ->name('api.public.assets.show');
 });
