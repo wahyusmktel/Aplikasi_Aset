@@ -170,7 +170,7 @@ class AssetAssignmentApiController extends Controller
         $headmaster = Employee::where('position', 'Kepala Sekolah')->first();
 
         // REUSE view PDF yang sudah ada di web (sesuaikan nama blade kamu)
-        return Pdf::loadView('assignments.bast-pdf', compact(
+        return Pdf::loadView('assets.bast-pdf', compact(
             'assignment',
             'asset',
             'employee',
