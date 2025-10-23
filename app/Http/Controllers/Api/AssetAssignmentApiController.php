@@ -155,39 +155,53 @@ class AssetAssignmentApiController extends Controller
         ]);
     }
 
-    // ===== PDF BAST download =====
-    private function generateBastPdf(AssetAssignment $assignment, string $type)
+    // CHANGED: samakan dengan versi web
+    private function generateBastPdf(\App\Models\AssetAssignment $assignment, string $type)
     {
-        $docNumber = $type === 'return' ? $assignment->return_doc_number : $assignment->checkout_doc_number;
-        $title = $type === 'return' ? 'Berita Acara Pengembalian Aset' : 'Berita Acara Serah Terima Aset';
+        $isReturn = ($type === 'return');
+        $docNumber = $isReturn ? $assignment->return_doc_number : $assignment->checkout_doc_number;
 
+        $title = $isReturn
+            ? 'Berita Acara Pengembalian Aset'
+            : 'Berita Acara Serah Terima Aset';
+
+        // QR verifikasi – sama seperti web
         $verificationUrl = route('public.verify', $docNumber);
-        $options = new QROptions(['outputType' => QRCode::OUTPUT_IMAGE_PNG, 'imageBase64' => true, 'scale' => 5]);
-        $qrCode = (new QRCode($options))->render($verificationUrl);
+        $options = new \chillerlan\QRCode\QROptions([
+            'outputType' => \chillerlan\QRCode\QRCode::OUTPUT_IMAGE_PNG,
+            'imageBase64' => true,
+            'scale' => 5,
+        ]);
+        $qrCode = (new \chillerlan\QRCode\QRCode($options))->render($verificationUrl);
 
+        // data yang dibutuhkan view (samakan)
         $asset = $assignment->asset()->with('personInCharge')->first();
         $employee = $assignment->employee;
-        $headmaster = Employee::where('position', 'Kepala Sekolah')->first();
+        $headmaster = \App\Models\Employee::where('position', 'Kepala Sekolah')->first();
 
-        // REUSE view PDF yang sudah ada di web (sesuaikan nama blade kamu)
-        return Pdf::loadView('assets.bast-pdf', compact(
-            'assignment',
-            'asset',
-            'employee',
-            'headmaster',
-            'title',
-            'qrCode',
-            'type'
-        ));
+        // IMPORTANT: view-nya sama persis seperti web
+        return \Barryvdh\DomPDF\Facade\Pdf::loadView('assets.bast-pdf', [
+            'title'      => $title,
+            'assignment' => $assignment,
+            'asset'      => $asset,
+            'employee'   => $employee,
+            'headmaster' => $headmaster,
+            'isReturn'   => $isReturn,
+            'qrCode'     => $qrCode,
+        ]);
     }
 
-    public function downloadBast(AssetAssignment $assignment, string $type)
+    public function downloadBast(\App\Models\AssetAssignment $assignment, string $type)
     {
-        $docNumber = $type === 'return' ? $assignment->return_doc_number : $assignment->checkout_doc_number;
-        if (!$docNumber) return response()->json(['message' => 'Dokumen belum tersedia.'], 404);
+        $isReturn = ($type === 'return');
+        $docNumber = $isReturn ? $assignment->return_doc_number : $assignment->checkout_doc_number;
+
+        if (!$docNumber) {
+            return response()->json(['message' => 'Dokumen belum tersedia.'], 404);
+        }
 
         $pdf = $this->generateBastPdf($assignment, $type);
-        $filename = str_replace('/', '-', $docNumber) . '.pdf';
-        return $pdf->download($filename);
+        $safe = str_replace('/', '-', $docNumber) . '.pdf';
+        return $pdf->download($safe);
     }
 }
