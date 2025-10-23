@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PublicAssetApiController;
 use App\Http\Controllers\Api\VehicleApiController;
+use App\Http\Controllers\Api\AssetAssignmentApiController;
 
 // Route untuk Login (Public)
 Route::post('/login', [AuthController::class, 'login']);
@@ -27,4 +28,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/vehicle-logs/{log}/download-bast/{type}', [VehicleApiController::class, 'downloadBast'])
         ->whereIn('type', ['checkout', 'checkin'])
         ->name('api.vehicleLogs.downloadBast');
+
+    // Detail aset by code (authenticated)
+    Route::get('/assets/by-code/{asset_code_ypt}', [AssetAssignmentApiController::class, 'showByCode'])
+        ->name('api.assets.showByCode');
+
+    // Peminjaman (checkout/assign) – employee diambil dari user login (bukan dari request)
+    Route::post('/assets/{asset}/assign', [AssetAssignmentApiController::class, 'assign'])
+        ->name('api.assets.assign');
+
+    // Pengembalian (return)
+    Route::post('/assets/assignment/{assignment}/return', [AssetAssignmentApiController::class, 'return'])
+        ->name('api.assets.return');
+
+    // Download BAST checkout/return (PDF)
+    Route::get('/assets/assignment/{assignment}/download-bast/{type}', [AssetAssignmentApiController::class, 'downloadBast'])
+        ->whereIn('type', ['checkout', 'return'])
+        ->name('api.assignments.downloadBast');
 });
