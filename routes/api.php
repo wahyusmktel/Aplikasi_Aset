@@ -45,4 +45,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/assets/assignment/{assignment}/download-bast/{type}', [AssetAssignmentApiController::class, 'downloadBast'])
         ->whereIn('type', ['checkout', 'return'])
         ->name('api.assignments.downloadBast');
+    Route::get('/assignments/my-history', [AssetAssignmentApiController::class, 'myHistory']) // ADDED
+        ->name('api.assignments.myHistory');
 });

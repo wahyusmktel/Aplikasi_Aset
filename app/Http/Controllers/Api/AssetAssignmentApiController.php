@@ -204,4 +204,41 @@ class AssetAssignmentApiController extends Controller
         $safe = str_replace('/', '-', $docNumber) . '.pdf';
         return $pdf->download($safe);
     }
+
+    // ADDED: riwayat peminjaman milik user login (paginated)
+    public function myHistory(Request $request)
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if (!$user || !$user->employee) {
+            return response()->json(['message' => 'Akun tidak terkait pegawai.'], 403);
+        }
+
+        $perPage = (int)($request->get('per_page', 20));
+        $q = \App\Models\AssetAssignment::with(['asset:id,name,asset_code_ypt'])
+            ->where('employee_id', $user->employee->id)
+            ->orderByDesc('assigned_date');
+
+        $page = $q->paginate($perPage);
+
+        // Optional: tambahkan field ringkas untuk memudahkan di mobile
+        $page->getCollection()->transform(function ($a) {
+            return [
+                'id' => $a->id,
+                'asset' => [
+                    'id' => $a->asset?->id,
+                    'name' => $a->asset?->name,
+                    'asset_code_ypt' => $a->asset?->asset_code_ypt,
+                ],
+                'assigned_date' => $a->assigned_date,
+                'returned_date' => $a->returned_date,
+                'condition_on_assign' => $a->condition_on_assign,
+                'condition_on_return' => $a->condition_on_return,
+                'checkout_doc_number' => $a->checkout_doc_number,
+                'return_doc_number' => $a->return_doc_number,
+                'is_returned' => !is_null($a->returned_date),
+            ];
+        });
+
+        return response()->json($page);
+    }
 }
