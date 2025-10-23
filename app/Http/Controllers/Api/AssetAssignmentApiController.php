@@ -216,6 +216,7 @@ class AssetAssignmentApiController extends Controller
         $perPage = (int)($request->get('per_page', 20));
         $q = \App\Models\AssetAssignment::with(['asset:id,name,asset_code_ypt'])
             ->where('employee_id', $user->employee->id)
+            ->orderByRaw('CASE WHEN returned_date IS NULL THEN 0 ELSE 1 END ASC') // ADDED
             ->orderByDesc('assigned_date');
 
         $page = $q->paginate($perPage);
