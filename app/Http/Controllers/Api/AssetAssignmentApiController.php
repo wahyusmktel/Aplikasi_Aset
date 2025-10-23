@@ -40,9 +40,10 @@ class AssetAssignmentApiController extends Controller
     }
 
     // ===== Detail aset by code (AUTH) =====
+    // CHANGED
     public function showByCode(string $asset_code_ypt)
     {
-        $asset = Asset::with([
+        $asset = \App\Models\Asset::with([
             'institution',
             'category',
             'building',
@@ -56,6 +57,17 @@ class AssetAssignmentApiController extends Controller
 
         if (!$asset) return response()->json(['message' => 'Asset not found'], 404);
 
+        // ADDED: cari assignment aktif milik user login untuk aset ini
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $active = null;
+        if ($user && $user->employee) {
+            $active = \App\Models\AssetAssignment::where('asset_id', $asset->id)
+                ->where('employee_id', $user->employee->id)
+                ->whereNull('returned_date')
+                ->latest('assigned_date')
+                ->first(['id', 'assigned_date', 'checkout_doc_number']);
+        }
+
         return response()->json([
             'asset' => [
                 'id' => $asset->id,
@@ -64,7 +76,7 @@ class AssetAssignmentApiController extends Controller
                 'purchase_year' => $asset->purchase_year,
                 'sequence_number' => $asset->sequence_number,
                 'status' => $asset->status,
-                'current_status' => $asset->current_status, // ADDED (Tersedia/Dipinjam/…)
+                'current_status' => $asset->current_status,
                 'institution' => optional($asset->institution)->name,
                 'building' => optional($asset->building)->name,
                 'room' => optional($asset->room)->name,
@@ -80,8 +92,15 @@ class AssetAssignmentApiController extends Controller
                 'disposal_doc_number' => $asset->disposal_doc_number,
             ],
             'isDisposed' => !is_null($asset->disposal_date),
+            // ADDED: info assignment aktif (null jika tidak ada)
+            'active_assignment' => $active ? [
+                'id' => $active->id,
+                'assigned_date' => $active->assigned_date,
+                'checkout_doc_number' => $active->checkout_doc_number,
+            ] : null,
         ]);
     }
+
 
     // ===== Assign (checkout) =====
     public function assign(Request $request, Asset $asset)
