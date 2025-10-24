@@ -48,9 +48,17 @@
                     </div>
 
                     <div class="mt-6">
-                        <a href="{{ route('assets.summary') }}" class="text-indigo-600 hover:underline">← Kembali ke
-                            Ringkasan</a>
+                        <a href="{{ route('assets.summary') }}"
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-600 text-white text-sm font-medium hover:bg-gray-700 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 19l-7-7 7-7" />
+                            </svg>
+                            Kembali ke Ringkasan
+                        </a>
                     </div>
+
                 </div>
             </div>
         </div>

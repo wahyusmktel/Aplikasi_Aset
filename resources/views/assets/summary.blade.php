@@ -101,8 +101,8 @@
                                         <td class="px-4 py-3 font-semibold">{{ $g->qty }}</td>
                                         <td class="px-4 py-3 text-right">
                                             <a href="{{ route('assets.summary.show', $g->group_key) }}"
-                                                class="text-indigo-600 hover:underline">
-                                                Lihat detail →
+                                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-xs">
+                                                Lihat Detail
                                             </a>
                                         </td>
                                     </tr>
