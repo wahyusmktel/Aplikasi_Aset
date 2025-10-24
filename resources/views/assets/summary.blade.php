@@ -10,18 +10,34 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
 
-                    <form method="GET" class="mb-4 grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari nama/desc..."
+                    <form method="GET" class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+                        {{-- Pencarian teks --}}
+                        <input type="text" name="q" value="{{ request('q') }}"
+                            placeholder="Cari nama/kode/desc..."
                             class="w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900" />
+
+                        {{-- Filter Kategori (Select2) --}}
                         <select name="category_id"
-                            class="w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900">
-                            <option value="">— Semua Kategori —</option>
+                            class="js-select2 w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900"
+                            data-placeholder="Semua Kategori">
+                            <option value="">Semua Kategori</option>
                             @foreach (\App\Models\Category::orderBy('name')->get() as $cat)
-                                <option value="{{ $cat->id }}" @selected(request('category_id') == $cat->id)>
-                                    {{ $cat->name }}
+                                <option value="{{ $cat->id }}" @selected(request('category_id') == $cat->id)>{{ $cat->name }}
                                 </option>
                             @endforeach
                         </select>
+
+                        {{-- Filter Tahun (Select2) --}}
+                        <select name="year"
+                            class="js-select2 w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900"
+                            data-placeholder="Semua Tahun">
+                            <option value="">Semua Tahun</option>
+                            @foreach ($years ?? [] as $y)
+                                <option value="{{ $y }}" @selected(request('year') == $y)>{{ $y }}
+                                </option>
+                            @endforeach
+                        </select>
+
                         <button
                             class="inline-flex items-center justify-center rounded-xl px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700">
                             Filter
@@ -81,3 +97,12 @@
         </div>
     </div>
 </x-app-layout>
+{{-- <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        $('.js-select2').select2({
+            width: '100%',
+            placeholder: 'Pilih...',
+            allowClear: true
+        });
+    });
+</script> --}}

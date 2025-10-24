@@ -23,6 +23,7 @@ use Carbon\Carbon;
 use App\Models\Employee;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class AssetController extends Controller
 {
@@ -473,29 +474,42 @@ class AssetController extends Controller
     public function summary(\Illuminate\Http\Request $request)
     {
         $categoryId = $request->integer('category_id');
+        $yearFilter = $request->input('year'); // ← filter tahun dari form
         $search = trim((string) $request->get('q'));
 
-        // Subquery: normalisasi kolom yang dipakai agregasi
+        // Ambil daftar tahun untuk dropdown (urut desc)
+        $years = \App\Models\Asset::query()
+            ->select('purchase_year')
+            ->whereNotNull('purchase_year')
+            ->distinct()
+            ->orderBy('purchase_year', 'desc')
+            ->pluck('purchase_year')
+            ->toArray();
+
+        // Subquery normalize kolom
         $base = \App\Models\Asset::query()
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
+            ->when($yearFilter !== null && $yearFilter !== '', fn($q) => $q->where('purchase_year', $yearFilter))
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($qq) use ($search) {
                     $qq->where('name', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%")
                         ->orWhere('asset_code_ypt', 'like', "%{$search}%");
+
+                    // 🔐 Aman untuk skema tanpa kolom 'description'
+                    if (Schema::hasColumn('assets', 'description')) {
+                        $qq->orWhere('description', 'like', "%{$search}%");
+                    }
                 });
             })
             ->selectRaw('
-            name,
-            COALESCE(purchase_year, 0) as yr,
-            asset_code_ypt,
-            status
-        ');
+        name,
+        COALESCE(purchase_year, 0) as yr,
+        asset_code_ypt,
+        status
+    ');
 
-        // Bungkus sebagai derived table "t"
         $wrapped = DB::query()->fromSub($base, 't');
 
-        // Agregasi di outer query (semua non-aggregates masuk GROUP BY)
         $groups = $wrapped
             ->selectRaw('
             name,
@@ -514,7 +528,8 @@ class AssetController extends Controller
             ->paginate(25)
             ->withQueryString();
 
-        return view('assets.summary', compact('groups'));
+        // Pass $years ke view
+        return view('assets.summary', compact('groups', 'years'));
     }
 
 
