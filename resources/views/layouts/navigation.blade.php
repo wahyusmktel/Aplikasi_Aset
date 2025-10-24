@@ -33,6 +33,7 @@
                             'inspection.history',
                             'vehicleLogs.index',
                             'books.index', // Masukkan juga Aset Buku ke sini jika relevan
+                            'asset-mapping.index',
                         ]);
                     @endphp
 
@@ -78,6 +79,9 @@
                                 {{-- Pindahkan Aset Buku ke sini jika dianggap bagian dari inventaris --}}
                                 <x-dropdown-link :href="route('books.index')">
                                     {{ __('Aset Buku') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('asset-mapping.index')">
+                                    {{ __('Mapping Aset (AI)') }}
                                 </x-dropdown-link>
                             </x-slot>
                         </x-dropdown>

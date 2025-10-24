@@ -28,6 +28,7 @@ use App\Http\Controllers\AssetDisposalController;
 use App\Http\Controllers\DisposedAssetController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\EmployeeAccountController;
+use App\Http\Controllers\AssetMappingController;
 use Illuminate\Support\Facades\Route;
 
 // Rute untuk halaman publik
@@ -163,6 +164,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/employees/account/{user}/reset-password', [EmployeeAccountController::class, 'showResetPasswordForm'])->name('employee.accounts.resetPasswordForm'); // Tampilkan form reset
     Route::put('/employees/account/{user}/reset-password', [EmployeeAccountController::class, 'updatePassword'])->name('employee.accounts.updatePassword'); // Proses update password
     Route::delete('/employees/account/{user}', [EmployeeAccountController::class, 'destroy'])->name('employee.accounts.destroy'); // Hapus akun user
+
+    // Route untuk Asset Mapping (AI) <-- TAMBAHKAN BLOK INI
+    Route::get('/asset-mapping', [AssetMappingController::class, 'index'])->name('asset-mapping.index');
+    Route::post('/asset-mapping', [AssetMappingController::class, 'store'])->name('asset-mapping.store');
 });
 
 require __DIR__ . '/auth.php';
