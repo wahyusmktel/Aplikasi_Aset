@@ -50,8 +50,8 @@
                                 <tr>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">#
                                     </th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Kode
-                                        Aset YPT</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                                        Rentang Kode Aset YPT</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Nama
                                         Barang</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Tahun
@@ -64,10 +64,37 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                @php
+                                    $fmtRange = function ($min, $max) {
+                                        if (!$min && !$max) {
+                                            return '-';
+                                        }
+                                        if (!$max) {
+                                            return $min;
+                                        }
+                                        if ($min === $max) {
+                                            return $min;
+                                        }
+
+                                        $len = min(strlen($min), strlen($max));
+                                        $i = 0;
+                                        for (; $i < $len && $min[$i] === $max[$i]; $i++);
+
+                                        $prefix = substr($min, 0, $i);
+                                        $sufMin = substr($min, $i);
+                                        $sufMax = substr($max, $i);
+
+                                        // Rapikan jika prefix berakhir dengan titik (.)
+                                        // tampil: PREFIX[suffixMin – suffixMax]
+                                        return $prefix . '[' . $sufMin . ' – ' . $sufMax . ']';
+                                    };
+                                @endphp
+
                                 @forelse($groups as $i => $g)
                                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/40">
                                         <td class="px-4 py-3">{{ $groups->firstItem() + $i }}</td>
-                                        <td class="px-4 py-3 font-mono text-sm">{{ $g->sample_code ?? '-' }}</td>
+                                        <td class="px-4 py-3 font-mono text-sm">
+                                            {{ $fmtRange($g->min_code, $g->max_code) }}</td>
                                         <td class="px-4 py-3">{{ $g->name }}</td>
                                         <td class="px-4 py-3">{{ $g->yr }}</td>
                                         <td class="px-4 py-3">{{ $g->status_label }}</td>
@@ -86,8 +113,6 @@
                                     </tr>
                                 @endforelse
                             </tbody>
-
-
                         </table>
                     </div>
 

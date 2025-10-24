@@ -474,10 +474,10 @@ class AssetController extends Controller
     public function summary(\Illuminate\Http\Request $request)
     {
         $categoryId = $request->integer('category_id');
-        $yearFilter = $request->input('year'); // ← filter tahun dari form
+        $yearFilter = $request->input('year');
         $search = trim((string) $request->get('q'));
 
-        // Ambil daftar tahun untuk dropdown (urut desc)
+        // Daftar tahun untuk dropdown
         $years = \App\Models\Asset::query()
             ->select('purchase_year')
             ->whereNotNull('purchase_year')
@@ -486,7 +486,7 @@ class AssetController extends Controller
             ->pluck('purchase_year')
             ->toArray();
 
-        // Subquery normalize kolom
+        // Subquery normalize kolom (AMAN untuk ONLY_FULL_GROUP_BY)
         $base = \App\Models\Asset::query()
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
             ->when($yearFilter !== null && $yearFilter !== '', fn($q) => $q->where('purchase_year', $yearFilter))
@@ -494,28 +494,27 @@ class AssetController extends Controller
                 $q->where(function ($qq) use ($search) {
                     $qq->where('name', 'like', "%{$search}%")
                         ->orWhere('asset_code_ypt', 'like', "%{$search}%");
-
-                    // 🔐 Aman untuk skema tanpa kolom 'description'
-                    if (Schema::hasColumn('assets', 'description')) {
+                    if (\Illuminate\Support\Facades\Schema::hasColumn('assets', 'description')) {
                         $qq->orWhere('description', 'like', "%{$search}%");
                     }
                 });
             })
             ->selectRaw('
-        name,
-        COALESCE(purchase_year, 0) as yr,
-        asset_code_ypt,
-        status
-    ');
+            name,
+            COALESCE(purchase_year, 0) as yr,
+            asset_code_ypt,
+            status
+        ');
 
-        $wrapped = DB::query()->fromSub($base, 't');
+        $wrapped = \Illuminate\Support\Facades\DB::query()->fromSub($base, 't');
 
         $groups = $wrapped
             ->selectRaw('
             name,
             yr,
             COUNT(*)                                 as qty,
-            MIN(asset_code_ypt)                      as sample_code,
+            MIN(asset_code_ypt)                      as min_code,
+            MAX(asset_code_ypt)                      as max_code,
             CASE WHEN COUNT(DISTINCT status)=1
                  THEN MIN(status)
                  ELSE "Campuran"
@@ -528,10 +527,8 @@ class AssetController extends Controller
             ->paginate(25)
             ->withQueryString();
 
-        // Pass $years ke view
         return view('assets.summary', compact('groups', 'years'));
     }
-
 
     public function summaryShow(string $group)
     {
