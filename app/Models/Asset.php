@@ -176,4 +176,10 @@ class Asset extends Model
     {
         return $this->hasOne(VehicleLog::class)->whereNull('return_time');
     }
+
+    public function getGroupKeyAttribute(): string
+    {
+        $yr = $this->purchase_year ?? 0;
+        return md5(($this->name ?? '') . '|' . $yr);
+    }
 }

@@ -22,6 +22,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use App\Models\Employee;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class AssetController extends Controller
 {
@@ -467,5 +468,69 @@ class AssetController extends Controller
         $fileName .= '.pdf';
 
         return $pdf->download($fileName);
+    }
+
+    public function summary(\Illuminate\Http\Request $request)
+    {
+        $categoryId = $request->integer('category_id');
+        $search = trim((string) $request->get('q'));
+
+        // Subquery: normalisasi kolom yang dipakai agregasi
+        $base = \App\Models\Asset::query()
+            ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($qq) use ($search) {
+                    $qq->where('name', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhere('asset_code_ypt', 'like', "%{$search}%");
+                });
+            })
+            ->selectRaw('
+            name,
+            COALESCE(purchase_year, 0) as yr,
+            asset_code_ypt,
+            status
+        ');
+
+        // Bungkus sebagai derived table "t"
+        $wrapped = DB::query()->fromSub($base, 't');
+
+        // Agregasi di outer query (semua non-aggregates masuk GROUP BY)
+        $groups = $wrapped
+            ->selectRaw('
+            name,
+            yr,
+            COUNT(*)                                 as qty,
+            MIN(asset_code_ypt)                      as sample_code,
+            CASE WHEN COUNT(DISTINCT status)=1
+                 THEN MIN(status)
+                 ELSE "Campuran"
+            END                                      as status_label,
+            MD5(CONCAT(name,"|",yr))                 as group_key
+        ')
+            ->groupBy('name', 'yr')
+            ->orderBy('name')
+            ->orderBy('yr')
+            ->paginate(25)
+            ->withQueryString();
+
+        return view('assets.summary', compact('groups'));
+    }
+
+
+    public function summaryShow(string $group)
+    {
+        $items = \App\Models\Asset::query()
+            ->whereRaw('MD5(CONCAT(`name`,"|", COALESCE(purchase_year,0))) = ?', [$group])
+            ->orderBy('sequence_number')
+            ->orderBy('id')
+            ->get();
+
+        abort_if($items->isEmpty(), 404);
+
+        $title = $items->first()->name;
+        $yr    = $items->first()->purchase_year;
+
+        return view('assets.summary_show', compact('items', 'title', 'yr'));
     }
 }

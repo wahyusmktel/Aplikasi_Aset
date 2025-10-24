@@ -92,6 +92,9 @@ Route::middleware('auth')->group(function () {
     // Route untuk CRUD Lembaga
     Route::resource('institutions', InstitutionController::class)->except(['show', 'create', 'edit']);
     Route::post('/institutions/import', [InstitutionController::class, 'import'])->name('institutions.import');
+    // Route untuk Sumary Aset
+    Route::get('assets/summary', [AssetController::class, 'summary'])->name('assets.summary');
+    Route::get('assets/summary/{group}', [AssetController::class, 'summaryShow'])->name('assets.summary.show');
     // Route baru untuk Ekspor Excel & PDF Aset Aktif <-- TAMBAHKAN INI
     Route::get('/assets/export-active-excel', [AssetController::class, 'exportActiveExcel'])->name('assets.exportActiveExcel');
     Route::get('/assets/download-active-pdf', [AssetController::class, 'downloadActivePDF'])->name('assets.downloadActivePDF');
