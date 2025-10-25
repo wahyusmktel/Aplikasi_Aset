@@ -95,6 +95,11 @@ Route::middleware('auth')->group(function () {
     // Route untuk Sumary Aset
     Route::get('assets/summary', [AssetController::class, 'summary'])->name('assets.summary');
     Route::get('assets/summary/{group}', [AssetController::class, 'summaryShow'])->name('assets.summary.show');
+    Route::get('assets/summary-export-excel', [\App\Http\Controllers\AssetController::class, 'summaryExportExcel'])
+        ->name('assets.summary.export-excel');
+
+    Route::get('assets/summary-export-pdf', [\App\Http\Controllers\AssetController::class, 'summaryExportPdf'])
+        ->name('assets.summary.export-pdf');
     // Route baru untuk Ekspor Excel & PDF Aset Aktif <-- TAMBAHKAN INI
     Route::get('/assets/export-active-excel', [AssetController::class, 'exportActiveExcel'])->name('assets.exportActiveExcel');
     Route::get('/assets/download-active-pdf', [AssetController::class, 'downloadActivePDF'])->name('assets.downloadActivePDF');

@@ -475,9 +475,10 @@ class AssetController extends Controller
     {
         $categoryId = $request->integer('category_id');
         $yearFilter = $request->input('year');
-        $search = trim((string) $request->get('q'));
+        $statuses   = array_filter((array) $request->input('status', [])); // ⬅️ multi status
+        $search     = trim((string) $request->get('q'));
 
-        // Daftar tahun untuk dropdown
+        // Daftar Tahun (dropdown)
         $years = \App\Models\Asset::query()
             ->select('purchase_year')
             ->whereNotNull('purchase_year')
@@ -486,15 +487,19 @@ class AssetController extends Controller
             ->pluck('purchase_year')
             ->toArray();
 
-        // Subquery normalize kolom (AMAN untuk ONLY_FULL_GROUP_BY)
+        // Daftar Status (dropdown)
+        $allStatuses = ['Aktif', 'Dipinjam', 'Maintenance', 'Rusak', 'Disposed']; // sesuaikan enum kamu
+
+        // Subquery normalize kolom (aman untuk ONLY_FULL_GROUP_BY)
         $base = \App\Models\Asset::query()
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
             ->when($yearFilter !== null && $yearFilter !== '', fn($q) => $q->where('purchase_year', $yearFilter))
+            ->when(!empty($statuses), fn($q) => $q->whereIn('status', $statuses))
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($qq) use ($search) {
                     $qq->where('name', 'like', "%{$search}%")
                         ->orWhere('asset_code_ypt', 'like', "%{$search}%");
-                    if (\Illuminate\Support\Facades\Schema::hasColumn('assets', 'description')) {
+                    if (Schema::hasColumn('assets', 'description')) {
                         $qq->orWhere('description', 'like', "%{$search}%");
                     }
                 });
@@ -506,7 +511,7 @@ class AssetController extends Controller
             status
         ');
 
-        $wrapped = \Illuminate\Support\Facades\DB::query()->fromSub($base, 't');
+        $wrapped = DB::query()->fromSub($base, 't');
 
         $groups = $wrapped
             ->selectRaw('
@@ -527,9 +532,8 @@ class AssetController extends Controller
             ->paginate(25)
             ->withQueryString();
 
-        return view('assets.summary', compact('groups', 'years'));
+        return view('assets.summary', compact('groups', 'years', 'allStatuses'));
     }
-
     public function summaryShow(string $group)
     {
         $items = \App\Models\Asset::query()
@@ -544,5 +548,97 @@ class AssetController extends Controller
         $yr    = $items->first()->purchase_year;
 
         return view('assets.summary_show', compact('items', 'title', 'yr'));
+    }
+
+    public function summaryExportExcel(\Illuminate\Http\Request $request)
+    {
+        $categoryId = $request->input('category_id');
+        $yearFilter = $request->input('year');
+        $statuses   = array_filter((array) $request->input('status', []));
+        $search     = trim((string) $request->get('q'));
+
+        // Ambil data sesuai filter (bukan grouped; export detail biar lengkap)
+        $query = \App\Models\Asset::query()
+            ->with(['category', 'building', 'room', 'personInCharge'])
+            ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
+            ->when($yearFilter !== null && $yearFilter !== '', fn($q) => $q->where('purchase_year', $yearFilter))
+            ->when(!empty($statuses), fn($q) => $q->whereIn('status', $statuses))
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($qq) use ($search) {
+                    $qq->where('name', 'like', "%{$search}%")
+                        ->orWhere('asset_code_ypt', 'like', "%{$search}%");
+                    if (\Illuminate\Support\Facades\Schema::hasColumn('assets', 'description')) {
+                        $qq->orWhere('description', 'like', "%{$search}%");
+                    }
+                });
+            })
+            ->orderBy('asset_code_ypt', 'asc');
+
+        // Exporter minimalis inline (tanpa bikin file class baru)
+        $rows = $query->get()->map(function ($a) {
+            return [
+                'Kode Aset YPT' => $a->asset_code_ypt,
+                'Nama'          => $a->name,
+                'Tahun'         => $a->purchase_year,
+                'Kategori'      => optional($a->category)->name,
+                'Gedung/Ruang'  => optional($a->building)->name . ' / ' . optional($a->room)->name,
+                'PIC'           => optional($a->personInCharge)->name,
+                'Status'        => $a->status,
+            ];
+        });
+
+        // Pakai FromArray (tanpa class), supaya cepat
+        $export = new class($rows->toArray()) implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings {
+            public function __construct(private array $data) {}
+            public function array(): array
+            {
+                return $this->data;
+            }
+            public function headings(): array
+            {
+                return array_keys($this->data[0] ?? ['Data' => 'Kosong']);
+            }
+        };
+
+        $file = 'export-ringkasan-' . now()->format('Ymd_His') . '.xlsx';
+        return Excel::download($export, $file);
+    }
+
+    public function summaryExportPdf(\Illuminate\Http\Request $request)
+    {
+        $categoryId = $request->input('category_id');
+        $yearFilter = $request->input('year');
+        $statuses   = array_filter((array) $request->input('status', []));
+        $search     = trim((string) $request->get('q'));
+
+        $query = \App\Models\Asset::query()
+            ->with(['category', 'building', 'room', 'personInCharge'])
+            ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
+            ->when($yearFilter !== null && $yearFilter !== '', fn($q) => $q->where('purchase_year', $yearFilter))
+            ->when(!empty($statuses), fn($q) => $q->whereIn('status', $statuses))
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($qq) use ($search) {
+                    $qq->where('name', 'like', "%{$search}%")
+                        ->orWhere('asset_code_ypt', 'like', "%{$search}%");
+                    if (\Illuminate\Support\Facades\Schema::hasColumn('assets', 'description')) {
+                        $qq->orWhere('description', 'like', "%{$search}%");
+                    }
+                });
+            })
+            ->orderBy('asset_code_ypt', 'asc');
+
+        $data = $query->get();
+
+        // Reuse view PDF aktif kamu atau bikin ringkas:
+        $pdf = Pdf::loadView('assets.report-all-pdf', [
+            'activeAssets' => $data,
+            'pj' => \App\Models\Employee::where('position', 'Kaur Sarpras')->first(),
+            'ks' => \App\Models\Employee::where('position', 'Kepala Sekolah')->first(),
+            'kota' => 'Bandar Lampung',
+            'categoryName' => optional(\App\Models\Category::find($categoryId))->name,
+        ])->setPaper('a4', 'landscape');
+
+        $fileName = 'laporan-ringkasan-' . now()->format('Ymd_His') . '.pdf';
+        return $pdf->download($fileName);
     }
 }
