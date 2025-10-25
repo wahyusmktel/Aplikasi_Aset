@@ -24,6 +24,8 @@ use App\Models\Employee;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use App\Models\SavedFilter;
+use Illuminate\Support\Facades\Auth;
 
 class AssetController extends Controller
 {
@@ -475,22 +477,32 @@ class AssetController extends Controller
     {
         $categoryId = $request->integer('category_id');
         $yearFilter = $request->input('year');
-        $statuses   = array_filter((array) $request->input('status', [])); // ⬅️ multi status
+        $statuses   = array_filter((array) $request->input('status', []));
         $search     = trim((string) $request->get('q'));
 
-        // Daftar Tahun (dropdown)
+        // Load preset by id (opsional)
+        if ($presetId = $request->integer('preset_id')) {
+            $preset = SavedFilter::where('user_id', Auth::id())
+                ->where('scope', 'assets_summary')
+                ->find($presetId);
+
+            if ($preset) {
+                // merge preset payload ke request
+                $payload = $preset->payload ?: [];
+                $categoryId = $payload['category_id'] ?? $categoryId;
+                $yearFilter = $payload['year'] ?? $yearFilter;
+                $statuses   = array_filter((array) ($payload['status'] ?? $statuses));
+                $search     = $payload['q'] ?? $search;
+            }
+        }
+
+        // Dropdown Tahun & Status (seperti sebelumnya)
         $years = \App\Models\Asset::query()
-            ->select('purchase_year')
-            ->whereNotNull('purchase_year')
-            ->distinct()
-            ->orderBy('purchase_year', 'desc')
-            ->pluck('purchase_year')
-            ->toArray();
+            ->select('purchase_year')->whereNotNull('purchase_year')
+            ->distinct()->orderBy('purchase_year', 'desc')->pluck('purchase_year')->toArray();
+        $allStatuses = ['Aktif', 'Dipinjam', 'Maintenance', 'Rusak', 'Disposed'];
 
-        // Daftar Status (dropdown)
-        $allStatuses = ['Aktif', 'Dipinjam', 'Maintenance', 'Rusak', 'Disposed']; // sesuaikan enum kamu
-
-        // Subquery normalize kolom (aman untuk ONLY_FULL_GROUP_BY)
+        // Subquery base (tambahkan purchase_cost untuk agregasi total)
         $base = \App\Models\Asset::query()
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
             ->when($yearFilter !== null && $yearFilter !== '', fn($q) => $q->where('purchase_year', $yearFilter))
@@ -499,7 +511,7 @@ class AssetController extends Controller
                 $q->where(function ($qq) use ($search) {
                     $qq->where('name', 'like', "%{$search}%")
                         ->orWhere('asset_code_ypt', 'like', "%{$search}%");
-                    if (Schema::hasColumn('assets', 'description')) {
+                    if (\Illuminate\Support\Facades\Schema::hasColumn('assets', 'description')) {
                         $qq->orWhere('description', 'like', "%{$search}%");
                     }
                 });
@@ -508,10 +520,11 @@ class AssetController extends Controller
             name,
             COALESCE(purchase_year, 0) as yr,
             asset_code_ypt,
-            status
+            status,
+            COALESCE(purchase_cost,0) as purchase_cost
         ');
 
-        $wrapped = DB::query()->fromSub($base, 't');
+        $wrapped = \Illuminate\Support\Facades\DB::query()->fromSub($base, 't');
 
         $groups = $wrapped
             ->selectRaw('
@@ -520,6 +533,7 @@ class AssetController extends Controller
             COUNT(*)                                 as qty,
             MIN(asset_code_ypt)                      as min_code,
             MAX(asset_code_ypt)                      as max_code,
+            SUM(purchase_cost)                       as total_cost,
             CASE WHEN COUNT(DISTINCT status)=1
                  THEN MIN(status)
                  ELSE "Campuran"
@@ -532,7 +546,12 @@ class AssetController extends Controller
             ->paginate(25)
             ->withQueryString();
 
-        return view('assets.summary', compact('groups', 'years', 'allStatuses'));
+        // Ambil semua preset user untuk dropdown
+        $presets = SavedFilter::where('user_id', Auth::id())
+            ->where('scope', 'assets_summary')
+            ->orderBy('name')->get();
+
+        return view('assets.summary', compact('groups', 'years', 'allStatuses', 'presets'));
     }
     public function summaryShow(string $group)
     {
@@ -584,6 +603,7 @@ class AssetController extends Controller
                 'Gedung/Ruang'  => optional($a->building)->name . ' / ' . optional($a->room)->name,
                 'PIC'           => optional($a->personInCharge)->name,
                 'Status'        => $a->status,
+                'Nilai Akuisisi (Rp)' => $a->purchase_cost,
             ];
         });
 
@@ -640,5 +660,36 @@ class AssetController extends Controller
 
         $fileName = 'laporan-ringkasan-' . now()->format('Ymd_His') . '.pdf';
         return $pdf->download($fileName);
+    }
+
+    public function saveSummaryPreset(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:100',
+        ]);
+
+        $payload = [
+            'q' => $request->get('q'),
+            'category_id' => $request->get('category_id'),
+            'year' => $request->get('year'),
+            'status' => (array) $request->get('status'),
+        ];
+
+        $preset = SavedFilter::create([
+            'user_id' => \Illuminate\Support\Facades\Auth::id(),
+            'scope'   => 'assets_summary',
+            'name'    => $request->get('name'),
+            'payload' => $payload,
+        ]);
+
+        return redirect()->route('assets.summary', ['preset_id' => $preset->id])
+            ->with('success', 'Preset filter tersimpan.');
+    }
+
+    public function deleteSummaryPreset(SavedFilter $preset)
+    {
+        abort_unless($preset->user_id === \Illuminate\Support\Facades\Auth::id(), 403);
+        $preset->delete();
+        return redirect()->route('assets.summary')->with('success', 'Preset dihapus.');
     }
 }

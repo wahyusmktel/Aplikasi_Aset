@@ -100,6 +100,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('assets/summary-export-pdf', [\App\Http\Controllers\AssetController::class, 'summaryExportPdf'])
         ->name('assets.summary.export-pdf');
+    Route::post('assets/summary/preset/save', [\App\Http\Controllers\AssetController::class, 'saveSummaryPreset'])
+        ->name('assets.summary.preset.save');
+    Route::delete('assets/summary/preset/{preset}', [\App\Http\Controllers\AssetController::class, 'deleteSummaryPreset'])
+        ->name('assets.summary.preset.delete');
     // Route baru untuk Ekspor Excel & PDF Aset Aktif <-- TAMBAHKAN INI
     Route::get('/assets/export-active-excel', [AssetController::class, 'exportActiveExcel'])->name('assets.exportActiveExcel');
     Route::get('/assets/download-active-pdf', [AssetController::class, 'downloadActivePDF'])->name('assets.downloadActivePDF');
