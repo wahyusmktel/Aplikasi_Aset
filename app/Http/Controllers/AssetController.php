@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use App\Models\SavedFilter;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class AssetController extends Controller
 {
@@ -691,5 +692,64 @@ class AssetController extends Controller
         abort_unless($preset->user_id === \Illuminate\Support\Facades\Auth::id(), 403);
         $preset->delete();
         return redirect()->route('assets.summary')->with('success', 'Preset dihapus.');
+    }
+
+    // public function roomsByBuilding(\App\Models\Building $building)
+    // {
+    //     $rooms = \App\Models\Room::where('building_id', $building->id)
+    //         ->orderBy('name')
+    //         ->get(['id', 'name']);
+
+    //     return response()->json([
+    //         'building_id' => $building->id,
+    //         'rooms' => $rooms,
+    //     ]);
+    // }
+    public function bulkMove(Request $request)
+    {
+        $data = $request->validate([
+            'ids'               => 'required|string', // akan berisi "1,2,3"
+            'building_id'       => 'nullable|exists:buildings,id',
+            'room_id'           => 'nullable|exists:rooms,id',
+            'person_in_charge_id' => 'nullable|exists:persons_in_charge,id',
+        ]);
+
+        $ids = collect(explode(',', $data['ids']))->filter()->map('intval')->unique()->values();
+
+        if ($ids->isEmpty()) {
+            return back()->with('error', 'Tidak ada aset yang dipilih.');
+        }
+
+        if (empty($data['building_id']) && empty($data['room_id']) && empty($data['person_in_charge_id'])) {
+            return back()->with('error', 'Pilih minimal salah satu: Gedung / Ruang / PIC.');
+        }
+
+        DB::transaction(function () use ($ids, $data) {
+            $payload = [];
+            if (!empty($data['building_id']))         $payload['building_id'] = $data['building_id'];
+            if (!empty($data['room_id']))             $payload['room_id'] = $data['room_id'];
+            if (!empty($data['person_in_charge_id'])) $payload['person_in_charge_id'] = $data['person_in_charge_id'];
+
+            \App\Models\Asset::whereIn('id', $ids)->update($payload);
+        });
+
+        return back()->with('success', 'Aset terpilih berhasil dipindahkan/diassign.');
+    }
+
+    public function bulkStatus(Request $request)
+    {
+        $data = $request->validate([
+            'ids'    => 'required|string',
+            'status' => 'required|string|in:Aktif,Dipinjam,Maintenance,Rusak,Disposed', // sesuaikan enum kamu
+        ]);
+
+        $ids = collect(explode(',', $data['ids']))->filter()->map('intval')->unique()->values();
+        if ($ids->isEmpty()) {
+            return back()->with('error', 'Tidak ada aset yang dipilih.');
+        }
+
+        \App\Models\Asset::whereIn('id', $ids)->update(['status' => $data['status']]);
+
+        return back()->with('success', 'Status aset terpilih berhasil diperbarui.');
     }
 }

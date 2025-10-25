@@ -104,7 +104,11 @@ Route::middleware('auth')->group(function () {
         ->name('assets.summary.preset.save');
     Route::delete('assets/summary/preset/{preset}', [\App\Http\Controllers\AssetController::class, 'deleteSummaryPreset'])
         ->name('assets.summary.preset.delete');
-    // Route baru untuk Ekspor Excel & PDF Aset Aktif <-- TAMBAHKAN INI
+    Route::post('assets/bulk-move',   [AssetController::class, 'bulkMove'])->name('assets.bulk-move');
+    Route::post('assets/bulk-status', [AssetController::class, 'bulkStatus'])->name('assets.bulk-status');
+    // Route::get('ajax/buildings/{building}/rooms', [\App\Http\Controllers\AssetController::class, 'roomsByBuilding'])
+    //     ->name('ajax.rooms.by-building');
+    // Route baru untuk Ekspor Excel & PDF Aset Aktif
     Route::get('/assets/export-active-excel', [AssetController::class, 'exportActiveExcel'])->name('assets.exportActiveExcel');
     Route::get('/assets/download-active-pdf', [AssetController::class, 'downloadActivePDF'])->name('assets.downloadActivePDF');
     // Route untuk CRUD Aset

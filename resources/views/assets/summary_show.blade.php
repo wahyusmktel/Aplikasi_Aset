@@ -9,12 +9,87 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
+                    {{-- BULK ACTION TOOLBAR --}}
+                    <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-2">
+                        {{-- Form Bulk Move --}}
+                        <form id="bulk-move-form" method="POST" action="{{ route('assets.bulk-move') }}"
+                            class="flex flex-col gap-2 md:flex-row md:items-end">
+                            @csrf
+                            <input type="hidden" name="ids" id="bulk-move-ids">
 
+                            <div class="flex-1">
+                                <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Gedung</label>
+                                <select name="building_id"
+                                    class="select2 w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900">
+                                    <option value="">— Tidak Diubah —</option>
+                                    @foreach (\App\Models\Building::orderBy('name')->get() as $b)
+                                        <option value="{{ $b->id }}">{{ $b->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="flex-1">
+                                <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Ruangan</label>
+                                <select name="room_id"
+                                    class="select2 w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900">
+                                    <option value="">— Tidak Diubah —</option>
+                                    @foreach (\App\Models\Room::orderBy('name')->get() as $r)
+                                        <option value="{{ $r->id }}">{{ $r->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="flex-1">
+                                <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">PIC</label>
+                                <select name="person_in_charge_id"
+                                    class="select2 w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900">
+                                    <option value="">— Tidak Diubah —</option>
+                                    @foreach (\App\Models\PersonInCharge::orderBy('name')->get() as $p)
+                                        <option value="{{ $p->id }}">{{ $p->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <button type="submit"
+                                class="inline-flex items-center px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm rounded-md">
+                                🚚 Pindahkan/Assign
+                            </button>
+                        </form>
+
+                        {{-- Form Bulk Status --}}
+                        <form id="bulk-status-form" method="POST" action="{{ route('assets.bulk-status') }}"
+                            class="flex flex-col gap-2 md:flex-row md:items-end">
+                            @csrf
+                            <input type="hidden" name="ids" id="bulk-status-ids">
+
+                            <div class="flex-1">
+                                <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Status Baru</label>
+                                <select name="status"
+                                    class="select2 w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900"
+                                    required>
+                                    <option value="">— Pilih Status —</option>
+                                    @foreach (['Aktif', 'Dipinjam', 'Maintenance', 'Rusak', 'Disposed'] as $st)
+                                        <option value="{{ $st }}">{{ $st }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <button type="submit"
+                                class="inline-flex items-center px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-md">
+                                ✅ Update Status
+                            </button>
+                        </form>
+                    </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead class="bg-gray-50 dark:bg-gray-900/40">
                                 <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">#</th>
+                                    <th class="px-4 py-3">
+                                        <input type="checkbox" id="select-all"
+                                            class="rounded border-gray-300 dark:border-gray-600">
+                                    </th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">#
+                                    </th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Kode
                                         Aset YPT</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Nama
@@ -32,12 +107,18 @@
                             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                                 @foreach ($items as $i => $a)
                                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/40">
+                                        <td class="px-4 py-3">
+                                            <input type="checkbox"
+                                                class="row-check rounded border-gray-300 dark:border-gray-600"
+                                                value="{{ $a->id }}">
+                                        </td>
                                         <td class="px-4 py-3">{{ $i + 1 }}</td>
                                         <td class="px-4 py-3 font-mono text-sm">{{ $a->asset_code_ypt ?? '-' }}</td>
                                         <td class="px-4 py-3">{{ $a->name }}</td>
                                         <td class="px-4 py-3">{{ $a->purchase_year ?? '-' }}</td>
                                         <td class="px-4 py-3">
-                                            {{ optional($a->room)->name ?? (optional($a->building)->name ?? '-') }}</td>
+                                            {{ optional($a->room)->name ?? (optional($a->building)->name ?? '-') }}
+                                        </td>
                                         <td class="px-4 py-3">{{ optional($a->personInCharge)->name ?? '-' }}</td>
                                         @php
                                             $badge = fn($s) => match ($s) {
@@ -67,6 +148,54 @@
                             </tbody>
 
                         </table>
+                        @push('scripts')
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    const selectAll = document.getElementById('select-all');
+                                    const checks = Array.from(document.querySelectorAll('.row-check'));
+                                    const moveForm = document.getElementById('bulk-move-form');
+                                    const statusForm = document.getElementById('bulk-status-form');
+                                    const moveIds = document.getElementById('bulk-move-ids');
+                                    const statusIds = document.getElementById('bulk-status-ids');
+
+                                    if (selectAll) {
+                                        selectAll.addEventListener('change', () => {
+                                            checks.forEach(c => {
+                                                c.checked = selectAll.checked;
+                                            });
+                                        });
+                                    }
+
+                                    function collectIds() {
+                                        return checks.filter(c => c.checked).map(c => c.value).join(',');
+                                    }
+
+                                    if (moveForm) {
+                                        moveForm.addEventListener('submit', (e) => {
+                                            const ids = collectIds();
+                                            if (!ids) {
+                                                e.preventDefault();
+                                                alert('Pilih minimal satu aset terlebih dahulu.');
+                                                return;
+                                            }
+                                            moveIds.value = ids;
+                                        });
+                                    }
+
+                                    if (statusForm) {
+                                        statusForm.addEventListener('submit', (e) => {
+                                            const ids = collectIds();
+                                            if (!ids) {
+                                                e.preventDefault();
+                                                alert('Pilih minimal satu aset terlebih dahulu.');
+                                                return;
+                                            }
+                                            statusIds.value = ids;
+                                        });
+                                    }
+                                });
+                            </script>
+                        @endpush
                     </div>
 
                     <div class="mt-6">
