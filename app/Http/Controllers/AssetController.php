@@ -30,6 +30,24 @@ use Illuminate\Support\Facades\Validator;
 
 class AssetController extends Controller
 {
+    private function assertAllowedStatusChange(string $from = null, string $to): void
+    {
+        // definisi transisi yang diizinkan
+        $map = [
+            'Aktif'       => ['Dipinjam', 'Maintenance', 'Rusak', 'Disposed'],
+            'Dipinjam'    => ['Aktif', 'Maintenance', 'Rusak'],
+            'Maintenance' => ['Aktif', 'Rusak', 'Disposed'],
+            'Rusak'       => ['Aktif', 'Maintenance', 'Disposed'],
+            'Disposed'    => [], // final state
+            null          => ['Aktif', 'Dipinjam', 'Maintenance', 'Rusak', 'Disposed'], // jaga-jaga
+        ];
+
+        $from = $from ?? 'Aktif';
+        if (!isset($map[$from]) || !in_array($to, $map[$from], true)) {
+            abort(422, "Transisi status tidak diizinkan: {$from} → {$to}");
+        }
+    }
+
     /**
      * Menampilkan daftar semua aset.
      */
@@ -708,48 +726,120 @@ class AssetController extends Controller
     public function bulkMove(Request $request)
     {
         $data = $request->validate([
-            'ids'               => 'required|string', // akan berisi "1,2,3"
-            'building_id'       => 'nullable|exists:buildings,id',
-            'room_id'           => 'nullable|exists:rooms,id',
+            'ids'                 => 'required|string',
+            'building_id'         => 'nullable|exists:buildings,id',
+            'room_id'             => 'nullable|exists:rooms,id',
             'person_in_charge_id' => 'nullable|exists:persons_in_charge,id',
         ]);
 
         $ids = collect(explode(',', $data['ids']))->filter()->map('intval')->unique()->values();
 
-        if ($ids->isEmpty()) {
-            return back()->with('error', 'Tidak ada aset yang dipilih.');
-        }
-
+        if ($ids->isEmpty()) return back()->with('error', 'Tidak ada aset yang dipilih.');
         if (empty($data['building_id']) && empty($data['room_id']) && empty($data['person_in_charge_id'])) {
             return back()->with('error', 'Pilih minimal salah satu: Gedung / Ruang / PIC.');
         }
 
-        DB::transaction(function () use ($ids, $data) {
-            $payload = [];
-            if (!empty($data['building_id']))         $payload['building_id'] = $data['building_id'];
-            if (!empty($data['room_id']))             $payload['room_id'] = $data['room_id'];
-            if (!empty($data['person_in_charge_id'])) $payload['person_in_charge_id'] = $data['person_in_charge_id'];
+        $assets = \App\Models\Asset::whereIn('id', $ids)->get();
+        $moved = 0;
+        $skipped = 0;
 
-            \App\Models\Asset::whereIn('id', $ids)->update($payload);
+        DB::transaction(function () use ($assets, $data, &$moved, &$skipped) {
+            foreach ($assets as $a) {
+                // aturan: Disposed tidak boleh dipindah
+                if (($a->status ?? '') === 'Disposed') {
+                    $skipped++;
+                    continue;
+                }
+
+                $before = [
+                    'building_id' => $a->building_id,
+                    'room_id'     => $a->room_id,
+                    'pic_id'      => $a->person_in_charge_id,
+                ];
+
+                $payload = [];
+                if (!empty($data['building_id']))         $payload['building_id'] = $data['building_id'];
+                if (!empty($data['room_id']))             $payload['room_id'] = $data['room_id'];
+                if (!empty($data['person_in_charge_id'])) $payload['person_in_charge_id'] = $data['person_in_charge_id'];
+
+                // skip kalau tidak ada perubahan nyata
+                $changed = array_filter($payload, fn($v, $k) => $a->{$k} != $v, ARRAY_FILTER_USE_BOTH);
+                if (empty($changed)) {
+                    $skipped++;
+                    continue;
+                }
+
+                $a->update($payload);
+
+                $after = [
+                    'building_id' => $a->building_id,
+                    'room_id'     => $a->room_id,
+                    'pic_id'      => $a->person_in_charge_id,
+                ];
+
+                \App\Services\AuditLogger::log($a, 'bulk_move', $before, $after);
+                $moved++;
+            }
         });
 
-        return back()->with('success', 'Aset terpilih berhasil dipindahkan/diassign.');
+        $msg = "Aset diproses: {$assets->count()}, berhasil: {$moved}, dilewati: {$skipped}.";
+        return back()->with('success', "Pindah/Assign selesai. {$msg}");
     }
-
     public function bulkStatus(Request $request)
     {
         $data = $request->validate([
             'ids'    => 'required|string',
-            'status' => 'required|string|in:Aktif,Dipinjam,Maintenance,Rusak,Disposed', // sesuaikan enum kamu
+            'status' => 'required|string|in:Aktif,Dipinjam,Maintenance,Rusak,Disposed',
         ]);
-
         $ids = collect(explode(',', $data['ids']))->filter()->map('intval')->unique()->values();
-        if ($ids->isEmpty()) {
-            return back()->with('error', 'Tidak ada aset yang dipilih.');
-        }
+        if ($ids->isEmpty()) return back()->with('error', 'Tidak ada aset yang dipilih.');
 
-        \App\Models\Asset::whereIn('id', $ids)->update(['status' => $data['status']]);
+        $assets = \App\Models\Asset::whereIn('id', $ids)->get();
+        $updated = 0;
+        $skipped = 0;
 
-        return back()->with('success', 'Status aset terpilih berhasil diperbarui.');
+        DB::transaction(function () use ($assets, $data, &$updated, &$skipped) {
+            foreach ($assets as $a) {
+                $from = $a->status ?? 'Aktif';
+                $to   = $data['status'];
+
+                // validasi transisi status
+                try {
+                    $this->assertAllowedStatusChange($from, $to);
+                } catch (\Throwable $e) {
+                    $skipped++;
+                    continue;
+                }
+
+                if ($from === $to) {
+                    $skipped++;
+                    continue;
+                }
+
+                $before = ['status' => $from];
+                $a->update(['status' => $to]);
+                $after  = ['status' => $a->status];
+
+                \App\Services\AuditLogger::log($a, 'bulk_status', $before, $after);
+                $updated++;
+            }
+        });
+
+        $msg = "Aset diproses: {$assets->count()}, berhasil: {$updated}, dilewati: {$skipped}.";
+        return back()->with('success', "Update Status selesai. {$msg}");
+    }
+
+    public function auditsIndex(Request $request)
+    {
+        $ids = collect(explode(',', (string)$request->get('ids')))
+            ->filter()->map('intval')->unique()->values();
+
+        $logs = \App\Models\AssetAudit::with('asset:id,asset_code_ypt,name')
+            ->when($ids->isNotEmpty(), fn($q) => $q->whereIn('asset_id', $ids))
+            ->orderByDesc('created_at')
+            ->paginate(50)
+            ->withQueryString();
+
+        return view('assets.audits-index', compact('logs', 'ids'));
     }
 }

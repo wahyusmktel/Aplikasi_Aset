@@ -108,6 +108,8 @@ Route::middleware('auth')->group(function () {
     Route::post('assets/bulk-status', [AssetController::class, 'bulkStatus'])->name('assets.bulk-status');
     // Route::get('ajax/buildings/{building}/rooms', [\App\Http\Controllers\AssetController::class, 'roomsByBuilding'])
     //     ->name('ajax.rooms.by-building');
+    Route::get('assets/audits', [\App\Http\Controllers\AssetController::class, 'auditsIndex'])
+        ->name('assets.audits');
     // Route baru untuk Ekspor Excel & PDF Aset Aktif
     Route::get('/assets/export-active-excel', [AssetController::class, 'exportActiveExcel'])->name('assets.exportActiveExcel');
     Route::get('/assets/download-active-pdf', [AssetController::class, 'downloadActivePDF'])->name('assets.downloadActivePDF');

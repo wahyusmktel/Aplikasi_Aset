@@ -182,4 +182,9 @@ class Asset extends Model
         $yr = $this->purchase_year ?? 0;
         return md5(($this->name ?? '') . '|' . $yr);
     }
+
+    public function audits()
+    {
+        return $this->hasMany(\App\Models\AssetAudit::class);
+    }
 }
