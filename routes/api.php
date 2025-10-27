@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PublicAssetApiController;
 use App\Http\Controllers\Api\VehicleApiController;
 use App\Http\Controllers\Api\AssetAssignmentApiController;
+use App\Http\Controllers\Api\BookAssetController;
+use App\Http\Controllers\Api\MasterDataController;
 
 // Route untuk Login (Public)
 Route::post('/login', [AuthController::class, 'login']);
@@ -47,4 +49,17 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('api.assignments.downloadBast');
     Route::get('/assignments/my-history', [AssetAssignmentApiController::class, 'myHistory']) // ADDED
         ->name('api.assignments.myHistory');
+
+    // Api Buku
+    Route::get('/books', [BookAssetController::class, 'index'])->name('api.books.index');
+    Route::post('/books', [BookAssetController::class, 'store'])->name('api.books.store');
+    Route::get('/books/{id}', [BookAssetController::class, 'show'])->name('api.books.show');
+    Route::put('/books/{id}', [BookAssetController::class, 'update'])->name('api.books.update');
+    Route::patch('/books/{id}', [BookAssetController::class, 'update']);
+    Route::delete('/books/{id}', [BookAssetController::class, 'destroy'])->name('api.books.destroy');
+
+    Route::get('/master/institutions', [MasterDataController::class, 'institutions']);
+    Route::get('/master/buildings',    [MasterDataController::class, 'buildings']);
+    Route::get('/master/rooms',        [MasterDataController::class, 'rooms']);
+    Route::get('/master/persons',      [MasterDataController::class, 'persons']);
 });
