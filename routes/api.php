@@ -62,4 +62,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/master/buildings',    [MasterDataController::class, 'buildings']);
     Route::get('/master/rooms',        [MasterDataController::class, 'rooms']);
     Route::get('/master/persons',      [MasterDataController::class, 'persons']);
+
+    Route::get('/master/faculties',        [MasterDataController::class, 'faculties']);
+    Route::get('/master/departments',      [MasterDataController::class, 'departments']);
+    Route::get('/master/asset-functions',  [MasterDataController::class, 'assetFunctions']);
+    Route::get('/master/funding-sources',  [MasterDataController::class, 'fundingSources']);
 });

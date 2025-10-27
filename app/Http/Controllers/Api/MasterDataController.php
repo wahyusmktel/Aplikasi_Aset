@@ -81,4 +81,68 @@ class MasterDataController extends Controller
 
         return $this->formatSelect2($pg, fn($p) => ['id' => $p->id, 'text' => $p->name]);
     }
+
+    public function faculties(Request $request)
+    {
+        $q = trim((string) $request->get('q'));
+        $per = min(max((int)$request->get('per_page', 20), 1), 100);
+
+        $pg = \App\Models\Faculty::query()
+            ->when($q !== '', fn($qq) => $qq->where('name', 'like', "%{$q}%"))
+            ->orderBy('name')
+            ->paginate($per);
+
+        return response()->json([
+            'results' => $pg->getCollection()->map(fn($x) => ['id' => $x->id, 'text' => $x->name])->values(),
+            'pagination' => ['more' => $pg->currentPage() < $pg->lastPage()],
+        ]);
+    }
+
+    public function departments(Request $request)
+    {
+        $q = trim((string) $request->get('q'));
+        $per = min(max((int)$request->get('per_page', 20), 1), 100);
+
+        $pg = \App\Models\Department::query()
+            ->when($q !== '', fn($qq) => $qq->where('name', 'like', "%{$q}%"))
+            ->orderBy('name')
+            ->paginate($per);
+
+        return response()->json([
+            'results' => $pg->getCollection()->map(fn($x) => ['id' => $x->id, 'text' => $x->name])->values(),
+            'pagination' => ['more' => $pg->currentPage() < $pg->lastPage()],
+        ]);
+    }
+
+    public function assetFunctions(Request $request)
+    {
+        $q = trim((string) $request->get('q'));
+        $per = min(max((int)$request->get('per_page', 20), 1), 100);
+
+        $pg = \App\Models\AssetFunction::query()
+            ->when($q !== '', fn($qq) => $qq->where('name', 'like', "%{$q}%"))
+            ->orderBy('name')
+            ->paginate($per);
+
+        return response()->json([
+            'results' => $pg->getCollection()->map(fn($x) => ['id' => $x->id, 'text' => $x->name])->values(),
+            'pagination' => ['more' => $pg->currentPage() < $pg->lastPage()],
+        ]);
+    }
+
+    public function fundingSources(Request $request)
+    {
+        $q = trim((string) $request->get('q'));
+        $per = min(max((int)$request->get('per_page', 20), 1), 100);
+
+        $pg = \App\Models\FundingSource::query()
+            ->when($q !== '', fn($qq) => $qq->where('name', 'like', "%{$q}%"))
+            ->orderBy('name')
+            ->paginate($per);
+
+        return response()->json([
+            'results' => $pg->getCollection()->map(fn($x) => ['id' => $x->id, 'text' => $x->name])->values(),
+            'pagination' => ['more' => $pg->currentPage() < $pg->lastPage()],
+        ]);
+    }
 }
