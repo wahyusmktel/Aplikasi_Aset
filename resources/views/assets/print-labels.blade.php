@@ -66,8 +66,8 @@
                     </div>
                     <div class="text-xs space-y-1">
                         <p class="font-bold text-sm leading-tight">{{ $asset->name }}</p>
-                        <p><span class="font-semibold">Lokasi:</span> {{ $asset->building->name }} /
-                            {{ $asset->room->name }}</p>
+                        {{-- <p><span class="font-semibold">Lokasi:</span> {{ $asset->building->name }} /
+                            {{ $asset->room->name }}</p> --}}
                         {{-- === PERUBAHAN 2: Tanggal Registrasi === --}}
                         <p><span class="font-semibold">Tahun Reg:</span> {{ $asset->purchase_year }}</p>
                         <p><span class="font-semibold">Sumber Dana:</span> {{ $asset->fundingSource->name ?? '-' }}</p>
