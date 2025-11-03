@@ -288,7 +288,7 @@ class AssetController extends Controller
      */
     public function printLabels(Request $request)
     {
-        $query = Asset::with('institution', 'building', 'room');
+        $query = Asset::with('institution', 'building', 'room', 'fundingSource');
 
         // Cek apakah ada ID yang dikirim dari checkbox
         if ($request->has('ids')) {

@@ -70,6 +70,7 @@
                             {{ $asset->room->name }}</p>
                         {{-- === PERUBAHAN 2: Tanggal Registrasi === --}}
                         <p><span class="font-semibold">Tahun Reg:</span> {{ $asset->purchase_year }}</p>
+                        <p><span class="font-semibold">Sumber Dana:</span> {{ $asset->fundingSource->name ?? '-' }}</p>
                     </div>
                 </div>
 
