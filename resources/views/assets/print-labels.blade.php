@@ -66,7 +66,7 @@
             <div class="label-container border border-gray-400 rounded p-1.5 bg-white shadow-sm flex flex-col">
 
                 {{-- === PERUBAHAN: pb-1 mb-1 (spacing lebih rapat) === --}}
-                <div class="text-center border-b border-gray-300 pb-0.5 mb-1">
+                <div class="text-center border-b border-gray-300 pb-0.5">
                     {{-- === PERUBAHAN: text-xs ke text-xxs === --}}
                     <p class="text-xxs text-gray-600 italic">Property of</p>
                     {{-- === PERUBAHAN: text-sm ke text-xs === --}}
@@ -75,7 +75,7 @@
 
                 {{-- === PERUBAHAN: gap-3 ke gap-2 === --}}
                 <div class="flex-grow flex items-center gap-2">
-                    <div class="flex-shrink-0">
+                    <div class="flex-shrink-0 pl-1">
                         {{-- === PERUBAHAN: size(80) ke size(45) (QR jauh lebih kecil) === --}}
                         {!! QrCode::size(45)->generate(route('public.assets.show', $asset->asset_code_ypt)) !!}
                     </div>
