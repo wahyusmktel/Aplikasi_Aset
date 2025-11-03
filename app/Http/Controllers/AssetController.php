@@ -63,6 +63,10 @@ class AssetController extends Controller
             'room'
         ])
             ->whereNull('disposal_date')
+            //Hapus Ya
+            ->whereDoesntHave('category', function ($query) {
+                $query->where('name', 'BUKU');
+            })
             ->when($categoryId && $categoryId !== 'all', function ($query) use ($categoryId) {
                 return $query->where('category_id', $categoryId);
             })
@@ -75,7 +79,8 @@ class AssetController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        $categories = Category::orderBy('name')->get();
+        //Hapus Ya
+        $categories = Category::where('name', '!=', 'BUKU')->orderBy('name')->get();
 
         return view('assets.index', compact('assets', 'categories'));
     }
