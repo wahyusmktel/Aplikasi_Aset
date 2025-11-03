@@ -76,7 +76,7 @@ class AssetController extends Controller
                     ->orWhere('asset_code_ypt', 'like', "%{$search}%");
             })
             ->latest()
-            ->paginate(10)
+            ->paginate(20)
             ->withQueryString();
 
         //Hapus Ya
