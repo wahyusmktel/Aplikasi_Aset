@@ -32,7 +32,7 @@
             /* Margin kertas diperkecil sedikit */
         }
 
-        /* Ukuran font custom super kecil yang tidak ada di Tailwind standar */
+        /* Ukuran font custom super kecil */
         .text-xxs {
             font-size: 0.6rem;
             /* Sekitar 9.6px */
@@ -59,40 +59,29 @@
         </a>
     </div>
 
-    {{-- === PERUBAHAN: p-4 ke p-1, gap-4 ke gap-1.5 === --}}
     <div class="p-1 grid grid-cols-2 gap-1.5">
         @foreach ($assets as $asset)
-            {{-- === PERUBAHAN: p-3 ke p-1.5 (padding label lebih kecil) === --}}
             <div class="label-container border border-gray-400 rounded p-1.5 bg-white shadow-sm flex flex-col">
 
-                {{-- === PERUBAHAN: pb-1 mb-1 (spacing lebih rapat) === --}}
-                <div class="text-center border-b border-gray-300 pb-0.5">
-                    {{-- === PERUBAHAN: text-xs ke text-xxs === --}}
+                <div class="text-center border-b border-gray-300 pb-0.5 mb-1">
                     <p class="text-xxs text-gray-600 italic">Property of</p>
-                    {{-- === PERUBAHAN: text-sm ke text-xs === --}}
                     <p class="font-bold text-xs">{{ $asset->institution->name }}</p>
                 </div>
 
-                {{-- === PERUBAHAN: gap-3 ke gap-2 === --}}
                 <div class="flex-grow flex items-center gap-2">
+                    {{-- === PERUBAHAN DI SINI: Tambahkan `pl-1` === --}}
                     <div class="flex-shrink-0 pl-1">
-                        {{-- === PERUBAHAN: size(80) ke size(45) (QR jauh lebih kecil) === --}}
                         {!! QrCode::size(45)->generate(route('public.assets.show', $asset->asset_code_ypt)) !!}
                     </div>
-                    {{-- === PERUBAHAN: text-xs ke text-xxs, space-y-1 ke space-y-0.5 === --}}
                     <div class="text-xxs space-y-0.5 leading-tight">
-                        {{-- === PERUBAHAN: text-sm ke text-xs (nama barang) === --}}
                         <p class="font-bold text-xs leading-tight">{{ $asset->name }}</p>
                         <p><span class="font-semibold">Tahun Reg:</span> {{ $asset->purchase_year }}</p>
                         <p><span class="font-semibold">Sumber Dana:</span> {{ $asset->fundingSource->name ?? '-' }}</p>
                     </div>
                 </div>
 
-                {{-- === PERUBAHAN: mt-2 pt-2 ke mt-1 pt-1 === --}}
                 <div class="mt-1 pt-1 border-t border-gray-300 text-center">
-                    {{-- === PERUBAHAN: text-xs ke text-xxxs, tracking-tighter === --}}
                     <p class="font-mono text-xxxs tracking-tighter">{{ $asset->asset_code_ypt }}</p>
-                    {{-- === PERUBAHAN: text-xs ke text-xxxs === --}}
                     <p class="text-xxxs font-bold text-gray-700 mt-0.5 uppercase">DO NOT REMOVE THIS LABEL</p>
                 </div>
             </div>
