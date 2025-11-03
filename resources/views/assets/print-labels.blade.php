@@ -71,7 +71,7 @@
                 <div class="flex-grow flex items-center gap-3">
                     {{-- === PERUBAHAN DI SINI: Tambahkan `pl-1` === --}}
                     <div class="flex-shrink-0">
-                        {!! QrCode::size(45)->generate(route('public.assets.show', $asset->asset_code_ypt)) !!}
+                        {!! QrCode::size(50)->generate(route('public.assets.show', $asset->asset_code_ypt)) !!}
                     </div>
                     <div class="text-xxs space-y-0.5 leading-tight">
                         <p class="font-bold text-xs leading-tight">{{ $asset->name }}</p>
