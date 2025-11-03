@@ -68,9 +68,9 @@
                     <p class="font-bold text-xs">{{ $asset->institution->name }}</p>
                 </div>
 
-                <div class="flex-grow flex items-center gap-2">
+                <div class="flex-grow flex items-center gap-3">
                     {{-- === PERUBAHAN DI SINI: Tambahkan `pl-1` === --}}
-                    <div class="flex-shrink-0 pl-1">
+                    <div class="flex-shrink-0">
                         {!! QrCode::size(45)->generate(route('public.assets.show', $asset->asset_code_ypt)) !!}
                     </div>
                     <div class="text-xxs space-y-0.5 leading-tight">
