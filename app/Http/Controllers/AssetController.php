@@ -54,31 +54,50 @@ class AssetController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $categoryIds = \Illuminate\Support\Arr::wrap($request->input('category_ids', []));
+
+        // Langkah 1: Ambil include & exclude sebagai array angka yang aman
+        $categoryIdsRaw        = \Illuminate\Support\Arr::wrap($request->input('category_ids', []));
+        $excludeCategoryIdsRaw = \Illuminate\Support\Arr::wrap($request->input('exclude_category_ids', []));
+        $categoryIds = array_values(array_filter(array_map('intval', $categoryIdsRaw)));
+        $excludeCategoryIds = array_values(array_filter(array_map('intval', $excludeCategoryIdsRaw)));
+
         $purchaseYear = $request->input('purchase_year');
 
         // === REFACTOR: Logika Paginasi ===
-        $allowedPerPages = [10, 25, 50, 100]; // Opsi per halaman
-        $perPage = $request->input('per_page', 10); // Default 10
-        if (!in_array($perPage, $allowedPerPages)) {
+        $allowedPerPages = [10, 25, 50, 100];
+        $perPage = (int) $request->input('per_page', 10);
+        if (!in_array($perPage, $allowedPerPages, true)) {
             $perPage = 10;
         }
 
         $assets = Asset::with(['category', 'institution', 'building', 'room'])
             ->whereNull('disposal_date')
+
+            // Langkah 1: terapkan filter kategori (IN)
             ->when(!empty($categoryIds), function ($query) use ($categoryIds) {
                 return $query->whereIn('category_id', $categoryIds);
             })
+
+            // Langkah 1: terapkan pengecualian kategori (NOT IN)
+            ->when(!empty($excludeCategoryIds), function ($query) use ($excludeCategoryIds) {
+                return $query->whereNotIn('category_id', $excludeCategoryIds);
+            })
+
             ->when($purchaseYear && $purchaseYear !== 'all', function ($query) use ($purchaseYear) {
                 return $query->where('purchase_year', $purchaseYear);
             })
+
+            // (Opsional) Rapikan pencarian agar orWhere tidak menabrak filter lain
             ->when($search, function ($query, $search) {
-                return $query->where('name', 'like', "%{$search}%")
-                    ->orWhere('asset_code_ypt', 'like', "%{$search}%");
+                return $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('asset_code_ypt', 'like', "%{$search}%");
+                });
             })
+
             ->latest()
-            ->paginate($perPage) // Gunakan variabel $perPage
-            ->withQueryString(); // withQueryString otomatis membawa SEMUA parameter (search, category_ids, year, per_page)
+            ->paginate($perPage)
+            ->withQueryString();
 
         $categories = Category::orderBy('name')->get();
         $years = Asset::whereNull('disposal_date')
@@ -88,7 +107,6 @@ class AssetController extends Controller
             ->orderBy('purchase_year', 'desc')
             ->pluck('purchase_year');
 
-        // === REFACTOR: Kirim $perPage dan $allowedPerPages ke view ===
         return view('assets.index', compact(
             'assets',
             'categories',
@@ -452,18 +470,62 @@ class AssetController extends Controller
     /**
      * Menangani ekspor semua aset aktif ke Excel.
      */
-    public function exportActiveExcel(Request $request) // Tambahkan Request
+    public function exportActiveExcel(Request $request)
     {
-        $categoryId = $request->input('category_id'); // Ambil category_id dari request
+        // Langkah 4A: dukung banyak include & exclude
+        $include = array_values(array_filter(array_map('intval', \Illuminate\Support\Arr::wrap($request->input('category_ids', [])))));
+        $exclude = array_values(array_filter(array_map('intval', \Illuminate\Support\Arr::wrap($request->input('exclude_category_ids', [])))));
+        $year    = $request->input('purchase_year');
+
+        // Nama file dinamis
         $fileName = 'daftar-aset-aktif';
-        if ($categoryId && $categoryId !== 'all') {
-            $category = Category::find($categoryId);
-            if ($category) $fileName .= '-' . Str::slug($category->name); // Tambahkan nama kategori ke nama file
+
+        if (!empty($include)) {
+            $names = Category::whereIn('id', $include)->pluck('name')->toArray();
+            if ($names) $fileName .= '-inc-' . \Illuminate\Support\Str::slug(implode('-', $names));
         }
+        if (!empty($exclude)) {
+            $names = Category::whereIn('id', $exclude)->pluck('name')->toArray();
+            if ($names) $fileName .= '-exc-' . \Illuminate\Support\Str::slug(implode('-', $names));
+        }
+        if ($year && $year !== 'all') $fileName .= "-{$year}";
         $fileName .= '.xlsx';
 
-        // Kirim categoryId ke class Export
-        return Excel::download(new ActiveAssetsExport($categoryId), $fileName);
+        // Pass filter via session/closure ke exporter (paling cepat: inline export)
+        $query = Asset::query()
+            ->whereNull('disposal_date')
+            ->when(!empty($include), fn($q) => $q->whereIn('category_id', $include))
+            ->when(empty($include) && !empty($exclude), fn($q) => $q->whereNotIn('category_id', $exclude))
+            ->when($year && $year !== 'all', fn($q) => $q->where('purchase_year', $year))
+            ->with(['category', 'building', 'room', 'personInCharge'])
+            ->orderBy('asset_code_ypt', 'asc');
+
+        $rows = $query->get()->map(function ($a) {
+            return [
+                'Kode Aset YPT'        => $a->asset_code_ypt,
+                'Nama'                 => $a->name,
+                'Tahun'                => $a->purchase_year,
+                'Kategori'             => optional($a->category)->name,
+                'Gedung/Ruang'         => optional($a->building)->name . ' / ' . optional($a->room)->name,
+                'PIC'                  => optional($a->personInCharge)->name,
+                'Status'               => $a->status,
+                'Nilai Akuisisi (Rp)'  => $a->purchase_cost,
+            ];
+        });
+
+        $export = new class($rows->toArray()) implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings {
+            public function __construct(private array $data) {}
+            public function array(): array
+            {
+                return $this->data;
+            }
+            public function headings(): array
+            {
+                return array_keys($this->data[0] ?? ['Data' => 'Kosong']);
+            }
+        };
+
+        return \Maatwebsite\Excel\Facades\Excel::download($export, $fileName);
     }
 
     /**
@@ -471,40 +533,45 @@ class AssetController extends Controller
      */
     public function downloadActivePDF(Request $request)
     {
-        $categoryId = $request->input('category_id');
+        // Langkah 4B: dukung banyak include & exclude
+        $include = array_values(array_filter(array_map('intval', \Illuminate\Support\Arr::wrap($request->input('category_ids', [])))));
+        $exclude = array_values(array_filter(array_map('intval', \Illuminate\Support\Arr::wrap($request->input('exclude_category_ids', [])))));
+        $year    = $request->input('purchase_year');
 
         $query = Asset::whereNull('disposal_date')
-            // Load SEMUA relasi yang dibutuhkan di PDF
-            ->with(['category', 'institution', 'building', 'room', 'department', 'personInCharge', 'assetFunction', 'fundingSource']);
+            ->with(['category', 'institution', 'building', 'room', 'department', 'personInCharge', 'assetFunction', 'fundingSource'])
+            ->when(!empty($include), fn($q) => $q->whereIn('category_id', $include))
+            ->when(empty($include) && !empty($exclude), fn($q) => $q->whereNotIn('category_id', $exclude))
+            ->when($year && $year !== 'all', fn($q) => $q->where('purchase_year', $year))
+            ->orderBy('asset_code_ypt', 'asc');
 
-        // Terapkan filter kategori
-        if ($categoryId && $categoryId !== 'all') {
-            $query->where('category_id', $categoryId);
-        }
-
-        $activeAssets = $query->orderBy('asset_code_ypt', 'asc')->get();
+        $activeAssets = $query->get();
 
         if ($activeAssets->isEmpty()) {
             alert()->info('Info', 'Tidak ada data aset aktif untuk dilaporkan.');
             return redirect()->route('assets.index');
         }
 
-        // Ambil nama kategori untuk judul PDF
+        // Hanya untuk judul: gabungkan nama kategori include/exclude
         $categoryName = null;
-        if ($categoryId && $categoryId !== 'all') {
-            $category = Category::find($categoryId);
-            if ($category) $categoryName = $category->name;
+        if (!empty($include)) {
+            $names = Category::whereIn('id', $include)->pluck('name')->toArray();
+            $categoryName = 'Termasuk: ' . implode(', ', $names);
+        } elseif (!empty($exclude)) {
+            $names = Category::whereIn('id', $exclude)->pluck('name')->toArray();
+            $categoryName = 'Kecuali: ' . implode(', ', $names);
         }
 
         $pj = Employee::where('position', 'Kaur Sarpras')->first();
         $ks = Employee::where('position', 'Kepala Sekolah')->first();
-        $kota = "Bandar Lampung"; // Ganti jika perlu
+        $kota = "Bandar Lampung";
 
-        $pdf = Pdf::loadView('assets.report-all-pdf', compact('activeAssets', 'pj', 'ks', 'kota', 'categoryName')) // Kirim categoryName
+        $pdf = Pdf::loadView('assets.report-all-pdf', compact('activeAssets', 'pj', 'ks', 'kota', 'categoryName'))
             ->setPaper('a4', 'landscape');
 
         $fileName = 'laporan-daftar-aset-aktif';
-        if ($categoryName) $fileName .= '-' . Str::slug($categoryName);
+        if ($categoryName) $fileName .= '-' . \Illuminate\Support\Str::slug($categoryName);
+        if ($year && $year !== 'all') $fileName .= "-{$year}";
         $fileName .= '.pdf';
 
         return $pdf->download($fileName);

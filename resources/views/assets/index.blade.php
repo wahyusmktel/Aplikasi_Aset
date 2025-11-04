@@ -28,6 +28,18 @@
                                 </select>
                             </div>
 
+                            <!-- Langkah 2: Dropdown KECUALIKAN Kategori -->
+                            <div class="flex items-center space-x-2">
+                                <label for="exclude_category_filter" class="text-sm font-medium">Kecualikan:</label>
+                                <select id="exclude_category_filter" name="exclude_category_ids[]" multiple="multiple"
+                                    x-ref="excludeCategorySelect"
+                                    class="rounded-md dark:bg-gray-700 text-sm w-full sm:w-64">
+                                    @foreach ($categories as $category)
+                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
                             {{-- Filter Tahun Pengadaan --}}
                             <div class="flex items-center space-x-2">
                                 <label for="year_filter" class="text-sm font-medium">Tahun:</label>
@@ -66,9 +78,16 @@
                             </div>
                             {{-- Form Pencarian --}}
                             <form action="{{ route('assets.index') }}" method="GET" class="flex w-full md:w-auto">
-                                <template x-for="categoryId in selectedCategories" :key="categoryId">
+                                <!-- Langkah 2: bawa include categories -->
+                                <template x-for="categoryId in selectedCategories" :key="'inc-' + categoryId">
                                     <input type="hidden" name="category_ids[]" :value="categoryId">
                                 </template>
+
+                                <!-- Langkah 2: bawa EXCLUDE categories -->
+                                <template x-for="categoryId in selectedExcludeCategories" :key="'exc-' + categoryId">
+                                    <input type="hidden" name="exclude_category_ids[]" :value="categoryId">
+                                </template>
+
                                 <input type="hidden" name="purchase_year" :value="selectedYear">
                                 <input type="hidden" name="per_page" :value="perPage">
 
@@ -76,7 +95,9 @@
                                     class="form-input rounded-l-md dark:bg-gray-700 w-full md:w-64"
                                     value="{{ request('search') }}">
                                 <button type="submit"
-                                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-r-md">Cari</button>
+                                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-r-md">
+                                    Cari
+                                </button>
                             </form>
                         </div>
                     </div>
@@ -233,26 +254,36 @@
                     selectedIds: [],
                     showImportBatchModal: false,
 
-                    // Ambil nilai awal dari request (string array)
+                    // Langkah 3: state include & exclude dari request
                     selectedCategories: @json(request()->input('category_ids', [])).map(String),
+                    selectedExcludeCategories: @json(request()->input('exclude_category_ids', [])).map(String),
+
                     selectedYear: '{{ request('purchase_year', 'all') }}',
                     perPage: '{{ $perPage }}',
 
                     init() {
-                        // Inisialisasi Select2
-                        const $el = $(this.$refs.categorySelect);
-                        $el.select2({
+                        // Inisialisasi Select2 (INCLUDE)
+                        const $inc = $(this.$refs.categorySelect);
+                        $inc.select2({
                             theme: 'classic',
-                            placeholder: 'Pilih satu atau lebih kategori',
+                            placeholder: 'Pilih kategori (TERMASUK)',
                             width: 'resolve'
                         });
+                        $inc.val(this.selectedCategories).trigger('change');
+                        $inc.on('change', () => {
+                            this.selectedCategories = ($inc.val() || []).map(String);
+                        });
 
-                        // Set nilai awal
-                        $el.val(this.selectedCategories).trigger('change');
-
-                        // Sinkronisasi Select2 -> Alpine
-                        $el.on('change', () => {
-                            this.selectedCategories = ($el.val() || []).map(String);
+                        // Langkah 3: Inisialisasi Select2 (EXCLUDE)
+                        const $exc = $(this.$refs.excludeCategorySelect);
+                        $exc.select2({
+                            theme: 'classic',
+                            placeholder: 'Pilih kategori (KECUALIKAN)',
+                            width: 'resolve'
+                        });
+                        $exc.val(this.selectedExcludeCategories).trigger('change');
+                        $exc.on('change', () => {
+                            this.selectedExcludeCategories = ($exc.val() || []).map(String);
                         });
                     },
 
@@ -262,12 +293,19 @@
                             Array.from(checkboxes).map(cb => parseInt(cb.value)) : [];
                     },
 
+                    // Langkah 3: builder URL export yang menyertakan include & exclude
                     generateExportUrl(baseUrl) {
                         const url = new URL(baseUrl);
                         url.searchParams.delete('category_ids[]');
                         (this.selectedCategories || []).forEach(id => {
                             url.searchParams.append('category_ids[]', id);
                         });
+
+                        url.searchParams.delete('exclude_category_ids[]');
+                        (this.selectedExcludeCategories || []).forEach(id => {
+                            url.searchParams.append('exclude_category_ids[]', id);
+                        });
+
                         url.searchParams.set('purchase_year', this.selectedYear);
                         return url.toString();
                     },
@@ -280,17 +318,20 @@
                         }
                     },
 
+                    // Langkah 3: applyFilters menyertakan include & exclude
                     applyFilters() {
-                        // Pastikan array
-                        const cats = Array.isArray(this.selectedCategories) ? this.selectedCategories : [];
+                        const inc = Array.isArray(this.selectedCategories) ? this.selectedCategories : [];
+                        const exc = Array.isArray(this.selectedExcludeCategories) ? this
+                            .selectedExcludeCategories : [];
 
                         const url = new URL('{{ route('assets.index') }}');
-                        cats.forEach(id => url.searchParams.append('category_ids[]', id));
+                        inc.forEach(id => url.searchParams.append('category_ids[]', id));
+                        exc.forEach(id => url.searchParams.append('exclude_category_ids[]', id));
+
                         url.searchParams.set('purchase_year', this.selectedYear);
                         url.searchParams.set('per_page', this.perPage);
                         url.searchParams.set('page', 1);
 
-                        // Bawa keyword pencarian saat ini (kalau ada di server)
                         const currentSearch = '{{ request('search') }}';
                         if (currentSearch) url.searchParams.set('search', currentSearch);
 
@@ -298,7 +339,8 @@
                     }
                 }));
             });
-            // Fungsi confirmDelete (di luar Alpine)
+
+            // Fungsi confirmDelete (tanpa perubahan)
             function confirmDelete(id) {
                 Swal.fire({
                     title: 'Anda yakin?',
