@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Schema;
 use App\Models\SavedFilter;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class AssetController extends Controller
 {
@@ -46,6 +47,52 @@ class AssetController extends Controller
         if (!isset($map[$from]) || !in_array($to, $map[$from], true)) {
             abort(422, "Transisi status tidak diizinkan: {$from} → {$to}");
         }
+    }
+
+    private function regenerateAssetCode(Asset $asset): void
+    {
+        // Ambil semua relasi yg dipakai dalam kode
+        $asset->loadMissing([
+            'institution',
+            'category',
+            'building',
+            'room',
+            'faculty',
+            'department',
+            'personInCharge',
+            'assetFunction',
+            'fundingSource'
+        ]);
+
+        $institution    = $asset->institution;
+        $category       = $asset->category;
+        $building       = $asset->building;
+        $room           = $asset->room;
+        $faculty        = $asset->faculty;
+        $department     = $asset->department;
+        $personInCharge = $asset->personInCharge;
+        $assetFunction  = $asset->assetFunction;
+        $fundingSource  = $asset->fundingSource;
+
+        // Year diambil 2 digit terakhir dari purchase_year
+        $year2 = $asset->purchase_year ? substr((string)$asset->purchase_year, -2) : '00';
+
+        // Safety: jika ada relasi null, jangan fatal — pakai "XX" biar tetap unik
+        $code = implode('.', [
+            $institution->code    ?? 'XX',
+            $year2,
+            $category->code       ?? 'XX',
+            $building->code       ?? 'XX',
+            $room->code           ?? 'XX',
+            $faculty->code        ?? 'XX',
+            $department->code     ?? 'XX',
+            $personInCharge->code ?? 'XX',
+            $assetFunction->code  ?? 'XX',
+            $fundingSource->code  ?? 'XX',
+            $asset->sequence_number ?? '0000'
+        ]);
+
+        $asset->forceFill(['asset_code_ypt' => $code])->save();
     }
 
     /**
@@ -107,12 +154,19 @@ class AssetController extends Controller
             ->orderBy('purchase_year', 'desc')
             ->pluck('purchase_year');
 
+        $personsInCharge = PersonInCharge::orderBy('name')->get();   // Langkah 1
+        $fundingSources  = FundingSource::orderBy('name')->get();    // Langkah 1
+        $rooms           = Room::orderBy('name')->get();              // Langkah 1
+
         return view('assets.index', compact(
             'assets',
             'categories',
             'years',
             'perPage',
-            'allowedPerPages'
+            'allowedPerPages',
+            'personsInCharge',
+            'fundingSources',
+            'rooms'
         ));
     }
 
@@ -926,5 +980,140 @@ class AssetController extends Controller
             ->withQueryString();
 
         return view('assets.audits-index', compact('logs', 'ids'));
+    }
+
+    public function bulkUpdateFields(Request $request)
+    {
+        Log::info('[bulkUpdateFields] incoming', [
+            'raw' => $request->all()
+        ]);
+
+        $data = $request->validate([
+            'ids'                   => 'required|string',
+            'apply_name'            => 'nullable|boolean',
+            'apply_funding'         => 'nullable|boolean',
+            'apply_room'            => 'nullable|boolean',
+            'apply_year'            => 'nullable|boolean',
+            'apply_pic'             => 'nullable|boolean',
+
+            'name'                  => 'nullable|string|max:255',
+            'funding_source_id'     => 'nullable|exists:funding_sources,id',
+            'room_id'               => 'nullable|exists:rooms,id',
+            'purchase_year'         => 'nullable|digits:4|integer|min:1900',
+            'person_in_charge_id'   => 'nullable|exists:persons_in_charges,id', // ⚠️ pastikan nama tabel benar
+        ]);
+
+        Log::debug('[bulkUpdateFields] after validate', ['data' => $data]);
+
+        $ids = collect(explode(',', $data['ids']))->filter()->map('intval')->unique()->values();
+
+        if ($ids->isEmpty()) {
+            Log::warning('[bulkUpdateFields] empty ids');
+            alert()->error('Gagal', 'Tidak ada aset yang dipilih.');
+            return back();
+        }
+
+        $apply = [
+            'name'                => (bool)($data['apply_name']   ?? false),
+            'funding_source_id'   => (bool)($data['apply_funding'] ?? false),
+            'room_id'             => (bool)($data['apply_room']   ?? false),
+            'purchase_year'       => (bool)($data['apply_year']   ?? false),
+            'person_in_charge_id' => (bool)($data['apply_pic']    ?? false),
+        ];
+
+        $target = array_filter([
+            'name'                => $data['name']                ?? null,
+            'funding_source_id'   => $data['funding_source_id']   ?? null,
+            'room_id'             => $data['room_id']             ?? null,
+            'purchase_year'       => $data['purchase_year']       ?? null,
+            'person_in_charge_id' => $data['person_in_charge_id'] ?? null,
+        ], fn($v) => !is_null($v));
+
+        Log::debug('[bulkUpdateFields] parsed', [
+            'ids'    => $ids->all(),
+            'apply'  => $apply,
+            'target' => $target,
+        ]);
+
+        if (!array_filter($apply)) {
+            Log::warning('[bulkUpdateFields] no fields selected to apply');
+            alert()->error('Gagal', 'Centang minimal satu field yang akan diubah.');
+            return back();
+        }
+
+        foreach ($apply as $field => $flag) {
+            if ($flag && !array_key_exists($field, $target)) {
+                Log::warning('[bulkUpdateFields] field checked but missing value', compact('field'));
+                alert()->error('Gagal', "Field '{$field}' dicentang tetapi nilainya kosong.");
+                return back();
+            }
+        }
+
+        $assets   = Asset::whereIn('id', $ids)->get();
+        $updated  = 0;
+        $skipped  = 0;
+
+        DB::transaction(function () use ($assets, $apply, $target, &$updated, &$skipped) {
+            foreach ($assets as $asset) {
+                if (($asset->status ?? '') === 'Disposed') {
+                    Log::info('[bulkUpdateFields] skip disposed', ['asset_id' => $asset->id]);
+                    $skipped++;
+                    continue;
+                }
+
+                $payload = [];
+                foreach ($apply as $field => $flag) {
+                    if ($flag) $payload[$field] = $target[$field];
+                }
+
+                $changed = array_filter($payload, fn($v, $k) => $asset->{$k} != $v, ARRAY_FILTER_USE_BOTH);
+
+                if (empty($changed)) {
+                    Log::info('[bulkUpdateFields] no-op change', ['asset_id' => $asset->id]);
+                    $skipped++;
+                    continue;
+                }
+
+                $before = $asset->only(array_keys($changed));
+                Log::debug('[bulkUpdateFields] updating', [
+                    'asset_id' => $asset->id,
+                    'before'   => $before,
+                    'payload'  => $changed
+                ]);
+
+                $asset->fill($changed)->save();
+
+                $affectsCode = array_intersect(array_keys($changed), [
+                    'purchase_year',
+                    'room_id',
+                    'person_in_charge_id',
+                    'funding_source_id'
+                ]);
+                if (!empty($affectsCode)) {
+                    Log::debug('[bulkUpdateFields] regenerating code', [
+                        'asset_id' => $asset->id,
+                        'fields'   => $affectsCode
+                    ]);
+                    $this->regenerateAssetCode($asset);
+                }
+
+                try {
+                    \App\Services\AuditLogger::log($asset, 'bulk_update_fields', $before, $asset->only(array_keys($changed)));
+                } catch (\Throwable $e) {
+                    Log::error('[bulkUpdateFields] audit log error', ['e' => $e->getMessage()]);
+                }
+
+                $updated++;
+            }
+        });
+
+        Log::info('[bulkUpdateFields] done', [
+            'assets'  => $assets->count(),
+            'updated' => $updated,
+            'skipped' => $skipped,
+        ]);
+
+        alert()->success('Berhasil', "Bulk edit selesai. Diproses: {$assets->count()}, diupdate: {$updated}, dilewati: {$skipped}.");
+        return back();
     }
 }

@@ -93,6 +93,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('institutions', InstitutionController::class)->except(['show', 'create', 'edit']);
     Route::post('/institutions/import', [InstitutionController::class, 'import'])->name('institutions.import');
     // Route untuk Sumary Aset
+    Route::post('/assets/bulk-update-fields', [\App\Http\Controllers\AssetController::class, 'bulkUpdateFields'])
+        ->name('assets.bulkUpdateFields');
     Route::get('assets/summary', [AssetController::class, 'summary'])->name('assets.summary');
     Route::get('assets/summary/{group}', [AssetController::class, 'summaryShow'])->name('assets.summary.show');
     Route::get('assets/summary-export-excel', [\App\Http\Controllers\AssetController::class, 'summaryExportExcel'])

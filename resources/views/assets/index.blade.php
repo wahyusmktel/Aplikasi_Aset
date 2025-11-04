@@ -104,6 +104,10 @@
 
                     {{-- Grup Tombol Ekspor & Cetak Label --}}
                     <div class="flex flex-wrap gap-2 mb-6 border-t dark:border-gray-700 pt-4">
+                        <button @click="openBulkEditModal" :disabled="selectedIds.length === 0"
+                            class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded text-sm disabled:bg-amber-300 disabled:cursor-not-allowed">
+                            Bulk Edit (<span x-text="selectedIds.length"></span>)
+                        </button>
                         <button @click="printSelected" :disabled="selectedIds.length === 0"
                             class="bg-purple-500 text-white font-bold py-2 px-4 rounded text-sm disabled:bg-purple-300 disabled:cursor-not-allowed">
                             Cetak Label (<span x-text="selectedIds.length"></span>)
@@ -244,6 +248,106 @@
                 </form>
             </div>
         </div>
+
+        <!-- Langkah 4B: Modal Bulk Edit -->
+        <div x-show="showBulkEditModal" x-cloak
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            @keydown.escape.window="showBulkEditModal = false">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-2xl"
+                @click.away="showBulkEditModal = false">
+                <h2 class="text-xl font-bold mb-4">Bulk Edit Aset Terpilih</h2>
+
+                <form method="POST" action="{{ route('assets.bulkUpdateFields') }}">
+                    @csrf
+                    <!-- kirim ids -->
+                    <input type="hidden" name="ids" :value="selectedIds.join(',')">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Nama Barang -->
+                        <div class="border dark:border-gray-700 rounded p-3">
+                            <label class="flex items-center gap-2 text-sm mb-2">
+                                <input type="checkbox" name="apply_name" x-model="apply.name" class="rounded">
+                                <span>Ubah Nama Barang</span>
+                            </label>
+                            <input type="text" name="name" x-bind:disabled="!apply.name"
+                                placeholder="Nama barang baru" class="w-full rounded-md dark:bg-gray-700">
+                        </div>
+
+                        <!-- Jenis Pendanaan -->
+                        <div class="border dark:border-gray-700 rounded p-3">
+                            <label class="flex items-center gap-2 text-sm mb-2">
+                                <input type="checkbox" name="apply_funding" x-model="apply.funding" class="rounded">
+                                <span>Ubah Jenis Pendanaan</span>
+                            </label>
+                            <select name="funding_source_id" x-bind:disabled="!apply.funding"
+                                class="w-full rounded-md dark:bg-gray-700">
+                                <option value="">-- Pilih Pendanaan --</option>
+                                @foreach ($fundingSources as $fs)
+                                    <option value="{{ $fs->id }}">{{ $fs->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Ruangan -->
+                        <div class="border dark:border-gray-700 rounded p-3">
+                            <label class="flex items-center gap-2 text-sm mb-2">
+                                <input type="checkbox" name="apply_room" x-model="apply.room" class="rounded">
+                                <span>Ubah Ruangan</span>
+                            </label>
+                            <select name="room_id" x-bind:disabled="!apply.room"
+                                class="w-full rounded-md dark:bg-gray-700">
+                                <option value="">-- Pilih Ruangan --</option>
+                                @foreach ($rooms as $r)
+                                    <option value="{{ $r->id }}">{{ $r->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Tahun Pengadaan -->
+                        <div class="border dark:border-gray-700 rounded p-3">
+                            <label class="flex items-center gap-2 text-sm mb-2">
+                                <input type="checkbox" name="apply_year" x-model="apply.year" class="rounded">
+                                <span>Ubah Tahun Pengadaan</span>
+                            </label>
+                            <input type="number" name="purchase_year" x-bind:disabled="!apply.year" min="1900"
+                                placeholder="YYYY" class="w-full rounded-md dark:bg-gray-700">
+                        </div>
+
+                        <!-- Penanggung Jawab -->
+                        <div class="border dark:border-gray-700 rounded p-3 md:col-span-2">
+                            <label class="flex items-center gap-2 text-sm mb-2">
+                                <input type="checkbox" name="apply_pic" x-model="apply.pic" class="rounded">
+                                <span>Ubah Penanggung Jawab</span>
+                            </label>
+                            <select name="person_in_charge_id" x-bind:disabled="!apply.pic"
+                                class="w-full rounded-md dark:bg-gray-700">
+                                <option value="">-- Pilih Penanggung Jawab --</option>
+                                @foreach ($personsInCharge as $pic)
+                                    <option value="{{ $pic->id }}">{{ $pic->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end mt-6 gap-3">
+                        <button type="button" @click="showBulkEditModal = false"
+                            class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                            Batal
+                        </button>
+                        <button type="submit"
+                            class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded">
+                            Terapkan ke (<span x-text="selectedIds.length"></span>) Aset
+                        </button>
+                    </div>
+                </form>
+
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">
+                    Catatan: Jika Anda mengubah Tahun / Ruangan / Penanggung Jawab / Pendanaan, kode aset YPT akan
+                    diregenerasi otomatis.
+                </p>
+            </div>
+        </div>
+
     </div>
 
     {{-- Script JavaScript (tidak berubah dari sebelumnya, sudah benar) --}}
@@ -253,6 +357,15 @@
                 Alpine.data('pageData', () => ({
                     selectedIds: [],
                     showImportBatchModal: false,
+
+                    showBulkEditModal: false,
+                    apply: {
+                        name: false,
+                        funding: false,
+                        room: false,
+                        year: false,
+                        pic: false
+                    },
 
                     // Langkah 3: state include & exclude dari request
                     selectedCategories: @json(request()->input('category_ids', [])).map(String),
@@ -308,6 +421,11 @@
 
                         url.searchParams.set('purchase_year', this.selectedYear);
                         return url.toString();
+                    },
+
+                    openBulkEditModal() {
+                        if (this.selectedIds.length === 0) return;
+                        this.showBulkEditModal = true;
                     },
 
                     printSelected() {
