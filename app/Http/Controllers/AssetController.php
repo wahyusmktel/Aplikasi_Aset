@@ -1074,14 +1074,17 @@ class AssetController extends Controller
                     continue;
                 }
 
+                // SESUDAH — set atribut langsung (anti mass-assignment), plus log rinci
                 $before = $asset->only(array_keys($changed));
-                Log::debug('[bulkUpdateFields] updating', [
+                foreach ($changed as $kk => $vv) {
+                    $asset->{$kk} = $vv;
+                }
+                $ok = $asset->save();
+                Log::debug('[bulkUpdateFields] saved', [
                     'asset_id' => $asset->id,
-                    'before'   => $before,
-                    'payload'  => $changed
+                    'ok'       => $ok,
+                    'after'    => $asset->only(array_keys($changed)),
                 ]);
-
-                $asset->fill($changed)->save();
 
                 $affectsCode = array_intersect(array_keys($changed), [
                     'purchase_year',
