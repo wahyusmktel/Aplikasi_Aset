@@ -8,24 +8,18 @@
 
     <title>{{ config('app.name', 'Laravel') }}</title>
 
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-    <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 </head>
 
 <body class="font-sans antialiased">
     <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
-        {{-- <div class="min-h-screen bg-gray-100 dark:bg-gray-900 md:pl-64"> --}}
         @include('layouts.navigation')
 
-        <!-- Page Heading -->
         @isset($header)
             <header class="bg-white dark:bg-gray-800 shadow">
                 <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -34,27 +28,25 @@
             </header>
         @endisset
 
-        <!-- Page Content -->
         <main>
             {{ $slot }}
         </main>
     </div>
+
+    {{-- SweetAlert --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.26.2/dist/sweetalert2.all.min.js"></script>
     @include('sweetalert::alert')
 
+    {{-- jQuery --}}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.full.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            // Inisialisasi Select2 pada semua elemen dengan class 'select2'
-            $('.select2').select2({
-                // Opsi ini membantu agar Select2 terlihat lebih baik dengan tema Tailwind/dark mode
-                theme: "bootstrap-5"
-            });
-        });
-    </script>
+
+    {{-- Select2 JS (v4.1.0-rc.0, sama dengan CSS) --}}
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    {{-- Chart.js --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    {{-- Stack untuk script per halaman --}}
     @stack('scripts')
 </body>
 

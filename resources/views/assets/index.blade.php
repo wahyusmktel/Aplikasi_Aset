@@ -5,127 +5,106 @@
         </h2>
     </x-slot>
 
-    <div x-data="{
-        selectedIds: [],
-        showImportBatchModal: false,
-        selectedCategory: '{{ request('category_id', 'all') }}',
-        {{-- printSelected() {
-            const ids = this.selectedIds.join(',');
-            if (ids) {
-                const url = `{{ route('assets.printLabels') }}?ids=${ids}`;
-                window.open(url, '_blank');
-            }
-        } --}}
-        allPageIds: @json($assets->pluck('id')->toArray()),
-        checkAll: false,
-        toggleCheckAll() {
-            if (this.checkAll) {
-                // Jika 'checkAll' menjadi true (dicentang):
-                // Gabungkan 'selectedIds' yang sudah ada dengan 'allPageIds'.
-                // Gunakan Set untuk memastikan tidak ada ID duplikat.
-                this.selectedIds = [...new Set([...this.selectedIds, ...this.allPageIds])];
-            } else {
-                // Jika 'checkAll' menjadi false (tidak dicentang):
-                // Filter 'selectedIds', buang semua ID yang ada di 'allPageIds'.
-                this.selectedIds = this.selectedIds.filter(id => !this.allPageIds.includes(id));
-            }
-        },
-    
-        updateCheckAllState() {
-            // Cek: Apakah *semua* ID di 'allPageIds' (dan 'allPageIds' tidak kosong)
-            //      sudah ada (ter-include) di dalam array 'selectedIds'?
-            this.checkAll = this.allPageIds.length > 0 && this.allPageIds.every(id => this.selectedIds.includes(id));
-        },
-    
-        printSelected() {
-            const ids = this.selectedIds.join(',');
-            if (ids) {
-                const url = `{{ route('assets.printLabels') }}?ids=${ids}`;
-                window.open(url, '_blank');
-            }
-        }
-    }" class="py-12">
+    {{-- === INI PERBAIKAN UTAMA: Panggil pageData() === --}}
+    <div x-data="pageData()" class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
 
-                    <div class="flex flex-wrap gap-4 justify-between items-center mb-6">
-                        {{-- Filter Kategori --}}
-                        <div class="flex items-center space-x-2">
-                            <label for="category_filter" class="text-sm font-medium">Filter Kategori:</label>
-                            <select id="category_filter" x-model="selectedCategory"
-                                @change="window.location = `{{ route('assets.index') }}?category_id=${selectedCategory}`"
-                                class="rounded-md dark:bg-gray-700 text-sm">
-                                <option value="all">Semua Kategori Aktif</option>
-                                @foreach ($categories as $category)
-                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                @endforeach
-                            </select>
+                    {{-- Layout Grid untuk Filter dan Aksi Utama --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+
+                        {{-- Kolom Kiri: Filter --}}
+                        <div class="flex flex-wrap gap-4 items-center">
+                            {{-- Filter Kategori --}}
+                            <div class="flex items-center space-x-2">
+                                <label for="category_filter" class="text-sm font-medium">Kategori:</label>
+                                {{-- Gunakan directive x-select2 --}}
+                                <select id="category_filter" name="category_ids[]" multiple="multiple"
+                                    x-ref="categorySelect" class="rounded-md dark:bg-gray-700 text-sm w-full sm:w-64">
+                                    @foreach ($categories as $category)
+                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            {{-- Filter Tahun Pengadaan --}}
+                            <div class="flex items-center space-x-2">
+                                <label for="year_filter" class="text-sm font-medium">Tahun:</label>
+                                <select id="year_filter" x-model="selectedYear"
+                                    class="rounded-md dark:bg-gray-700 text-sm">
+                                    <option value="all">Semua Tahun</option>
+                                    @foreach ($years as $year)
+                                        <option value="{{ $year }}">{{ $year }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            {{-- Tombol Terapkan --}}
+                            <button @click="applyFilters"
+                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded text-sm">
+                                Terapkan
+                            </button>
                         </div>
 
-                        <div class="flex flex-wrap gap-2">
-                            <a href="{{ route('assets.create') }}"
-                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                                Tambah Aset
-                            </a>
+                        {{-- Kolom Kanan: Tombol Aksi Utama & Pencarian --}}
+                        <div class="flex flex-col md:items-end gap-4">
+                            {{-- Grup Tombol Aksi Utama --}}
+                            <div class="flex flex-wrap gap-2 justify-end">
+                                <a href="{{ route('assets.create') }}"
+                                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm">
+                                    Tambah Aset
+                                </a>
+                                <a href="{{ route('assets.batchCreate') }}"
+                                    class="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded text-sm">
+                                    Tambah Massal
+                                </a>
+                                <button @click="showImportBatchModal = true"
+                                    class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded text-sm">
+                                    Impor Massal
+                                </button>
+                            </div>
+                            {{-- Form Pencarian --}}
+                            <form action="{{ route('assets.index') }}" method="GET" class="flex w-full md:w-auto">
+                                <template x-for="categoryId in selectedCategories" :key="categoryId">
+                                    <input type="hidden" name="category_ids[]" :value="categoryId">
+                                </template>
+                                <input type="hidden" name="purchase_year" :value="selectedYear">
+                                <input type="hidden" name="per_page" :value="perPage">
 
-                            <a href="{{ route('assets.batchCreate') }}"
-                                class="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded">
-                                Tambah Massal (Batch)
-                            </a>
-
-                            <button @click="showImportBatchModal = true"
-                                class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
-                                Impor Massal
-                            </button>
-
-                            {{-- Cetak Terpilih --}}
-                            <button @click="printSelected" :disabled="selectedIds.length === 0"
-                                class="bg-purple-500 text-white font-bold py-2 px-4 rounded disabled:bg-purple-300 disabled:cursor-not-allowed">
-                                Cetak Terpilih (<span x-text="selectedIds.length"></span>)
-                            </button>
-
-                            {{-- Cetak Semua (berdasarkan filter kategori) --}}
-                            <a :href="`{{ route('assets.printLabels') }}?category_id=${selectedCategory}`"
-                                target="_blank"
-                                class="bg-gray-600 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded">
-                                Cetak Semua
-                            </a>
-
-                            {{-- Export Excel (Aktif) berdasarkan kategori terpilih --}}
-                            <a :href="`{{ route('assets.exportActiveExcel') }}?category_id=${selectedCategory}&search={{ urlencode(request('search', '')) }}`"
-                                class="bg-green-600 hover:bg-green-800 text-white font-bold py-2 px-4 rounded">
-                                Export Excel (Aktif)
-                            </a>
-
-                            {{-- Laporan PDF (Aktif) berdasarkan kategori terpilih --}}
-                            <a :href="`{{ route('assets.downloadActivePDF') }}?category_id=${selectedCategory}&search={{ urlencode(request('search', '')) }}`"
-                                target="_blank"
-                                class="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 rounded">
-                                Laporan PDF (Aktif)
-                            </a>
+                                <input type="text" name="search" placeholder="Cari nama atau kode aset..."
+                                    class="form-input rounded-l-md dark:bg-gray-700 w-full md:w-64"
+                                    value="{{ request('search') }}">
+                                <button type="submit"
+                                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-r-md">Cari</button>
+                            </form>
                         </div>
-
                     </div>
-                    <form action="{{ route('assets.index') }}" method="GET">
-                        <div class="flex items-center">
-                            <input type="text" name="search" placeholder="Cari nama atau kode aset..."
-                                class="form-input rounded-l-md dark:bg-gray-700 dark:text-gray-300 w-64"
-                                value="{{ request('search') }}">
-                            <button type="submit"
-                                class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-r-md">
-                                Cari
-                            </button>
-                        </div>
-                    </form>
 
+                    {{-- Grup Tombol Ekspor & Cetak Label --}}
+                    <div class="flex flex-wrap gap-2 mb-6 border-t dark:border-gray-700 pt-4">
+                        <button @click="printSelected" :disabled="selectedIds.length === 0"
+                            class="bg-purple-500 text-white font-bold py-2 px-4 rounded text-sm disabled:bg-purple-300 disabled:cursor-not-allowed">
+                            Cetak Label (<span x-text="selectedIds.length"></span>)
+                        </button>
+                        <a :href="generateExportUrl('{{ route('assets.exportActiveExcel') }}')"
+                            class="bg-green-600 hover:bg-green-800 text-white font-bold py-2 px-4 rounded text-sm">
+                            Export Excel (Filter)
+                        </a>
+                        <a :href="generateExportUrl('{{ route('assets.downloadActivePDF') }}')" target="_blank"
+                            class="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 rounded text-sm">
+                            Laporan PDF (Filter)
+                        </a>
+                    </div>
+
+                    {{-- Tabel Data --}}
                     <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
                         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                             <thead
                                 class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
                                     <th scope="col" class="p-4">
-                                        <input type="checkbox" x-model="checkAll" @click="toggleCheckAll"
+                                        <input type="checkbox" @click="toggleAll($event)"
                                             class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800">
                                     </th>
                                     <th scope="col" class="py-3 px-6">No</th>
@@ -142,7 +121,6 @@
                                     <tr
                                         class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                         <td class="p-4">
-                                            {{-- Checkbox untuk setiap baris --}}
                                             <input type="checkbox" :value="{{ $asset->id }}" x-model="selectedIds"
                                                 class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800">
                                         </td>
@@ -163,78 +141,60 @@
                                                     $asset->current_status == 'Digunakan',
                                                 'text-red-700 bg-red-100 dark:bg-red-700 dark:text-red-100' =>
                                                     $asset->current_status == 'Rusak',
+                                                'text-gray-700 bg-gray-100 dark:bg-gray-700 dark:text-gray-100' => !in_array(
+                                                    $asset->current_status,
+                                                    ['Tersedia', 'Dipinjam', 'Digunakan', 'Rusak']),
                                             ])>
                                                 {{ $asset->current_status }}
                                             </span>
                                         </td>
-                                        <td class="py-4 px-6 flex flex-wrap gap-2">
-                                            <a href="{{ route('assets.show', $asset->id) }}"
-                                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-xs">
-                                                Detail
-                                            </a>
-                                            <a href="{{ route('assets.edit', $asset->id) }}"
-                                                class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">
-                                                Edit
-                                            </a>
-                                            <button onclick="confirmDelete({{ $asset->id }})"
-                                                class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
-                                                Hapus
-                                            </button>
+                                        <td class="py-4 px-6">
+                                            <div class="flex flex-nowrap gap-2">
+                                                <a href="{{ route('assets.show', $asset->id) }}"
+                                                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-xs">
+                                                    Detail
+                                                </a>
+                                                <a href="{{ route('assets.edit', $asset->id) }}"
+                                                    class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded text-xs">
+                                                    Edit
+                                                </a>
+                                                <button onclick="confirmDelete({{ $asset->id }})"
+                                                    class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs">
+                                                    Hapus
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="py-4 px-6 text-center">Belum ada data aset.</td>
+                                        <td colspan="8" class="py-4 px-6 text-center">Tidak ada data aset.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
-                    {{-- <div class="mt-4 flex flex-wrap justify-between items-center gap-4">
-                        {{ $assets->appends(['search' => request('search'), 'category_id' => request('category_id', 'all')])->links() }}
-                    </div> --}}
+
+                    {{-- Paginasi & "Per Halaman" --}}
                     <div class="mt-4 flex flex-wrap justify-between items-center gap-4">
-                        {{-- Dropdown "Per Halaman" --}}
                         <div class="flex items-center space-x-2 text-sm">
                             <label for="per_page_select" class="text-gray-700 dark:text-gray-300">Tampilkan:</label>
-                            <select id="per_page_select" onchange="window.location.href = this.value"
+                            <select id="per_page_select" x-model="perPage" @change="applyFilters"
                                 class="rounded-md dark:bg-gray-700 text-sm border-gray-300 dark:border-gray-600 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600">
-
-                                {{-- Loop melalui opsi per halaman yang dikirim dari controller --}}
                                 @foreach ($allowedPerPages as $option)
-                                    <option {{-- 
-                                          - Buat URL baru dengan route()
-                                          - array_merge(request()->query(), ...) akan mengambil semua parameter URL saat ini
-                                            (seperti 'search' dan 'category_id')
-                                          - lalu menimpanya/menambahkannya dengan 'per_page' => $option
-                                          - 'page' => 1 digunakan untuk kembali ke halaman pertama saat ganti jumlah item
-                                        --}}
-                                        value="{{ route('assets.index', array_merge(request()->query(), ['per_page' => $option, 'page' => 1])) }}"
-                                        {{-- Tandai sebagai 'selected' jika opsinya sama dengan $perPage saat ini --}} {{ $option == $perPage ? 'selected' : '' }}>
-
-                                        {{ $option }} per halaman
-                                    </option>
+                                    <option value="{{ $option }}">{{ $option }} per halaman</option>
                                 @endforeach
                             </select>
                         </div>
-
-                        {{-- Link Paginasi --}}
                         <div class="flex-grow text-right">
-                            {{-- 
-                              - Pastikan untuk menambahkan 'per_page' => $perPage ke appends()
-                              - request('category_id', 'all') sudah benar
-                              - request('search') sudah benar
-                            --}}
-                            {{ $assets->appends([
-                                    'search' => request('search'),
-                                    'category_id' => request('category_id', 'all'),
-                                    'per_page' => $perPage,
-                                ])->links() }}
+                            {{ $assets->links() }}
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
+
+        {{-- Modal Impor (tidak berubah) --}}
         <div x-show="showImportBatchModal" x-cloak
             class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
             @keydown.escape.window="showImportBatchModal = false">
@@ -264,37 +224,102 @@
             </div>
         </div>
     </div>
-</x-app-layout>
 
-<script>
-    // Fungsi untuk membuka tab baru dengan ID yang dipilih
-    function printSelected() {
-        const ids = this.selectedIds.join(',');
-        if (ids) {
-            const url = `{{ route('assets.printLabels') }}?ids=${ids}`;
-            window.open(url, '_blank');
-        }
-    }
+    {{-- Script JavaScript (tidak berubah dari sebelumnya, sudah benar) --}}
+    @push('scripts')
+        <script>
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('pageData', () => ({
+                    selectedIds: [],
+                    showImportBatchModal: false,
 
-    function confirmDelete(id) {
-        Swal.fire({
-            title: 'Anda yakin?',
-            text: "Data aset ini akan dihapus permanen!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Ya, hapus!',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                let form = document.createElement('form');
-                form.action = `/assets/${id}`;
-                form.method = 'POST';
-                form.innerHTML = `@csrf @method('DELETE')`;
-                document.body.appendChild(form);
-                form.submit();
+                    // Ambil nilai awal dari request (string array)
+                    selectedCategories: @json(request()->input('category_ids', [])).map(String),
+                    selectedYear: '{{ request('purchase_year', 'all') }}',
+                    perPage: '{{ $perPage }}',
+
+                    init() {
+                        // Inisialisasi Select2
+                        const $el = $(this.$refs.categorySelect);
+                        $el.select2({
+                            theme: 'classic',
+                            placeholder: 'Pilih satu atau lebih kategori',
+                            width: 'resolve'
+                        });
+
+                        // Set nilai awal
+                        $el.val(this.selectedCategories).trigger('change');
+
+                        // Sinkronisasi Select2 -> Alpine
+                        $el.on('change', () => {
+                            this.selectedCategories = ($el.val() || []).map(String);
+                        });
+                    },
+
+                    toggleAll(event) {
+                        let checkboxes = document.querySelectorAll('tbody input[type="checkbox"]');
+                        this.selectedIds = event.target.checked ?
+                            Array.from(checkboxes).map(cb => parseInt(cb.value)) : [];
+                    },
+
+                    generateExportUrl(baseUrl) {
+                        const url = new URL(baseUrl);
+                        url.searchParams.delete('category_ids[]');
+                        (this.selectedCategories || []).forEach(id => {
+                            url.searchParams.append('category_ids[]', id);
+                        });
+                        url.searchParams.set('purchase_year', this.selectedYear);
+                        return url.toString();
+                    },
+
+                    printSelected() {
+                        const ids = this.selectedIds.join(',');
+                        if (ids) {
+                            const url = `{{ route('assets.printLabels') }}?ids=${ids}`;
+                            window.open(url, '_blank');
+                        }
+                    },
+
+                    applyFilters() {
+                        // Pastikan array
+                        const cats = Array.isArray(this.selectedCategories) ? this.selectedCategories : [];
+
+                        const url = new URL('{{ route('assets.index') }}');
+                        cats.forEach(id => url.searchParams.append('category_ids[]', id));
+                        url.searchParams.set('purchase_year', this.selectedYear);
+                        url.searchParams.set('per_page', this.perPage);
+                        url.searchParams.set('page', 1);
+
+                        // Bawa keyword pencarian saat ini (kalau ada di server)
+                        const currentSearch = '{{ request('search') }}';
+                        if (currentSearch) url.searchParams.set('search', currentSearch);
+
+                        window.location.href = url.toString();
+                    }
+                }));
+            });
+            // Fungsi confirmDelete (di luar Alpine)
+            function confirmDelete(id) {
+                Swal.fire({
+                    title: 'Anda yakin?',
+                    text: "Data aset ini akan dihapus permanen!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Ya, hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        let form = document.createElement('form');
+                        form.action = `/assets/${id}`;
+                        form.method = 'POST';
+                        form.innerHTML = `@csrf @method('DELETE')`;
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                })
             }
-        })
-    }
-</script>
+        </script>
+    @endpush
+</x-app-layout>

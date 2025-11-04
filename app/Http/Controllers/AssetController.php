@@ -54,44 +54,48 @@ class AssetController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $categoryId = $request->input('category_id');
+        $categoryIds = \Illuminate\Support\Arr::wrap($request->input('category_ids', []));
+        $purchaseYear = $request->input('purchase_year');
 
-        // Tentukan jumlah item per halaman yang diizinkan
-        $allowedPerPages = [10, 20, 50, 100, 200];
-        // Ambil nilai per_page dari request, default-nya 10
-        $perPage = $request->input('per_page', 10);
-        // Validasi, jika nilai tidak diizinkan, kembalikan ke 10
+        // === REFACTOR: Logika Paginasi ===
+        $allowedPerPages = [10, 25, 50, 100]; // Opsi per halaman
+        $perPage = $request->input('per_page', 10); // Default 10
         if (!in_array($perPage, $allowedPerPages)) {
             $perPage = 10;
         }
 
-        $assets = Asset::with([
-            'category',
-            'institution',
-            'building',
-            'room'
-        ])
+        $assets = Asset::with(['category', 'institution', 'building', 'room'])
             ->whereNull('disposal_date')
-            //Hapus Ya
-            ->whereDoesntHave('category', function ($query) {
-                $query->where('name', 'BUKU');
+            ->when(!empty($categoryIds), function ($query) use ($categoryIds) {
+                return $query->whereIn('category_id', $categoryIds);
             })
-            ->when($categoryId && $categoryId !== 'all', function ($query) use ($categoryId) {
-                return $query->where('category_id', $categoryId);
+            ->when($purchaseYear && $purchaseYear !== 'all', function ($query) use ($purchaseYear) {
+                return $query->where('purchase_year', $purchaseYear);
             })
             ->when($search, function ($query, $search) {
-                // Pencarian berdasarkan nama aset atau kode YPT
                 return $query->where('name', 'like', "%{$search}%")
                     ->orWhere('asset_code_ypt', 'like', "%{$search}%");
             })
             ->latest()
-            ->paginate($perPage)
-            ->withQueryString();
+            ->paginate($perPage) // Gunakan variabel $perPage
+            ->withQueryString(); // withQueryString otomatis membawa SEMUA parameter (search, category_ids, year, per_page)
 
-        //Hapus Ya
-        $categories = Category::where('name', '!=', 'BUKU')->orderBy('name')->get();
+        $categories = Category::orderBy('name')->get();
+        $years = Asset::whereNull('disposal_date')
+            ->whereNotNull('purchase_year')
+            ->select('purchase_year')
+            ->distinct()
+            ->orderBy('purchase_year', 'desc')
+            ->pluck('purchase_year');
 
-        return view('assets.index', compact('assets', 'categories', 'perPage', 'allowedPerPages'));
+        // === REFACTOR: Kirim $perPage dan $allowedPerPages ke view ===
+        return view('assets.index', compact(
+            'assets',
+            'categories',
+            'years',
+            'perPage',
+            'allowedPerPages'
+        ));
     }
 
     /**
