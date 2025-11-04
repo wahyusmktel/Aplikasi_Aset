@@ -9,6 +9,34 @@
         selectedIds: [],
         showImportBatchModal: false,
         selectedCategory: '{{ request('category_id', 'all') }}',
+        {{-- printSelected() {
+            const ids = this.selectedIds.join(',');
+            if (ids) {
+                const url = `{{ route('assets.printLabels') }}?ids=${ids}`;
+                window.open(url, '_blank');
+            }
+        } --}}
+        allPageIds: @json($assets->pluck('id')->toArray()),
+        checkAll: false,
+        toggleCheckAll() {
+            if (this.checkAll) {
+                // Jika 'checkAll' menjadi true (dicentang):
+                // Gabungkan 'selectedIds' yang sudah ada dengan 'allPageIds'.
+                // Gunakan Set untuk memastikan tidak ada ID duplikat.
+                this.selectedIds = [...new Set([...this.selectedIds, ...this.allPageIds])];
+            } else {
+                // Jika 'checkAll' menjadi false (tidak dicentang):
+                // Filter 'selectedIds', buang semua ID yang ada di 'allPageIds'.
+                this.selectedIds = this.selectedIds.filter(id => !this.allPageIds.includes(id));
+            }
+        },
+    
+        updateCheckAllState() {
+            // Cek: Apakah *semua* ID di 'allPageIds' (dan 'allPageIds' tidak kosong)
+            //      sudah ada (ter-include) di dalam array 'selectedIds'?
+            this.checkAll = this.allPageIds.length > 0 && this.allPageIds.every(id => this.selectedIds.includes(id));
+        },
+    
         printSelected() {
             const ids = this.selectedIds.join(',');
             if (ids) {
@@ -96,7 +124,10 @@
                             <thead
                                 class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
-                                    <th scope="col" class="p-4"></th>
+                                    <th scope="col" class="p-4">
+                                        <input type="checkbox" x-model="checkAll" @click="toggleCheckAll"
+                                            class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800">
+                                    </th>
                                     <th scope="col" class="py-3 px-6">No</th>
                                     <th scope="col" class="py-3 px-6">Kode Aset YPT</th>
                                     <th scope="col" class="py-3 px-6">Nama Barang</th>
@@ -159,8 +190,47 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="mt-4">
+                    {{-- <div class="mt-4 flex flex-wrap justify-between items-center gap-4">
                         {{ $assets->appends(['search' => request('search'), 'category_id' => request('category_id', 'all')])->links() }}
+                    </div> --}}
+                    <div class="mt-4 flex flex-wrap justify-between items-center gap-4">
+                        {{-- Dropdown "Per Halaman" --}}
+                        <div class="flex items-center space-x-2 text-sm">
+                            <label for="per_page_select" class="text-gray-700 dark:text-gray-300">Tampilkan:</label>
+                            <select id="per_page_select" onchange="window.location.href = this.value"
+                                class="rounded-md dark:bg-gray-700 text-sm border-gray-300 dark:border-gray-600 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600">
+
+                                {{-- Loop melalui opsi per halaman yang dikirim dari controller --}}
+                                @foreach ($allowedPerPages as $option)
+                                    <option {{-- 
+                                          - Buat URL baru dengan route()
+                                          - array_merge(request()->query(), ...) akan mengambil semua parameter URL saat ini
+                                            (seperti 'search' dan 'category_id')
+                                          - lalu menimpanya/menambahkannya dengan 'per_page' => $option
+                                          - 'page' => 1 digunakan untuk kembali ke halaman pertama saat ganti jumlah item
+                                        --}}
+                                        value="{{ route('assets.index', array_merge(request()->query(), ['per_page' => $option, 'page' => 1])) }}"
+                                        {{-- Tandai sebagai 'selected' jika opsinya sama dengan $perPage saat ini --}} {{ $option == $perPage ? 'selected' : '' }}>
+
+                                        {{ $option }} per halaman
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Link Paginasi --}}
+                        <div class="flex-grow text-right">
+                            {{-- 
+                              - Pastikan untuk menambahkan 'per_page' => $perPage ke appends()
+                              - request('category_id', 'all') sudah benar
+                              - request('search') sudah benar
+                            --}}
+                            {{ $assets->appends([
+                                    'search' => request('search'),
+                                    'category_id' => request('category_id', 'all'),
+                                    'per_page' => $perPage,
+                                ])->links() }}
+                        </div>
                     </div>
                 </div>
             </div>

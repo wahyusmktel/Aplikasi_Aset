@@ -56,6 +56,15 @@ class AssetController extends Controller
         $search = $request->input('search');
         $categoryId = $request->input('category_id');
 
+        // Tentukan jumlah item per halaman yang diizinkan
+        $allowedPerPages = [10, 20, 50, 100, 200];
+        // Ambil nilai per_page dari request, default-nya 10
+        $perPage = $request->input('per_page', 10);
+        // Validasi, jika nilai tidak diizinkan, kembalikan ke 10
+        if (!in_array($perPage, $allowedPerPages)) {
+            $perPage = 10;
+        }
+
         $assets = Asset::with([
             'category',
             'institution',
@@ -76,13 +85,13 @@ class AssetController extends Controller
                     ->orWhere('asset_code_ypt', 'like', "%{$search}%");
             })
             ->latest()
-            ->paginate(20)
+            ->paginate($perPage)
             ->withQueryString();
 
         //Hapus Ya
         $categories = Category::where('name', '!=', 'BUKU')->orderBy('name')->get();
 
-        return view('assets.index', compact('assets', 'categories'));
+        return view('assets.index', compact('assets', 'categories', 'perPage', 'allowedPerPages'));
     }
 
     /**

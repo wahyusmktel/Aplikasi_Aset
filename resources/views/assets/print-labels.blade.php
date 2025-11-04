@@ -71,7 +71,21 @@
                 <div class="flex-grow flex items-center gap-3">
                     {{-- === PERUBAHAN DI SINI: Tambahkan `pl-1` === --}}
                     <div class="flex-shrink-0">
-                        {!! QrCode::size(50)->generate(route('public.assets.show', $asset->asset_code_ypt)) !!}
+                        {{-- {!! QrCode::size(50)->generate(route('public.assets.show', $asset->asset_code_ypt)) !!} --}}
+                        @php
+                            // 1. Tentukan domain publik Anda secara manual di sini
+                            $publicDomain = 'http://34.50.72.182';
+
+                            // 2. Dapatkan HANYA path-nya saja dari route()
+                            //    Parameter 'false' ketiga berarti "jangan buat URL absolut"
+                            $relativePath = route('public.assets.show', $asset->asset_code_ypt, false);
+
+                            // 3. Gabungkan domain dan path
+                            $fullPublicUrl = $publicDomain . $relativePath;
+                        @endphp
+
+                        {{-- Generate QR code dari URL yang sudah digabung --}}
+                        {!! QrCode::size(50)->generate($fullPublicUrl) !!}
                     </div>
                     <div class="text-xxs space-y-0.5 leading-tight">
                         <p class="font-bold text-xs leading-tight">{{ $asset->name }}</p>
