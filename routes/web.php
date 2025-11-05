@@ -29,7 +29,14 @@ use App\Http\Controllers\DisposedAssetController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\EmployeeAccountController;
 use App\Http\Controllers\AssetMappingController;
+use App\Http\Controllers\Auth\SocialLoginController;
 use Illuminate\Support\Facades\Route;
+
+// === Rute untuk Google SSO ===
+Route::get('/auth/google/redirect', [SocialLoginController::class, 'redirectToGoogle'])
+    ->name('auth.google.redirect'); // <-- Ini yang dipanggil tombol di login.blade.php
+
+Route::get('/auth/google/callback', [SocialLoginController::class, 'handleGoogleCallback']);
 
 // Rute untuk halaman publik
 Route::get('/aset/{asset_code_ypt}', [PublicAssetController::class, 'show'])->name('public.assets.show');
