@@ -111,10 +111,10 @@ class AssetController extends Controller
         $purchaseYear = $request->input('purchase_year');
 
         // === REFACTOR: Logika Paginasi ===
-        $allowedPerPages = [10, 25, 50, 100];
+        $allowedPerPages = [12, 25, 50, 100];
         $perPage = (int) $request->input('per_page', 10);
         if (!in_array($perPage, $allowedPerPages, true)) {
-            $perPage = 10;
+            $perPage = 12;
         }
 
         $assets = Asset::with(['category', 'institution', 'building', 'room'])
