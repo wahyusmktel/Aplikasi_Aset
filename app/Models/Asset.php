@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\MaintenanceSchedule;
 use Carbon\Carbon;
 
 class Asset extends Model
@@ -186,5 +187,13 @@ class Asset extends Model
     public function audits()
     {
         return $this->hasMany(\App\Models\AssetAudit::class);
+    }
+
+    /**
+     * Relasi: Satu Aset PUNYA (hasMany) banyak jadwal maintenance.
+     */
+    public function maintenanceSchedules()
+    {
+        return $this->hasMany(MaintenanceSchedule::class);
     }
 }

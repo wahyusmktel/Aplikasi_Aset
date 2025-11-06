@@ -63,4 +63,9 @@ class User extends Authenticatable
     {
         return $this->role === 'admin';
     }
+
+    public function maintenanceTasks()
+    {
+        return $this->hasMany(MaintenanceSchedule::class, 'assigned_to_user_id');
+    }
 }

@@ -30,6 +30,7 @@ use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\EmployeeAccountController;
 use App\Http\Controllers\AssetMappingController;
 use App\Http\Controllers\Auth\SocialLoginController;
+use App\Http\Controllers\MaintenanceScheduleController;
 use Illuminate\Support\Facades\Route;
 
 // === Rute untuk Google SSO ===
@@ -195,6 +196,8 @@ Route::middleware('auth')->group(function () {
     // Route untuk Asset Mapping (AI) <-- TAMBAHKAN BLOK INI
     Route::get('/asset-mapping', [AssetMappingController::class, 'index'])->name('asset-mapping.index');
     Route::post('/asset-mapping', [AssetMappingController::class, 'store'])->name('asset-mapping.store');
+
+    Route::resource('maintenance-schedules', MaintenanceScheduleController::class);
 });
 
 require __DIR__ . '/auth.php';

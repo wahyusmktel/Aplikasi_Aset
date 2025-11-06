@@ -370,6 +370,11 @@ class AssetController extends Controller
         // Load relasi agar data master bisa ditampilkan di view
         $asset->load('institution', 'category', 'building', 'room', 'faculty', 'department', 'personInCharge', 'assetFunction', 'fundingSource');
 
+        // relasi 'assignedTo' dari dalam 'maintenanceSchedules'
+        $asset->load(['maintenanceSchedules' => function ($query) {
+            $query->orderBy('schedule_date', 'desc'); // Urutkan riwayat dari terbaru
+        }, 'maintenanceSchedules.assignedTo']);
+
         return view('assets.show', compact('asset'));
     }
 

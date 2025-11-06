@@ -750,6 +750,72 @@
                 </div>
             @endif
 
+            <div class="mt-8 bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900 dark:text-gray-100">
+
+                    <h3 class="text-xl font-semibold mb-4">Riwayat Pemeliharaan</h3>
+
+                    <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
+                        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                            <thead
+                                class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                <tr>
+                                    <th scope="col" class="py-3 px-6">Judul Pekerjaan</th>
+                                    <th scope="col" class="py-3 px-6">Tgl. Jadwal</th>
+                                    <th scope="col" class="py-3 px-6">Status</th>
+                                    <th scope="col" class="py-3 px-6">Tgl. Selesai</th>
+                                    <th scope="col" class="py-3 px-6">Teknisi</th>
+                                    <th scope="col" class="py-3 px-6">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($asset->maintenanceSchedules as $schedule)
+                                    <tr
+                                        class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                        <td class="py-4 px-6 font-medium text-gray-900 dark:text-white">
+                                            {{ $schedule->title }}
+                                        </td>
+                                        <td class="py-4 px-6">
+                                            {{ \Carbon\Carbon::parse($schedule->schedule_date)->format('d M Y') }}</td>
+                                        <td class="py-4 px-6">
+                                            <span @class([
+                                                'px-2 py-1 font-semibold leading-tight text-xs rounded-full',
+                                                'text-blue-700 bg-blue-100 dark:bg-blue-700 dark:text-blue-100' =>
+                                                    $schedule->status == 'scheduled',
+                                                'text-yellow-700 bg-yellow-100 dark:bg-yellow-700 dark:text-yellow-100' =>
+                                                    $schedule->status == 'in_progress',
+                                                'text-green-700 bg-green-100 dark:bg-green-700 dark:text-green-100' =>
+                                                    $schedule->status == 'completed',
+                                                'text-gray-700 bg-gray-100 dark:bg-gray-700 dark:text-gray-100' =>
+                                                    $schedule->status == 'cancelled',
+                                            ])>
+                                                {{ ucfirst($schedule->status) }}
+                                            </span>
+                                        </td>
+                                        <td class="py-4 px-6">
+                                            {{ $schedule->completed_at ? \Carbon\Carbon::parse($schedule->completed_at)->format('d M Y') : '-' }}
+                                        </td>
+                                        <td class="py-4 px-6">{{ $schedule->assignedTo->name ?? '-' }}</td>
+                                        <td class="py-4 px-6">
+                                            <a href="{{ route('maintenance-schedules.show', $schedule->id) }}"
+                                                class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded text-xs">
+                                                Lihat Detail
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="py-4 px-6 text-center">Aset ini belum memiliki
+                                            riwayat pemeliharaan.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+
         </div>
     </div>
     {{-- Scripts --}}

@@ -20,6 +20,10 @@
                         {{ __('Aset') }}
                     </x-nav-link>
 
+                    <x-nav-link :href="route('maintenance-schedules.index')" :active="request()->routeIs('maintenance-schedules.*')">
+                        {{ __('Jadwal Pemeliharaan') }}
+                    </x-nav-link>
+
                     <x-nav-link :href="route('disposedAssets.index')" :active="request()->routeIs('disposedAssets.index')">
                         {{ __('Riwayat Disposal') }}
                     </x-nav-link>
