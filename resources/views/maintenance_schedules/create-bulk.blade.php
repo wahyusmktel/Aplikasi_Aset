@@ -80,7 +80,12 @@
 
                         <hr class="dark:border-gray-700 my-6">
                         <h3 class="text-lg font-semibold mb-4">Pilih Aset (Minimal 1)</h3>
-
+                        <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+                            <span id="selected-count" class="font-bold">{{ count($selectedAssetIds) }}</span> aset
+                            dipilih.
+                            <a href="{{ route('maintenance-schedules.clearBulk') }}"
+                                class="ms-2 text-red-500 hover:underline">(Bersihkan semua pilihan)</a>
+                        </div>
                         <div class="overflow-x-auto relative shadow-md sm:rounded-lg border dark:border-gray-700">
                             <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                                 <thead
@@ -101,8 +106,10 @@
                                         <tr
                                             class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                             <td class="py-4 px-4">
-                                                <input type="checkbox" name="asset_ids[]" value="{{ $asset->id }}"
-                                                    class="asset-checkbox rounded border-gray-300 dark:border-gray-700 dark:bg-gray-900 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600">
+                                                <input type="checkbox" value="{{ $asset->id }}"
+                                                    class="asset-checkbox-ajax rounded border-gray-300 dark:border-gray-700 dark:bg-gray-900 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600"
+                                                    data-url="{{ route('maintenance-schedules.toggleBulk') }}"
+                                                    {{ in_array($asset->id, $selectedAssetIds) ? 'checked' : '' }}>
                                             </td>
                                             <td class="py-4 px-6 font-medium text-gray-900 dark:text-white">
                                                 {{ $asset->name }}</td>
@@ -118,6 +125,9 @@
                                     @endforelse
                                 </tbody>
                             </table>
+                            <div class="mt-4">
+                                {{ $assets->links() }}
+                            </div>
                         </div>
 
                         <div class="flex items-center justify-end mt-6">
@@ -137,10 +147,42 @@
 
     @push('scripts')
         <script>
-            document.getElementById('select-all-assets').addEventListener('click', function(event) {
-                let checkboxes = document.querySelectorAll('.asset-checkbox');
-                checkboxes.forEach(function(checkbox) {
-                    checkbox.checked = event.target.checked;
+            $(document).ready(function() {
+                // Pastikan Anda sudah punya jQuery (dari DataTables sebelumnya)
+
+                // Hapus script DataTables jika masih ada
+                // $('#assets-table').DataTable(...); // HAPUS INI
+
+                // Script AJAX untuk checkbox
+                $('.asset-checkbox-ajax').on('change', function() {
+                    let checkbox = $(this);
+                    let assetId = checkbox.val();
+                    let url = checkbox.data('url');
+
+                    $.ajax({
+                        type: 'POST',
+                        url: url,
+                        data: {
+                            _token: '{{ csrf_token() }}', // Jangan lupa CSRF
+                            id: assetId
+                        },
+                        success: function(response) {
+                            // Update hitungan
+                            $('#selected-count').text(response.count);
+                            console.log('ID ' + assetId + ' tersimpan ke session.');
+                        },
+                        error: function() {
+                            alert('Gagal menyimpan pilihan. Coba lagi.');
+                            // Kembalikan status checkbox jika gagal
+                            checkbox.prop('checked', !checkbox.prop('checked'));
+                        }
+                    });
+                });
+
+                // "Select All" di Halaman Ini Saja
+                $('#select-all-assets').on('click', function() {
+                    // Ini HANYA akan memilih yang terlihat di halaman ini
+                    $('.asset-checkbox-ajax').prop('checked', $(this).prop('checked')).trigger('change');
                 });
             });
         </script>

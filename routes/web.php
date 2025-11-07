@@ -197,6 +197,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/asset-mapping', [AssetMappingController::class, 'index'])->name('asset-mapping.index');
     Route::post('/asset-mapping', [AssetMappingController::class, 'store'])->name('asset-mapping.store');
 
+    Route::post('maintenance-schedules/toggle-bulk', [MaintenanceScheduleController::class, 'toggleBulk'])
+        ->name('maintenance-schedules.toggleBulk');
+    Route::get('maintenance-schedules/clear-bulk', [MaintenanceScheduleController::class, 'clearBulk'])
+        ->name('maintenance-schedules.clearBulk');
+
     // Rute untuk Penjadwalan Massal
     Route::get('maintenance-schedules/create-bulk', [MaintenanceScheduleController::class, 'createBulk'])
         ->name('maintenance-schedules.createBulk');
