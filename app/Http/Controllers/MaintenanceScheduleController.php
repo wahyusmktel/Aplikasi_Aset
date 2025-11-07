@@ -138,4 +138,73 @@ class MaintenanceScheduleController extends Controller
         return redirect()->route('maintenance-schedules.index')
             ->with('success', 'Jadwal pemeliharaan berhasil dihapus.');
     }
+
+    /**
+     * Menampilkan form untuk membuat jadwal massal.
+     */
+    public function createBulk()
+    {
+        // Ambil semua aset untuk ditampilkan di tabel checklist
+        // Eager load relasi agar bisa ditampilkan di tabel (misal: kategori & lokasi)
+        $assets = Asset::with(['category', 'room', 'building'])->orderBy('name')->get();
+
+        // Ambil semua user (teknisi) untuk dropdown
+        $users = User::orderBy('name')->get();
+
+        return view('maintenance_schedules.create-bulk', compact('assets', 'users'));
+    }
+
+    /**
+     * Menyimpan data jadwal massal dari form 'createBulk'.
+     */
+    public function storeBulk(Request $request)
+    {
+        // 1. Validasi data
+        $validatedData = $request->validate([
+            // Validasi untuk detail pekerjaan
+            'title' => 'required|string|max:255',
+            'maintenance_type' => 'required|string',
+            'schedule_date' => 'required|date',
+            'description' => 'nullable|string',
+            'assigned_to_user_id' => 'nullable|exists:users,id',
+
+            // Validasi untuk aset yang dipilih (HARUS BERUPA ARRAY)
+            'asset_ids' => 'required|array|min:1',
+            'asset_ids.*' => 'required|exists:assets,id', // Cek tiap ID di array
+        ]);
+
+        $assetIds = $validatedData['asset_ids'];
+        $count = 0;
+
+        // 2. Siapkan data yang akan di-insert
+        // Kita gunakan query builder `insert()` agar jauh lebih cepat
+        // daripada looping dan create() satu per satu.
+
+        $recordsToInsert = [];
+        $now = now(); // Waktu saat ini untuk timestamp
+
+        foreach ($assetIds as $assetId) {
+            $recordsToInsert[] = [
+                'asset_id' => $assetId,
+                'assigned_to_user_id' => $validatedData['assigned_to_user_id'],
+                'title' => $validatedData['title'],
+                'description' => $validatedData['description'],
+                'maintenance_type' => $validatedData['maintenance_type'],
+                'schedule_date' => $validatedData['schedule_date'],
+                'status' => 'scheduled', // Status default
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+            $count++;
+        }
+
+        // 3. Masukkan semua data ke DB dalam satu query
+        if (!empty($recordsToInsert)) {
+            MaintenanceSchedule::insert($recordsToInsert);
+        }
+
+        // 4. Redirect kembali ke halaman index
+        return redirect()->route('maintenance-schedules.index')
+            ->with('success', "Penjadwalan massal berhasil dibuat untuk $count aset.");
+    }
 }

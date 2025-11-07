@@ -4,10 +4,16 @@
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 {{ __('Jadwal Pemeliharaan Aset') }}
             </h2>
-            <a href="{{ route('maintenance-schedules.create') }}"
-                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                + Buat Jadwal Baru
-            </a>
+            <div class="flex space-x-2">
+                <a href="{{ route('maintenance-schedules.createBulk') }}"
+                    class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                    + Buat Jadwal Massal
+                </a>
+                <a href="{{ route('maintenance-schedules.create') }}"
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    + Buat Jadwal Tunggal
+                </a>
+            </div>
         </div>
     </x-slot>
 
