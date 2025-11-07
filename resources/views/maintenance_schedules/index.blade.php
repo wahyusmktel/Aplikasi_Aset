@@ -5,6 +5,11 @@
                 {{ __('Jadwal Pemeliharaan Aset') }}
             </h2>
             <div class="flex space-x-2">
+                {{-- INI TOMBOL BARU --}}
+                <a href="{{ route('maintenance-schedules.bulkEdit') }}"
+                    class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded text-sm">
+                    Update Progress Massal
+                </a>
                 <a href="{{ route('maintenance-schedules.createBulk') }}"
                     class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
                     + Buat Jadwal Massal
@@ -12,6 +17,14 @@
                 <a href="{{ route('maintenance-schedules.create') }}"
                     class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                     + Buat Jadwal Tunggal
+                </a>
+                <a href="{{ route('maintenance-schedules.exportExcel', request()->query()) }}"
+                    class="bg-gray-700 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded text-sm">
+                    Export Excel
+                </a>
+                <a href="{{ route('maintenance-schedules.exportPdf', request()->query()) }}"
+                    class="bg-gray-700 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded text-sm">
+                    Export PDF
                 </a>
             </div>
         </div>
@@ -28,7 +41,47 @@
                             <span class="block sm:inline">{{ session('success') }}</span>
                         </div>
                     @endif
-
+                    <form method="GET" action="{{ route('maintenance-schedules.index') }}" class="mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div>
+                                <x-input-label for="status" :value="__('Status')" />
+                                <select name="status" id="status"
+                                    class="block mt-1 w-full border-gray-300 ... rounded-md shadow-sm">
+                                    <option value="">Semua Status</option>
+                                    <option value="scheduled"
+                                        {{ ($filters['status'] ?? '') == 'scheduled' ? 'selected' : '' }}>Scheduled
+                                    </option>
+                                    <option value="in_progress"
+                                        {{ ($filters['status'] ?? '') == 'in_progress' ? 'selected' : '' }}>In Progress
+                                    </option>
+                                    <option value="completed"
+                                        {{ ($filters['status'] ?? '') == 'completed' ? 'selected' : '' }}>Completed
+                                    </option>
+                                    <option value="cancelled"
+                                        {{ ($filters['status'] ?? '') == 'cancelled' ? 'selected' : '' }}>Cancelled
+                                    </option>
+                                </select>
+                            </div>
+                            <div>
+                                <x-input-label for="date_from" :value="__('Dari Tanggal')" />
+                                <x-text-input id="date_from" class="block mt-1 w-full" type="date" name="date_from"
+                                    :value="$filters['date_from'] ?? ''" />
+                            </div>
+                            <div>
+                                <x-input-label for="date_to" :value="__('Sampai Tanggal')" />
+                                <x-text-input id="date_to" class="block mt-1 w-full" type="date" name="date_to"
+                                    :value="$filters['date_to'] ?? ''" />
+                            </div>
+                            <div class="flex items-end">
+                                <x-primary-button class="me-2">
+                                    Terapkan Filter
+                                </x-primary-button>
+                                <a href="{{ route('maintenance-schedules.index') }}" class="text-sm text-gray-600 ...">
+                                    Reset
+                                </a>
+                            </div>
+                        </div>
+                    </form>
                     <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
                         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                             <thead

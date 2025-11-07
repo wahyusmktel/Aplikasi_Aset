@@ -197,6 +197,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/asset-mapping', [AssetMappingController::class, 'index'])->name('asset-mapping.index');
     Route::post('/asset-mapping', [AssetMappingController::class, 'store'])->name('asset-mapping.store');
 
+    // Rute untuk Update Progress Massal
+    Route::get('maintenance-schedules/bulk-edit', [MaintenanceScheduleController::class, 'bulkEdit'])
+        ->name('maintenance-schedules.bulkEdit');
+    Route::post('maintenance-schedules/bulk-update', [MaintenanceScheduleController::class, 'bulkUpdate'])
+        ->name('maintenance-schedules.bulkUpdate');
+
     Route::post('maintenance-schedules/toggle-bulk', [MaintenanceScheduleController::class, 'toggleBulk'])
         ->name('maintenance-schedules.toggleBulk');
     Route::get('maintenance-schedules/clear-bulk', [MaintenanceScheduleController::class, 'clearBulk'])
@@ -209,6 +215,12 @@ Route::middleware('auth')->group(function () {
         ->name('maintenance-schedules.storeBulk');
 
     Route::resource('maintenance-schedules', MaintenanceScheduleController::class);
+
+    // TAMBAHKAN DUA RUTE INI
+    Route::get('maintenance-schedules/export/excel', [MaintenanceScheduleController::class, 'exportExcel'])
+        ->name('maintenance-schedules.exportExcel');
+    Route::get('maintenance-schedules/export/pdf', [MaintenanceScheduleController::class, 'exportPdf'])
+        ->name('maintenance-schedules.exportPdf');
 });
 
 require __DIR__ . '/auth.php';

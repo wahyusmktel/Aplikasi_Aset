@@ -7,22 +7,76 @@ use App\Models\MaintenanceSchedule;
 use App\Models\Asset;
 use App\Models\User;
 use Illuminate\Http\Request; // Untuk menangani data form
+use Carbon\Carbon;
+use App\Exports\MaintenanceSchedulesExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class MaintenanceScheduleController extends Controller
 {
+    // FUNGSI UNTUK MENDAPATKAN DATA TERFILTER (DRY - Don't Repeat Yourself)
+    private function getFilteredData(Request $request)
+    {
+        $filters = [
+            'status' => $request->get('status'),
+            'date_from' => $request->get('date_from'),
+            'date_to' => $request->get('date_to'),
+        ];
+
+        $query = MaintenanceSchedule::query()->with(['asset', 'assignedTo']);
+
+        $query->when($filters['status'], function ($q, $status) {
+            return $q->where('status', $status);
+        });
+        $query->when($filters['date_from'], function ($q, $date_from) {
+            return $q->whereDate('schedule_date', '>=', $date_from);
+        });
+        $query->when($filters['date_to'], function ($q, $date_to) {
+            return $q->whereDate('schedule_date', '<=', $date_to);
+        });
+
+        return [
+            'query' => $query->latest(),
+            'filters' => $filters
+        ];
+    }
+
     /**
      * Menampilkan daftar semua jadwal pemeliharaan.
      */
-    public function index()
+    public function index(Request $request) // Ubah method signature
     {
-        // Ambil semua jadwal, urutkan dari yang terbaru
-        // 'with' (Eager Loading) penting agar tidak terjadi N+1 query
-        $schedules = MaintenanceSchedule::with(['asset', 'assignedTo'])
-            ->latest()
-            ->paginate(15); // Paginasi 15 data per halaman
+        // Ambil input filter dari request
+        $filters = [
+            'status' => $request->get('status'),
+            'date_from' => $request->get('date_from'),
+            'date_to' => $request->get('date_to'),
+        ];
+
+        // Mulai query
+        $query = MaintenanceSchedule::with(['asset', 'assignedTo']);
+
+        // Terapkan filter JIKA ada
+        $query->when($filters['status'], function ($q, $status) {
+            return $q->where('status', $status);
+        });
+
+        $query->when($filters['date_from'], function ($q, $date_from) {
+            // Asumsi format 'YYYY-MM-DD'
+            return $q->whereDate('schedule_date', '>=', $date_from);
+        });
+
+        $query->when($filters['date_to'], function ($q, $date_to) {
+            return $q->whereDate('schedule_date', '<=', $date_to);
+        });
+
+        // Ambil data (sudah terfilter) dan paginasi
+        $schedules = $query->latest()->paginate(15)
+            ->withQueryString(); // withQueryString agar filter tetap ada di link paginasi
 
         // Kirim data ke view
-        return view('maintenance_schedules.index', compact('schedules'));
+        // Kita kirim 'filters' agar form bisa menampilkan nilai filter saat ini
+        return view('maintenance_schedules.index', compact('schedules', 'filters'));
     }
 
     /**
@@ -252,5 +306,97 @@ class MaintenanceScheduleController extends Controller
     {
         session()->forget('bulk_schedule_assets');
         return redirect()->back()->with('success', 'Pilihan aset berhasil dibersihkan.');
+    }
+
+    /**
+     * Menampilkan form untuk update status massal.
+     * (Menggunakan DataTables, jadi kita GET semua data yang relevan)
+     */
+    public function bulkEdit()
+    {
+        // Ambil SEMUA jadwal yang butuh tindakan
+        // Kita tidak mau menampilkan yang sudah 'completed' atau 'cancelled'
+        $schedules = MaintenanceSchedule::with(['asset', 'assignedTo'])
+            ->whereIn('status', ['scheduled', 'in_progress'])
+            ->orderBy('schedule_date', 'asc') // Urutkan dari yang paling mendesak
+            ->get(); // Ambil semua (DataTables yang akan urus paginasi)
+
+        return view('maintenance_schedules.bulk-edit', compact('schedules'));
+    }
+
+    /**
+     * Memproses update status massal.
+     */
+    public function bulkUpdate(Request $request)
+    {
+        // 1. Validasi
+        $validatedData = $request->validate([
+            'schedule_ids'   => 'required|array|min:1',
+            'schedule_ids.*' => 'required|exists:maintenance_schedules,id',
+            'status'         => 'required|string|in:scheduled,in_progress,completed,cancelled',
+            'notes'          => 'nullable|string',
+        ]);
+
+        $count = count($validatedData['schedule_ids']);
+
+        // 2. Siapkan data untuk di-update
+        $dataToUpdate = [
+            'status' => $validatedData['status'],
+        ];
+
+        // 3. Tambahkan catatan JIKA diisi
+        // Ini akan menimpa catatan lama.
+        if (!empty($validatedData['notes'])) {
+            $dataToUpdate['notes'] = $validatedData['notes'];
+        }
+
+        // 4. LOGIKA KRUSIAL: Set 'completed_at' jika statusnya 'completed'
+        if ($validatedData['status'] == 'completed') {
+            $dataToUpdate['completed_at'] = now();
+        }
+
+        // 5. Update semua record dalam satu query! (Sangat efisien)
+        MaintenanceSchedule::whereIn('id', $validatedData['schedule_ids'])
+            ->update($dataToUpdate);
+
+        // 6. Redirect
+        return redirect()->route('maintenance-schedules.index')
+            ->with('success', "Berhasil mengupdate status $count jadwal pemeliharaan.");
+    }
+
+    // METHOD EKSPOR EXCEL
+    public function exportExcel(Request $request)
+    {
+        // Ambil filter dari request
+        $filters = $this->getFilteredData($request)['filters'];
+
+        // Buat nama file
+        $fileName = 'laporan-pemeliharaan-' . date('Y-m-d') . '.xlsx';
+
+        // Panggil Export Class dan kirimkan filter
+        return Excel::download(new MaintenanceSchedulesExport($filters), $fileName);
+    }
+
+
+    // METHOD EKSPOR PDF
+    public function exportPdf(Request $request)
+    {
+        // Ambil query yang sudah terfilter
+        $query = $this->getFilteredData($request)['query'];
+
+        // Ambil semua data (jangan paginasi)
+        $schedules = $query->get();
+
+        // Buat nama file
+        $fileName = 'laporan-pemeliharaan-' . date('Y-m-d') . '.pdf';
+
+        // Load view PDF dengan data
+        $pdf = PDF::loadView('maintenance_schedules.pdf', compact('schedules'));
+
+        // Set orientasi kertas (jika perlu)
+        $pdf->setPaper('a4', 'landscape'); // 'landscape' (horizontal) atau 'portrait' (vertikal)
+
+        // Download
+        return $pdf->download($fileName);
     }
 }
