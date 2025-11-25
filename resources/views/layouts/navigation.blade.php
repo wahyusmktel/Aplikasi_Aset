@@ -32,6 +32,10 @@
                         {{ __('Ringkasan Aset') }}
                     </x-nav-link>
 
+                    <x-nav-link :href="route('labs.index')" :active="request()->routeIs('labs.*')">
+                        {{ __('Lab') }}
+                    </x-nav-link>
+
 
                     @php
                         // Cek apakah salah satu route inventaris sedang aktif
@@ -91,6 +95,9 @@
                                 </x-dropdown-link>
                                 <x-dropdown-link :href="route('asset-mapping.index')">
                                     {{ __('Mapping Aset (AI)') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('labs.history')">
+                                    {{ __('Riwayat Penggunaan Lab') }}
                                 </x-dropdown-link>
                             </x-slot>
                         </x-dropdown>

@@ -7,6 +7,7 @@ use App\Models\AssetMaintenance;
 use App\Models\AssetInspection;
 use App\Models\VehicleLog;
 use App\Models\Asset;
+use App\Models\LabUsageLog;
 use Illuminate\Http\Request;
 
 class PublicVerificationController extends Controller
@@ -61,6 +62,22 @@ class PublicVerificationController extends Controller
 
             // Kirim variabel $vehicleLog
             return view('public.verification', compact('vehicleLog', 'documentType', 'isReturn', 'assetName', 'employeeName', 'transactionDate', 'docNumber'));
+        }
+
+        $labLog = LabUsageLog::where('checkin_doc_number', $docNumber)
+            ->orWhere('checkout_doc_number', $docNumber)
+            ->with(['room', 'teacher'])
+            ->first();
+
+        if ($labLog) {
+            $isReturn = ($labLog->checkout_doc_number === $docNumber); // Checkout di Lab artinya Selesai/Keluar (Return logic)
+            $documentType = $isReturn ? 'Berita Acara Selesai Penggunaan Lab' : 'Berita Acara Penggunaan Lab';
+            $assetName = $labLog->room->name ?? 'Ruangan Tidak Ditemukan';
+            $employeeName = $labLog->teacher->name ?? 'Guru Tidak Ditemukan';
+            $transactionDate = $labLog->usage_date;
+
+            // Kirim variabel $labLog
+            return view('public.verification', compact('labLog', 'documentType', 'isReturn', 'assetName', 'employeeName', 'transactionDate', 'docNumber'));
         }
 
         // 4. Jika masih tidak ketemu, cari di Asset (untuk BAPh)

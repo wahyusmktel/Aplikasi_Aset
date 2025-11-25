@@ -32,6 +32,7 @@ use App\Http\Controllers\AssetMappingController;
 use App\Http\Controllers\Auth\SocialLoginController;
 use App\Http\Controllers\MaintenanceScheduleController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\LabController;
 
 // === Rute untuk Google SSO ===
 Route::get('/auth/google/redirect', [SocialLoginController::class, 'redirectToGoogle'])
@@ -221,6 +222,21 @@ Route::middleware('auth')->group(function () {
         ->name('maintenance-schedules.exportExcel');
     Route::get('maintenance-schedules/export/pdf', [MaintenanceScheduleController::class, 'exportPdf'])
         ->name('maintenance-schedules.exportPdf');
+
+    // Route Manajemen Lab
+    Route::get('/labs', [LabController::class, 'index'])->name('labs.index');
+    Route::post('/labs/schedule', [LabController::class, 'storeSchedule'])->name('labs.schedule.store');
+    Route::delete('/labs/schedule/{schedule}', [LabController::class, 'destroySchedule'])->name('labs.schedule.destroy');
+    Route::post('/labs/log/checkin', [LabController::class, 'storeLog'])->name('labs.log.store');
+    Route::post('/labs/log/{log}/checkout', [LabController::class, 'checkoutLog'])->name('labs.log.checkout');
+
+    Route::get('/labs/history', [LabController::class, 'history'])->name('labs.history');
+    Route::get('/labs/history/excel', [LabController::class, 'exportExcel'])->name('labs.exportExcel');
+    Route::get('/labs/history/pdf', [LabController::class, 'downloadPDF'])->name('labs.downloadPDF');
+
+    Route::get('/labs/log/{log}/bast/{type}', [LabController::class, 'downloadBast'])
+        ->whereIn('type', ['in', 'out'])
+        ->name('labs.log.downloadBast');
 });
 
 require __DIR__ . '/auth.php';
