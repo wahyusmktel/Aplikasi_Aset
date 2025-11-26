@@ -121,7 +121,7 @@
             <tr>
                 <td><br>Mengetahui,<br>Kepala
                     Sekolah<br><br><br><br><br><strong>{{ $ks->name ?? '.........................' }}</strong></td>
-                <td><br>Kaur Sarana
+                <td><br>Waka Bid. Sarpra, IT dan Lab
                     Prasarana<br><br><br><br><br><strong>{{ $pj->name ?? '.........................' }}</strong></td>
                 <td>Bandar Lampung, {{ date('d F Y') }}<br>Kepala
                     Lab/Teknisi<br><br><br><br><br><strong>.........................</strong></td>
