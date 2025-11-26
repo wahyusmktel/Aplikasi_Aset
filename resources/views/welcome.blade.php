@@ -34,7 +34,7 @@
                         </svg>
                     </div>
                     <span class="font-bold text-lg tracking-tight text-gray-900 dark:text-white">Stella<span
-                            class="text-blue-600">Log</span></span>
+                            class="text-blue-600">Log's</span></span>
                 </a>
             </div>
 
