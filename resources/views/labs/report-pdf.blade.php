@@ -78,7 +78,7 @@
 
 <body>
     <div class="header">
-        <h1>Laporan Jurnal Penggunaan Laboratorium</h1>
+        <h1>Laporan Log Penggunaan Laboratorium</h1>
         <p>Ruangan: {{ $labName }}</p>
         <p>Periode: {{ \Carbon\Carbon::parse($startDate)->isoFormat('D MMMM YYYY') }} s/d
             {{ \Carbon\Carbon::parse($endDate)->isoFormat('D MMMM YYYY') }}</p>
