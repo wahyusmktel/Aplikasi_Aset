@@ -301,6 +301,40 @@ class ProcurementController extends Controller
     }
 
     /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Procurement $procurement)
+    {
+        // Check if any items have been converted to assets
+        $hasConvertedItems = $procurement->items()->where('is_converted_to_asset', true)->exists();
+        
+        if ($hasConvertedItems) {
+            alert()->error('Gagal!', 'Pengadaan ini tidak dapat dihapus karena beberapa item sudah dikonversi menjadi aset.');
+            return back();
+        }
+
+        DB::beginTransaction();
+        try {
+            // Delete related handovers (documents)
+            $procurement->handovers()->delete();
+            
+            // Delete related items
+            $procurement->items()->delete();
+            
+            // Delete the procurement record
+            $procurement->delete();
+
+            DB::commit();
+            alert()->success('Berhasil!', 'Data pengadaan berhasil dihapus.');
+            return redirect()->route('procurements.index');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            alert()->error('Gagal!', 'Terjadi kesalahan: ' . $e->getMessage());
+            return back();
+        }
+    }
+
+    /**
      * Download or Print BAST.
      */
     public function downloadBast(Procurement $procurement, $type)
