@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout x-data="pageData()">
     <x-slot name="header">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div class="flex items-center gap-4">
@@ -32,7 +32,7 @@
         </div>
     </x-slot>
 
-    <div class="py-12" x-data="{ activeTab: 'detail' }">
+    <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8 pb-24">
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -388,19 +388,22 @@
             </div>
         </div>
 
-        {{-- Modals Section (Hidden By Default) --}}
+        {{-- Modals Section --}}
+        
         <!-- Modal: Assign Asset -->
-        <div x-show="activeTab === 'history' && showAssignModal" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-8">
-             <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" @click="showAssignModal = false"></div>
-             <div x-data="{ showAssignModal: false }" class="relative bg-white dark:bg-gray-950 rounded-[40px] shadow-2xl w-full max-w-md overflow-hidden animate-slideUp border border-gray-100">
-                 <form action="{{ route('assets.assign', $asset->id) }}" method="POST" class="p-10">
+        <div x-show="showAssignModal" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-8">
+            <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" @click="showAssignModal = false"></div>
+            <div class="relative bg-white dark:bg-gray-950 rounded-[40px] shadow-2xl w-full max-w-md overflow-hidden animate-slideUp border border-gray-100 dark:border-gray-800">
+                <form action="{{ route('assets.assign', $asset->id) }}" method="POST" class="p-10">
                     @csrf
                     <h2 class="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-tight mb-8">Serah Terima Aset</h2>
                     <div class="space-y-6">
                         <div>
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Pegawai Penerima</label>
                             <select name="employee_id" required class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none">
-                                @foreach (App\Models\Employee::orderBy('name')->get() as $e) <option value="{{ $e->id }}">{{ $e->name }}</option> @endforeach
+                                @foreach (App\Models\Employee::orderBy('name')->get() as $e) 
+                                    <option value="{{ $e->id }}">{{ $e->name }}</option> 
+                                @endforeach
                             </select>
                         </div>
                         <div>
@@ -409,19 +412,172 @@
                         </div>
                     </div>
                     <div class="flex justify-end mt-10 gap-4">
-                        <button type="button" @click="$parent.showAssignModal = false" class="px-6 py-3 font-bold text-gray-400">Batal</button>
+                        <button type="button" @click="showAssignModal = false" class="px-6 py-3 font-bold text-gray-400">Batal</button>
                         <button type="submit" class="px-8 py-4 bg-red-600 text-white font-black rounded-2xl shadow-xl shadow-red-500/20">Konfirmasi</button>
                     </div>
-                 </form>
-             </div>
+                </form>
+            </div>
         </div>
 
-        {{-- Add state for modals manually to simplify --}}
+        <!-- Modal: Return Asset -->
+        @if($asset->currentAssignment)
+        <div x-show="showReturnModal" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-8">
+            <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" @click="showReturnModal = false"></div>
+            <div class="relative bg-white dark:bg-gray-950 rounded-[40px] shadow-2xl w-full max-w-md overflow-hidden animate-slideUp border border-gray-100 dark:border-gray-800">
+                <form action="{{ route('assets.return', $asset->currentAssignment->id) }}" method="POST" class="p-10">
+                    @csrf
+                    <h2 class="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-tight mb-8">Pengembalian Aset</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Kondisi Saat Kembali</label>
+                            <select name="condition_on_return" required class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none">
+                                <option value="Baik">Baik</option>
+                                <option value="Rusak">Rusak</option>
+                                <option value="Rusak Berat">Rusak Berat</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex justify-end mt-10 gap-4">
+                        <button type="button" @click="showReturnModal = false" class="px-6 py-3 font-bold text-gray-400">Batal</button>
+                        <button type="submit" class="px-8 py-4 bg-gray-800 text-white font-black rounded-2xl shadow-xl">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        @endif
+
+        <!-- Modal: Maintenance Log -->
+        <div x-show="showMaintenanceModal" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-8">
+            <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" @click="showMaintenanceModal = false"></div>
+            <div class="relative bg-white dark:bg-gray-950 rounded-[40px] shadow-2xl w-full max-w-lg overflow-hidden animate-slideUp border border-gray-100 dark:border-gray-800">
+                <form action="{{ route('maintenance.store', $asset->id) }}" method="POST" class="p-10">
+                    @csrf
+                    <input type="hidden" name="asset_id" value="{{ $asset->id }}">
+                    <h2 class="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-tight mb-8">Catat Pekerjaan</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-2">
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Deskripsi Pekerjaan</label>
+                            <input type="text" name="description" required class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Biaya (Rp)</label>
+                            <input type="number" name="cost" required class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Tanggal</label>
+                            <input type="date" name="maintenance_date" value="{{ date('Y-m-d') }}" required class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none font-bold">
+                        </div>
+                    </div>
+                    <div class="flex justify-end mt-10 gap-4">
+                        <button type="button" @click="showMaintenanceModal = false" class="px-6 py-3 font-bold text-gray-400">Batal</button>
+                        <button type="submit" class="px-8 py-4 bg-gray-800 text-white font-black rounded-2xl shadow-xl">Simpan Data</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal: Inspection Log -->
+        <div x-show="showInspectionModal" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-8">
+            <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" @click="showInspectionModal = false"></div>
+            <div class="relative bg-white dark:bg-gray-950 rounded-[40px] shadow-2xl w-full max-w-md overflow-hidden animate-slideUp border border-gray-100 dark:border-gray-800">
+                <form action="{{ route('inspections.store', $asset->id) }}" method="POST" class="p-10">
+                    @csrf
+                    <input type="hidden" name="asset_id" value="{{ $asset->id }}">
+                    <h2 class="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-tight mb-8">Tambah Inspeksi</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Kondisi Saat Ini</label>
+                            <select name="condition" required class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none font-black text-sm">
+                                <option value="Baik">Baik</option>
+                                <option value="Rusak Ringan">Rusak Ringan</option>
+                                <option value="Rusak Berat">Rusak Berat</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Catatan Inspeksi</label>
+                            <textarea name="notes" class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none min-h-[100px] font-bold text-sm"></textarea>
+                        </div>
+                    </div>
+                    <div class="flex justify-end mt-10 gap-4">
+                        <button type="button" @click="showInspectionModal = false" class="px-6 py-3 font-bold text-gray-400">Batal</button>
+                        <button type="submit" class="px-8 py-4 bg-red-600 text-white font-black rounded-2xl shadow-xl shadow-red-500/20">Simpan Inspeksi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        @if($asset->category->name == 'KENDARAAN BERMOTOR DINAS / KBM DINAS')
+            <!-- Modal: Vehicle Checkout -->
+            <div x-show="showVehicleModal" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-8">
+                <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" @click="showVehicleModal = false"></div>
+                <div class="relative bg-white dark:bg-gray-950 rounded-[40px] shadow-2xl w-full max-w-md overflow-hidden animate-slideUp border border-gray-100 dark:border-gray-800">
+                    <form action="{{ route('vehicles.checkout', $asset->id) }}" method="POST" class="p-10">
+                        @csrf
+                        <h2 class="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-tight mb-8 italic italic">Catat Perjalanan</h2>
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Pengemudi</label>
+                                <select name="employee_id" required class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none">
+                                    @foreach (App\Models\Employee::orderBy('name')->get() as $e) <option value="{{ $e->id }}">{{ $e->name }}</option> @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Tujuan</label>
+                                <input type="text" name="destination" required class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">KM Awal</label>
+                                    <input type="number" name="start_odometer" value="{{ $asset->vehicleLogs()->latest()->first()?->end_odometer ?? 0 }}" required class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Bensin (L)</label>
+                                    <input type="number" step="0.1" name="fuel_liters" value="0" class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-end mt-10 gap-4">
+                            <button type="button" @click="showVehicleModal = false" class="px-6 py-3 font-bold text-gray-400">Batal</button>
+                            <button type="submit" class="px-8 py-4 bg-gray-800 text-white font-black rounded-2xl shadow-xl">Mulai</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modal: Vehicle Return -->
+            <div x-show="showVehicleReturnModal" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-8">
+                <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" @click="showVehicleReturnModal = false"></div>
+                <div class="relative bg-white dark:bg-gray-950 rounded-[40px] shadow-2xl w-full max-w-md overflow-hidden animate-slideUp border border-gray-100 dark:border-gray-800">
+                    <form action="{{ route('vehicleLogs.checkin', $asset->currentVehicleLog->id ?? 0) }}" method="POST" class="p-10">
+                        @csrf
+                        <h2 class="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-tight mb-8">Selesai Perjalanan</h2>
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">KM Akhir</label>
+                                <input type="number" name="end_odometer" required class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none">
+                            </div>
+                        </div>
+                        <div class="flex justify-end mt-10 gap-4">
+                            <button type="button" @click="showVehicleReturnModal = false" class="px-6 py-3 font-bold text-gray-400">Batal</button>
+                            <button type="submit" class="px-8 py-4 bg-red-600 text-white font-black rounded-2xl shadow-xl shadow-red-500/20">Data Masuk</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        @endif
     </div>
 
     <script>
         document.addEventListener('alpine:init', () => {
-            // Simplified modal states within pageData if needed
+            Alpine.data('pageData', () => ({
+                activeTab: 'detail',
+                showAssignModal: false,
+                showReturnModal: false,
+                showMaintenanceModal: false,
+                showInspectionModal: false,
+                showVehicleModal: false,
+                showVehicleReturnModal: false,
+            }));
         });
     </script>
 
