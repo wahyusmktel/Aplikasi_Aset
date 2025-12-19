@@ -91,12 +91,12 @@
                             </div>
                         </div>
 
-                        {{-- Kategori (Select2) --}}
+                        {{-- Kategori (Tom Select) --}}
                         <div class="md:col-span-1">
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Pilih Kategori</label>
                             <select x-ref="categorySelect" multiple="multiple" class="rounded-2xl dark:bg-gray-900 border-gray-100 dark:border-gray-800 w-full">
                                 @foreach ($categories as $category)
-                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                    <option value="{{ $category->id }}" @selected(in_array($category->id, request('category_ids', [])))>{{ $category->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -104,10 +104,10 @@
                         {{-- Tahun --}}
                         <div class="md:col-span-1">
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Tahun Pengadaan</label>
-                            <select x-model="selectedYear" class="w-full px-4 py-3.5 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-red-500 focus:ring-red-500 transition-all shadow-sm">
+                            <select x-ref="yearSelect" class="w-full px-4 py-3.5 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-red-500 focus:ring-red-500 transition-all shadow-sm">
                                 <option value="all">Semua Tahun</option>
                                 @foreach ($years as $year)
-                                    <option value="{{ $year }}">{{ $year }}</option>
+                                    <option value="{{ $year }}" @selected(request('purchase_year') == $year)>{{ $year }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -134,15 +134,15 @@
                                 <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Kecualikan Kategori</label>
                                 <select x-ref="excludeCategorySelect" multiple="multiple" class="w-full">
                                     @foreach ($categories as $category)
-                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                        <option value="{{ $category->id }}" @selected(in_array($category->id, request('exclude_category_ids', [])))>{{ $category->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div>
                                 <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Jumlah Per Halaman</label>
-                                <select x-model="perPage" class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
+                                <select x-ref="perPageSelect" class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
                                     @foreach ($allowedPerPages as $option)
-                                        <option value="{{ $option }}">{{ $option }} item</option>
+                                        <option value="{{ $option }}" @selected($perPage == $option)>{{ $option }} item</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -401,6 +401,10 @@
     </div>
 
     @push('scripts')
+        <!-- Tom Select CSS/JS -->
+        <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+
         <script>
             document.addEventListener('alpine:init', () => {
                 Alpine.data('pageData', () => ({
@@ -422,24 +426,59 @@
                     perPage: '{{ $perPage }}',
 
                     init() {
-                        const styleSelect2 = (el, placeholder) => {
-                            $(el).select2({
-                                placeholder: placeholder,
-                                width: '100%',
-                                selectionCssClass: 'modern-select2-selection',
-                                dropdownCssClass: 'modern-select2-dropdown'
-                            });
+                        const tomStyles = {
+                            plugins: ['remove_button', 'clear_button'],
+                            persist: false,
+                            create: false,
+                            render: {
+                                item: function(data, escape) {
+                                    return '<div class="flex items-center gap-2 px-3 py-1 bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm">' + escape(data.text) + '</div>';
+                                },
+                                option: function(data, escape) {
+                                    return '<div class="px-4 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">' + escape(data.text) + '</div>';
+                                }
+                            }
                         };
 
-                        const $inc = $(this.$refs.categorySelect);
-                        styleSelect2($inc, 'Filter Kategori...');
-                        $inc.val(this.selectedCategories).trigger('change');
-                        $inc.on('change', () => { this.selectedCategories = ($inc.val() || []).map(String); });
+                        const singleStyles = {
+                            persist: false,
+                            create: false,
+                            render: {
+                                option: function(data, escape) {
+                                    return '<div class="px-4 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">' + escape(data.text) + '</div>';
+                                }
+                            }
+                        };
 
-                        const $exc = $(this.$refs.excludeCategorySelect);
-                        styleSelect2($exc, 'Kecualikan Kategori...');
-                        $exc.val(this.selectedExcludeCategories).trigger('change');
-                        $exc.on('change', () => { this.selectedExcludeCategories = ($exc.val() || []).map(String); });
+                        new TomSelect(this.$refs.categorySelect, {
+                            ...tomStyles,
+                            placeholder: 'Pilih Kategori...',
+                            onChange: (value) => { 
+                                this.selectedCategories = Array.isArray(value) ? value : [value];
+                                if(value === '') this.selectedCategories = [];
+                             }
+                        });
+
+                        new TomSelect(this.$refs.excludeCategorySelect, {
+                            ...tomStyles,
+                            placeholder: 'Kecualikan Kategori...',
+                            onChange: (value) => { 
+                                this.selectedExcludeCategories = Array.isArray(value) ? value : [value];
+                                if(value === '') this.selectedExcludeCategories = [];
+                             }
+                        });
+
+                        new TomSelect(this.$refs.yearSelect, {
+                            ...singleStyles,
+                            placeholder: 'Pilih Tahun...',
+                            onChange: (value) => { this.selectedYear = value; }
+                        });
+
+                        new TomSelect(this.$refs.perPageSelect, {
+                            ...singleStyles,
+                            placeholder: 'Items...',
+                            onChange: (value) => { this.perPage = value; }
+                        });
                     },
 
                     toggleAll(event) {
@@ -471,8 +510,12 @@
 
                     applyFilters() {
                         const url = new URL('{{ route('assets.index') }}');
-                        this.selectedCategories.forEach(id => url.searchParams.append('category_ids[]', id));
-                        this.selectedExcludeCategories.forEach(id => url.searchParams.append('exclude_category_ids[]', id));
+                        this.selectedCategories.forEach(id => {
+                            if(id) url.searchParams.append('category_ids[]', id);
+                        });
+                        this.selectedExcludeCategories.forEach(id => {
+                            if(id) url.searchParams.append('exclude_category_ids[]', id);
+                        });
                         url.searchParams.set('purchase_year', this.selectedYear);
                         url.searchParams.set('per_page', this.perPage);
                         if (this.searchQuery) url.searchParams.set('search', this.searchQuery);
@@ -509,26 +552,45 @@
         </script>
 
         <style>
-            .select2-container--default .select2-selection--multiple {
-                background: transparent !important;
+            .ts-wrapper.multi .ts-control > div {
+                border-radius: 12px;
+                background: #dc2626 !important;
+                color: #fff !important;
+                margin: 2px 4px 2px 0;
+            }
+            .ts-control {
                 border: 1px solid #f3f4f6 !important;
-                border-radius: 1rem !important;
-                padding: 4px 8px !important;
+                border-radius: 1.25rem !important;
+                padding: 10px 14px !important;
+                box-shadow: none !important;
+                background: white !important;
             }
-            .dark .select2-container--default .select2-selection--multiple {
+            .dark .ts-control {
+                background: #111827 !important;
                 border-color: #1f2937 !important;
-                background-color: #111827 !important;
+                color: #d1d5db !important;
             }
-            .select2-container--default .select2-selection--multiple .select2-selection__choice {
-                background-color: #dc2626 !important;
-                border: none !important;
-                color: white !important;
-                border-radius: 8px !important;
-                padding: 2px 8px !important;
-                font-weight: 800 !important;
-                font-size: 10px !important;
-                text-transform: uppercase !important;
-                letter-spacing: 0.05em !important;
+            .ts-dropdown {
+                border-radius: 1.5rem !important;
+                border: 1px solid #f3f4f6 !important;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+                margin-top: 8px !important;
+                overflow: hidden !important;
+            }
+            .dark .ts-dropdown {
+                background: #0a0a0a !important;
+                border-color: #1f2937 !important;
+            }
+            .ts-dropdown .active {
+                background-color: #fee2e2 !important;
+                color: #dc2626 !important;
+            }
+            .dark .ts-dropdown .active {
+                background-color: #7f1d1d !important;
+                color: #fecaca !important;
+            }
+            .ts-wrapper.multi .ts-control > div .remove {
+                border-left: 1px solid rgba(255,255,255,0.2) !important;
             }
             .custom-scrollbar::-webkit-scrollbar {
                 width: 6px;
