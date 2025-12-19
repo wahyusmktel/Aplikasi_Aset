@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout x-data="pageData()">
     <x-slot name="header">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
@@ -39,7 +39,7 @@
         </div>
     </x-slot>
 
-    <div x-data="pageData()" class="py-12">
+    <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8 pb-24">
             
             {{-- Quick Stats --}}
@@ -91,36 +91,84 @@
                             </div>
                         </div>
 
-                        {{-- Kategori (Tom Select) --}}
-                        <div class="md:col-span-1">
+                        {{-- Kategori (Custom Tailwind Multi-select) --}}
+                        <div class="md:col-span-1" x-data="{ open: false, search: '' }">
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Pilih Kategori</label>
-                            <select x-ref="categorySelect" multiple="multiple" class="rounded-2xl dark:bg-gray-900 border-gray-100 dark:border-gray-800 w-full">
-                                @foreach ($categories as $category)
-                                    <option value="{{ $category->id }}" @selected(in_array($category->id, request('category_ids', [])))>{{ $category->name }}</option>
-                                @endforeach
-                            </select>
+                            <div class="relative" @click.away="open = false">
+                                <div @click="open = !open"
+                                    class="min-h-[56px] w-full px-4 py-2 rounded-2xl border border-gray-100 dark:border-gray-800 dark:bg-gray-900 flex flex-wrap gap-2 items-center cursor-pointer transition-all focus-within:border-red-500 focus-within:ring-4 focus-within:ring-red-500/10 shadow-sm">
+                                    <template x-if="selectedCategories.length === 0">
+                                        <span class="text-sm text-gray-400 font-bold px-2">Pilih Kategori...</span>
+                                    </template>
+                                    <template x-for="id in selectedCategories" :key="id">
+                                        <div class="flex items-center gap-1.5 px-3 py-1 bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-red-500/20 group">
+                                            <span x-text="allCategories.find(c => c.id == id)?.name"></span>
+                                            <button @click.stop="selectedCategories = selectedCategories.filter(i => i != id)" class="hover:text-red-200 transition-colors">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                                            </button>
+                                        </div>
+                                    </template>
+                                    <div class="ml-auto">
+                                        <svg class="w-4 h-4 text-gray-400 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" /></svg>
+                                    </div>
+                                </div>
+
+                                {{-- Dropdown --}}
+                                <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+                                    class="absolute z-[100] mt-3 w-full animate-slideUp bg-white dark:bg-gray-950 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-2xl overflow-hidden">
+                                    <div class="p-3 border-b border-gray-50 dark:border-gray-900">
+                                        <input type="text" x-model="search" placeholder="Cari kategori..." 
+                                            class="w-full px-4 py-2.5 text-sm bg-gray-50 dark:bg-gray-900 border-none rounded-xl focus:ring-0 font-bold text-gray-600 dark:text-gray-300">
+                                    </div>
+                                    <div class="max-h-60 overflow-y-auto custom-scrollbar p-2">
+                                        <template x-for="cat in allCategories.filter(c => c.name.toLowerCase().includes(search.toLowerCase()))" :key="cat.id">
+                                            <div @click="selectedCategories.includes(cat.id.toString()) ? selectedCategories = selectedCategories.filter(i => i != cat.id.toString()) : selectedCategories.push(cat.id.toString())"
+                                                class="flex items-center justify-between px-4 py-3 rounded-xl cursor-pointer transition-all"
+                                                :class="selectedCategories.includes(cat.id.toString()) ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' : 'hover:bg-gray-50 dark:hover:bg-gray-900 text-gray-700 dark:text-gray-400 font-bold'">
+                                                <span class="text-sm font-black uppercase tracking-tight" x-text="cat.name"></span>
+                                                <div x-show="selectedCategories.includes(cat.id.toString())" class="w-5 h-5 bg-red-600 text-white rounded-full flex items-center justify-center">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        {{-- Tahun --}}
-                        <div class="md:col-span-1">
+                        {{-- Tahun (Custom Selection) --}}
+                        <div class="md:col-span-1" x-data="{ open: false }">
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Tahun Pengadaan</label>
-                            <select x-ref="yearSelect" class="w-full px-4 py-3.5 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-red-500 focus:ring-red-500 transition-all shadow-sm">
-                                <option value="all">Semua Tahun</option>
-                                @foreach ($years as $year)
-                                    <option value="{{ $year }}" @selected(request('purchase_year') == $year)>{{ $year }}</option>
-                                @endforeach
-                            </select>
+                            <div class="relative" @click.away="open = false">
+                                <div @click="open = !open"
+                                    class="h-[56px] w-full px-6 py-4 rounded-2xl border border-gray-100 dark:border-gray-800 dark:bg-gray-900 flex items-center justify-between cursor-pointer group shadow-sm">
+                                    <span class="text-sm font-black text-gray-700 dark:text-gray-300 uppercase tracking-widest" x-text="selectedYear === 'all' ? 'Semua Tahun' : selectedYear"></span>
+                                    <svg class="w-4 h-4 text-gray-400 group-hover:text-red-600 transition-all" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" /></svg>
+                                </div>
+                                <div x-show="open" x-transition class="absolute z-[100] mt-3 w-full bg-white dark:bg-gray-950 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-2xl p-2">
+                                    <div class="max-h-60 overflow-y-auto custom-scrollbar">
+                                        <div @click="selectedYear = 'all'; open = false" 
+                                            class="px-4 py-3 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900 text-sm font-black uppercase tracking-tight"
+                                            :class="selectedYear === 'all' ? 'text-red-500 bg-red-50 dark:bg-red-900/20' : 'text-gray-600 dark:text-gray-400'">Semua Tahun</div>
+                                        @foreach ($years as $year)
+                                            <div @click="selectedYear = '{{ $year }}'; open = false" 
+                                                class="px-4 py-3 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900 text-sm font-black uppercase tracking-tight"
+                                                :class="selectedYear === '{{ $year }}' ? 'text-red-500 bg-red-50 dark:bg-red-900/20' : 'text-gray-600 dark:text-gray-400'">{{ $year }}</div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-3 shrink-0">
                         <button @click="expanded = !expanded" 
-                            class="px-5 py-3.5 bg-gray-50 dark:bg-gray-900 text-gray-500 font-bold rounded-2xl border border-gray-100 dark:border-gray-800 hover:bg-gray-100 transition-all flex items-center">
+                            class="px-5 py-3.5 bg-gray-50 dark:bg-gray-900 text-gray-500 font-bold rounded-2xl border border-gray-100 dark:border-gray-800 hover:bg-gray-100 transition-all flex items-center shadow-sm">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
                             Lanjutan
                         </button>
                         <button @click="applyFilters"
-                            class="px-8 py-3.5 bg-gray-800 dark:bg-white dark:text-gray-900 text-white font-black rounded-2xl transition-all shadow-lg hover:-translate-y-1">
+                            class="px-8 py-3.5 bg-red-600 hover:bg-red-700 text-white font-black rounded-2xl transition-all shadow-xl shadow-red-500/20 hover:-translate-y-1">
                             Terapkan
                         </button>
                     </div>
@@ -130,21 +178,58 @@
                 <div x-show="expanded" x-collapse>
                     <div class="pt-8 mt-6 border-t border-gray-50 dark:border-gray-900">
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            <div>
+                            {{-- Kecualikan Kategori (Custom Tailwind Multi-select) --}}
+                            <div class="md:col-span-2" x-data="{ open: false, search: '' }">
                                 <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Kecualikan Kategori</label>
-                                <select x-ref="excludeCategorySelect" multiple="multiple" class="w-full">
-                                    @foreach ($categories as $category)
-                                        <option value="{{ $category->id }}" @selected(in_array($category->id, request('exclude_category_ids', [])))>{{ $category->name }}</option>
-                                    @endforeach
-                                </select>
+                                <div class="relative" @click.away="open = false">
+                                    <div @click="open = !open"
+                                        class="min-h-[56px] w-full px-4 py-2 rounded-2xl border border-gray-100 dark:border-gray-800 dark:bg-gray-900 flex flex-wrap gap-2 items-center cursor-pointer transition-all focus-within:border-red-500 shadow-sm">
+                                        <template x-if="selectedExcludeCategories.length === 0">
+                                            <span class="text-sm text-gray-400 font-bold px-2">Pilih yang dikecualikan...</span>
+                                        </template>
+                                        <template x-for="id in selectedExcludeCategories" :key="id">
+                                            <div class="flex items-center gap-1.5 px-3 py-1 bg-gray-800 text-white rounded-xl text-[10px] font-black uppercase tracking-widest group">
+                                                <span x-text="allCategories.find(c => c.id == id)?.name"></span>
+                                                <button @click.stop="selectedExcludeCategories = selectedExcludeCategories.filter(i => i != id)" class="hover:text-red-400">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <div x-show="open" x-transition class="absolute z-[100] mt-3 w-full bg-white dark:bg-gray-950 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-2xl overflow-hidden p-2">
+                                        <div class="p-2">
+                                            <input type="text" x-model="search" placeholder="Cari..." 
+                                                class="w-full px-4 py-2 text-sm bg-gray-50 dark:bg-gray-900 border-none rounded-xl focus:ring-0 font-bold">
+                                        </div>
+                                        <div class="max-h-48 overflow-y-auto custom-scrollbar">
+                                            <template x-for="cat in allCategories.filter(c => c.name.toLowerCase().includes(search.toLowerCase()))" :key="cat.id">
+                                                <div @click="selectedExcludeCategories.includes(cat.id.toString()) ? selectedExcludeCategories = selectedExcludeCategories.filter(i => i != cat.id.toString()) : selectedExcludeCategories.push(cat.id.toString())"
+                                                    class="flex items-center justify-between px-4 py-3 rounded-xl cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-gray-900"
+                                                    :class="selectedExcludeCategories.includes(cat.id.toString()) ? 'text-red-500 font-black' : 'text-gray-600 dark:text-gray-400 font-bold'">
+                                                    <span class="text-[11px] uppercase tracking-widest" x-text="cat.name"></span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
+
+                            <div class="md:col-span-2" x-data="{ open: false }">
                                 <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Jumlah Per Halaman</label>
-                                <select x-ref="perPageSelect" class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
-                                    @foreach ($allowedPerPages as $option)
-                                        <option value="{{ $option }}" @selected($perPage == $option)>{{ $option }} item</option>
-                                    @endforeach
-                                </select>
+                                <div class="relative" @click.away="open = false">
+                                    <div @click="open = !open"
+                                        class="h-[56px] w-full px-6 py-4 rounded-2xl border border-gray-100 dark:border-gray-800 dark:bg-gray-900 flex items-center justify-between cursor-pointer group shadow-sm">
+                                        <span class="text-sm font-black text-gray-700 dark:text-gray-300 uppercase underline decoration-red-500/30 underline-offset-4" x-text="perPage + ' ITEM PER HALAMAN'"></span>
+                                        <svg class="w-4 h-4 text-gray-400 group-hover:text-red-600 transition-all" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" /></svg>
+                                    </div>
+                                    <div x-show="open" x-transition class="absolute z-[100] mt-3 w-full bg-white dark:bg-gray-950 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-2xl p-2">
+                                        @foreach ($allowedPerPages as $option)
+                                            <div @click="perPage = '{{ $option }}'; open = false" 
+                                                class="px-4 py-3 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900 text-[10px] font-black uppercase tracking-widest transition-all"
+                                                :class="perPage == '{{ $option }}' ? 'text-red-500 bg-red-50 dark:bg-red-900/20' : 'text-gray-500'">{{ $option }} ITEM PER HALAMAN</div>
+                                        @endforeach
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -401,10 +486,6 @@
     </div>
 
     @push('scripts')
-        <!-- Tom Select CSS/JS -->
-        <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
-        <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
-
         <script>
             document.addEventListener('alpine:init', () => {
                 Alpine.data('pageData', () => ({
@@ -412,6 +493,7 @@
                     showImportBatchModal: false,
                     showBulkEditModal: false,
                     searchQuery: '{{ request('search') }}',
+                    expanded: {{ (request('exclude_category_ids') || $perPage != 12) ? 'true' : 'false' }},
                     apply: {
                         name: false,
                         funding: false,
@@ -420,65 +502,14 @@
                         pic: false
                     },
 
+                    allCategories: @json($categories->map(fn($c) => ['id' => $c->id, 'name' => $c->name])),
                     selectedCategories: @json(request()->input('category_ids', [])).map(String),
                     selectedExcludeCategories: @json(request()->input('exclude_category_ids', [])).map(String),
                     selectedYear: '{{ request('purchase_year', 'all') }}',
                     perPage: '{{ $perPage }}',
 
                     init() {
-                        const tomStyles = {
-                            plugins: ['remove_button', 'clear_button'],
-                            persist: false,
-                            create: false,
-                            render: {
-                                item: function(data, escape) {
-                                    return '<div class="flex items-center gap-2 px-3 py-1 bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm">' + escape(data.text) + '</div>';
-                                },
-                                option: function(data, escape) {
-                                    return '<div class="px-4 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">' + escape(data.text) + '</div>';
-                                }
-                            }
-                        };
-
-                        const singleStyles = {
-                            persist: false,
-                            create: false,
-                            render: {
-                                option: function(data, escape) {
-                                    return '<div class="px-4 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">' + escape(data.text) + '</div>';
-                                }
-                            }
-                        };
-
-                        new TomSelect(this.$refs.categorySelect, {
-                            ...tomStyles,
-                            placeholder: 'Pilih Kategori...',
-                            onChange: (value) => { 
-                                this.selectedCategories = Array.isArray(value) ? value : [value];
-                                if(value === '') this.selectedCategories = [];
-                             }
-                        });
-
-                        new TomSelect(this.$refs.excludeCategorySelect, {
-                            ...tomStyles,
-                            placeholder: 'Kecualikan Kategori...',
-                            onChange: (value) => { 
-                                this.selectedExcludeCategories = Array.isArray(value) ? value : [value];
-                                if(value === '') this.selectedExcludeCategories = [];
-                             }
-                        });
-
-                        new TomSelect(this.$refs.yearSelect, {
-                            ...singleStyles,
-                            placeholder: 'Pilih Tahun...',
-                            onChange: (value) => { this.selectedYear = value; }
-                        });
-
-                        new TomSelect(this.$refs.perPageSelect, {
-                            ...singleStyles,
-                            placeholder: 'Items...',
-                            onChange: (value) => { this.perPage = value; }
-                        });
+                        // No logic needed for custom Tailwind selects
                     },
 
                     toggleAll(event) {
@@ -552,46 +583,6 @@
         </script>
 
         <style>
-            .ts-wrapper.multi .ts-control > div {
-                border-radius: 12px;
-                background: #dc2626 !important;
-                color: #fff !important;
-                margin: 2px 4px 2px 0;
-            }
-            .ts-control {
-                border: 1px solid #f3f4f6 !important;
-                border-radius: 1.25rem !important;
-                padding: 10px 14px !important;
-                box-shadow: none !important;
-                background: white !important;
-            }
-            .dark .ts-control {
-                background: #111827 !important;
-                border-color: #1f2937 !important;
-                color: #d1d5db !important;
-            }
-            .ts-dropdown {
-                border-radius: 1.5rem !important;
-                border: 1px solid #f3f4f6 !important;
-                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
-                margin-top: 8px !important;
-                overflow: hidden !important;
-            }
-            .dark .ts-dropdown {
-                background: #0a0a0a !important;
-                border-color: #1f2937 !important;
-            }
-            .ts-dropdown .active {
-                background-color: #fee2e2 !important;
-                color: #dc2626 !important;
-            }
-            .dark .ts-dropdown .active {
-                background-color: #7f1d1d !important;
-                color: #fecaca !important;
-            }
-            .ts-wrapper.multi .ts-control > div .remove {
-                border-left: 1px solid rgba(255,255,255,0.2) !important;
-            }
             .custom-scrollbar::-webkit-scrollbar {
                 width: 6px;
             }

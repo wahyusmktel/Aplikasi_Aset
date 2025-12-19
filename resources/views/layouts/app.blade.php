@@ -22,7 +22,7 @@
 </head>
 
 <body class="font-sans antialiased bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100" x-data="{ sidebarOpen: true }">
-    <div class="flex h-screen overflow-hidden">
+    <div class="flex h-screen overflow-hidden" {{ $attributes }}>
         <!-- Sidebar -->
         @include('layouts.sidebar')
 
