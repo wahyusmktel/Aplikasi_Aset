@@ -114,6 +114,7 @@
             Google Workspace
         </a>
 
+        @if(\App\Models\Setting::get('allow_registration', '1') === '1')
         <p class="text-center text-sm text-gray-600 dark:text-gray-400">
             Belum punya akun?
             <a href="{{ route('register') }}"
@@ -121,5 +122,6 @@
                 Daftar sekarang
             </a>
         </p>
+        @endif
     </div>
 </x-guest-layout>

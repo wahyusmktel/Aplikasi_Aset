@@ -129,7 +129,7 @@
                         </a>
                     @else
                         <a href="{{ route('login') }}" class="text-sm font-bold text-gray-400 hover:text-white mr-4">Log in</a>
-                        @if (Route::has('register'))
+                        @if (Route::has('register') && \App\Models\Setting::get('allow_registration', '1') === '1')
                             <a href="{{ route('register') }}"
                                class="hidden sm:block glass px-6 py-2.5 text-sm font-black rounded-xl hover:bg-white hover:text-black transition-all">
                                 Register

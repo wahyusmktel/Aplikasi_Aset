@@ -82,4 +82,14 @@
         <x-sidebar-dropdown-link :href="route('asset-functions.index')" :active="request()->routeIs('asset-functions.index')">{{ __('Fungsi Barang') }}</x-sidebar-dropdown-link>
         <x-sidebar-dropdown-link :href="route('funding-sources.index')" :active="request()->routeIs('funding-sources.index')">{{ __('Jenis Pendanaan') }}</x-sidebar-dropdown-link>
     </x-sidebar-dropdown>
+    @if(Auth::user()->isAdmin())
+    <div class="my-4 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider" x-show="sidebarOpen">
+        {{ __('Sistem') }}
+    </div>
+
+    <!-- Pengaturan -->
+    <x-sidebar-link :href="route('settings.index')" :active="request()->routeIs('settings.*')" icon="cog">
+        {{ __('Pengaturan Sistem') }}
+    </x-sidebar-link>
+    @endif
 </nav>

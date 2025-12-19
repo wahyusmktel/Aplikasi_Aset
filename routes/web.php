@@ -33,6 +33,7 @@ use App\Http\Controllers\Auth\SocialLoginController;
 use App\Http\Controllers\MaintenanceScheduleController;
 use App\Http\Controllers\VendorController;
 use App\Http\Controllers\ProcurementController;
+use App\Http\Controllers\SettingController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LabController;
 
@@ -251,6 +252,10 @@ Route::middleware('auth')->group(function () {
         ->whereIn('type', ['vendor_to_school', 'school_to_unit'])
         ->name('procurements.downloadBast');
     Route::post('/procurements/{procurement}/convert-to-assets', [ProcurementController::class, 'convertToAssets'])->name('procurements.convertToAssets');
+
+    // System Settings
+    Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
+    Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
 });
 
 require __DIR__ . '/auth.php';

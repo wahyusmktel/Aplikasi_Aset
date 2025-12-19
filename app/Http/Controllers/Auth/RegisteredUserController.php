@@ -14,11 +14,13 @@ use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
-    /**
-     * Display the registration view.
-     */
-    public function create(): View
+    public function create()
     {
+        if (\App\Models\Setting::get('allow_registration', '1') === '0') {
+            alert()->warning('Registrasi Ditutup', 'Pendaftaran akun baru saat ini sedang dinonaktifkan oleh administrator.');
+            return redirect()->route('login');
+        }
+
         return view('auth.register');
     }
 
@@ -29,6 +31,10 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        if (\App\Models\Setting::get('allow_registration', '1') === '0') {
+            return redirect()->route('login');
+        }
+
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
