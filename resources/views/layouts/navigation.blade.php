@@ -1,269 +1,83 @@
-<nav x-data="{ open: false }" class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
-    <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex">
-                <!-- Logo -->
-                <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}">
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200" />
-                    </a>
-                </div>
-
-                <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('assets.index')" :active="request()->routeIs('assets.*')">
-                        {{ __('Aset') }}
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('maintenance-schedules.index')" :active="request()->routeIs('maintenance-schedules.*')">
-                        {{ __('Jadwal Pemeliharaan') }}
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('disposedAssets.index')" :active="request()->routeIs('disposedAssets.index')">
-                        {{ __('Riwayat Disposal') }}
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('assets.summary')" :active="request()->routeIs('assets.summary')">
-                        {{ __('Ringkasan Aset') }}
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('labs.index')" :active="request()->routeIs('labs.*')">
-                        {{ __('Lab') }}
-                    </x-nav-link>
-
-
-                    @php
-                        // Cek apakah salah satu route inventaris sedang aktif
-                        $isInventarisActive = request()->routeIs([
-                            'assignedAssets.index',
-                            'inventory.history',
-                            'maintenance.history',
-                            'inspection.history',
-                            'vehicleLogs.index',
-                            'books.index', // Masukkan juga Aset Buku ke sini jika relevan
-                            'asset-mapping.index',
-                        ]);
-                    @endphp
-
-                    <div class="hidden sm:flex sm:items-center sm:ms-6">
-                        <x-dropdown align="right" width="48">
-                            {{-- Trigger Dropdown --}}
-                            <x-slot name="trigger">
-                                <button @class([
-                                    'inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none',
-                                    'border-indigo-400 dark:border-indigo-600 text-gray-900 dark:text-gray-100 focus:border-indigo-700' => $isInventarisActive, // Gunakan variabel $isInventarisActive
-                                    'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-700 focus:text-gray-700 dark:focus:text-gray-300 focus:border-gray-300 dark:focus:border-gray-700' => !$isInventarisActive,
-                                ])>
-                                    <div>Inventaris</div> {{-- Judul Dropdown --}}
-
-                                    <div class="ms-1">
-                                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd"
-                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                clip-rule="evenodd" />
-                                        </svg>
-                                    </div>
-                                </button>
-                            </x-slot>
-
-                            {{-- Konten Dropdown --}}
-                            <x-slot name="content">
-                                <x-dropdown-link :href="route('assignedAssets.index')">
-                                    {{ __('Inventaris Pegawai') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('inventory.history')">
-                                    {{ __('Riwayat Inventaris') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('vehicleLogs.index')">
-                                    {{ __('Log Kendaraan') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('maintenance.history')">
-                                    {{ __('Riwayat Maintenance') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('inspection.history')">
-                                    {{ __('Riwayat Inspeksi') }}
-                                </x-dropdown-link>
-                                {{-- Pindahkan Aset Buku ke sini jika dianggap bagian dari inventaris --}}
-                                <x-dropdown-link :href="route('books.index')">
-                                    {{ __('Aset Buku') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('asset-mapping.index')">
-                                    {{ __('Mapping Aset (AI)') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('labs.history')">
-                                    {{ __('Riwayat Penggunaan Lab') }}
-                                </x-dropdown-link>
-                            </x-slot>
-                        </x-dropdown>
-                    </div>
-
-                    @php
-                        $isDataReferensiActive = request()->routeIs([
-                            'institutions.index',
-                            'buildings.index',
-                            'rooms.index',
-                            'categories.index',
-                            'faculties.index',
-                            'departments.index',
-                            'persons-in-charge.index',
-                            'asset-functions.index',
-                            'funding-sources.index',
-                        ]);
-                    @endphp
-
-
-                    <div class="hidden sm:flex sm:items-center sm:ms-6">
-                        <x-dropdown align="right" width="48">
-                            <x-slot name="trigger">
-                                <button @class([
-                                    'inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none',
-                                    'border-indigo-400 dark:border-indigo-600 text-gray-900 dark:text-gray-100 focus:border-indigo-700' => $isDataReferensiActive,
-                                    'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-700 focus:text-gray-700 dark:focus:text-gray-300 focus:border-gray-300 dark:focus:border-gray-700' => !$isDataReferensiActive,
-                                ])>
-                                    <div>Data Referensi</div>
-
-                                    <div class="ms-1">
-                                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd"
-                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                clip-rule="evenodd" />
-                                        </svg>
-                                    </div>
-                                </button>
-                            </x-slot>
-
-                            <x-slot name="content">
-                                <x-dropdown-link :href="route('institutions.index')">
-                                    {{ __('Lembaga') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('employees.index')">
-                                    {{ __('Pegawai') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('buildings.index')">
-                                    {{ __('Gedung') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('rooms.index')">
-                                    {{ __('Ruangan') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('categories.index')">
-                                    {{ __('Kategori') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('faculties.index')">
-                                    {{ __('Fakultas') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('departments.index')">
-                                    {{ __('Prodi/Unit') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('persons-in-charge.index')">
-                                    {{ __('Penanggung Jawab') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('asset-functions.index')">
-                                    {{ __('Fungsi Barang') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('funding-sources.index')">
-                                    {{ __('Jenis Pendanaan') }}
-                                </x-dropdown-link>
-                            </x-slot>
-                        </x-dropdown>
-                    </div>
-
-
-
-                </div>
+<nav class="sticky top-0 z-40 w-full bg-white/60 dark:bg-gray-950/60 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 transition-all duration-300">
+    <div class="px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            <!-- Left side (Mobile Toggle) -->
+            <div class="flex items-center md:hidden">
+                <button @click="sidebarOpen = !sidebarOpen" class="text-gray-500 hover:text-primary-600 focus:outline-none transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                </button>
+                <a href="{{ route('dashboard') }}" class="ml-4 flex items-center">
+                    <x-application-logo class="block h-7 w-auto fill-current text-primary-600" />
+                </a>
             </div>
 
-            <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
+            <!-- Page Title (Optional) -->
+            <div class="hidden md:block">
+                <h2 class="text-sm font-medium text-gray-500 dark:text-gray-400 capitalize">
+                    {{ str_replace('.', ' / ', request()->route()->getName()) }}
+                </h2>
+            </div>
+
+            <!-- Right side -->
+            <div class="flex items-center space-x-4">
+                {{-- Notification / Search could go here --}}
+                
+                <!-- Settings Dropdown -->
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
-                        <button
-                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
-                            <div>{{ Auth::user()->name }}</div>
-
-                            <div class="ms-1">
-                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd"
-                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                        clip-rule="evenodd" />
-                                </svg>
+                        <button class="flex items-center text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-all duration-200 focus:outline-none bg-gray-50 dark:bg-gray-900 rounded-full pl-1 pr-3 py-1 border border-gray-100 dark:border-gray-800">
+                            <div class="w-7 h-7 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center text-primary-600 dark:text-primary-400 font-bold mr-2 text-xs">
+                                {{ substr(Auth::user()->name, 0, 1) }}
                             </div>
+                            <span class="hidden sm:inline">{{ Auth::user()->name }}</span>
+                            <svg class="ms-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
                         </button>
                     </x-slot>
 
                     <x-slot name="content">
                         <x-dropdown-link :href="route('profile.edit')">
-                            {{ __('Profile') }}
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                {{ __('Profile') }}
+                            </div>
                         </x-dropdown-link>
 
                         <!-- Authentication -->
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-
-                            <x-dropdown-link :href="route('logout')"
-                                onclick="event.preventDefault();
-                                                this.closest('form').submit();">
-                                {{ __('Log Out') }}
+                            <x-dropdown-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">
+                                <div class="flex items-center text-red-600">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                                    {{ __('Log Out') }}
+                                </div>
                             </x-dropdown-link>
                         </form>
                     </x-slot>
                 </x-dropdown>
             </div>
-
-            <!-- Hamburger -->
-            <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open"
-                    class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-500 dark:focus:text-gray-400 transition duration-150 ease-in-out">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{ 'hidden': open, 'inline-flex': !open }" class="inline-flex"
-                            stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{ 'hidden': !open, 'inline-flex': open }" class="hidden" stroke-linecap="round"
-                            stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Responsive Navigation Menu -->
-    <div :class="{ 'block': open, 'hidden': !open }" class="hidden sm:hidden">
-        <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Dashboard') }}
-            </x-responsive-nav-link>
-        </div>
-
-        <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200 dark:border-gray-600">
-            <div class="px-4">
-                <div class="font-medium text-base text-gray-800 dark:text-gray-200">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
-            </div>
-
-            <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')">
-                    {{ __('Profile') }}
-                </x-responsive-nav-link>
-
-                <!-- Authentication -->
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-
-                    <x-responsive-nav-link :href="route('logout')"
-                        onclick="event.preventDefault();
-                                        this.closest('form').submit();">
-                        {{ __('Log Out') }}
-                    </x-responsive-nav-link>
-                </form>
-            </div>
         </div>
     </div>
 </nav>
+
+<!-- Mobile Sidebar Backdrop -->
+<div x-show="sidebarOpen" @click="sidebarOpen = false" x-cloak class="fixed inset-0 z-40 bg-gray-900/50 backdrop-blur-sm md:hidden" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"></div>
+
+<!-- Mobile Sidebar -->
+<div :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-900 shadow-2xl transition-transform duration-300 ease-in-out md:hidden flex flex-col">
+    <div class="flex items-center justify-between h-16 px-6 border-b border-gray-100 dark:border-gray-800">
+        <a href="{{ route('dashboard') }}" class="flex items-center">
+            <x-application-logo class="block h-8 w-auto fill-current text-primary-600" />
+            <span class="ml-3 font-bold text-xl tracking-tight text-gray-800 dark:text-white uppercase">ASET <span class="text-primary-600">APP</span></span>
+        </a>
+        <button @click="sidebarOpen = false" class="text-gray-500 hover:text-primary-600 focus:outline-none transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+    </div>
+    
+    <div class="flex-grow py-6 overflow-y-auto no-scrollbar">
+        {{-- Re-use sidebar content if needed, for simplicity I'll just suggest moving sidebar navigation to a component --}}
+        @include('layouts.sidebar-content')
+    </div>
+</div>

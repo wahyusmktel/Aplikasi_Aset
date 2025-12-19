@@ -1,0 +1,366 @@
+<x-app-layout>
+    <x-slot name="header">
+        <div class="flex items-center space-x-4">
+            <a href="{{ route('procurements.index') }}" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-500">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+            </a>
+            <h2 class="font-bold text-2xl text-gray-800 dark:text-gray-200 leading-tight">
+                {{ __('Detail Pengadaan') }}
+            </h2>
+        </div>
+    </x-slot>
+
+    <div class="py-12" x-data="{ showBastReceived: false, showBastUnit: false, showAssetConversion: false }">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8 pb-20">
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Left Side: Main Detail -->
+                <div class="lg:col-span-2 space-y-8">
+                    <!-- Status & Basic Info -->
+                    <div class="bg-white dark:bg-gray-950 rounded-3xl p-8 border border-gray-100 dark:border-gray-800 relative overflow-hidden">
+                        @php
+                            $statusClasses = [
+                                'pending' => 'bg-amber-100 text-amber-600',
+                                'received' => 'bg-blue-100 text-blue-600',
+                                'unit_delivered' => 'bg-green-100 text-green-600',
+                            ];
+                        @endphp
+                        <div class="inline-flex px-4 py-2 rounded-xl text-xs font-bold {{ $statusClasses[$procurement->status] ?? 'bg-gray-100' }} mb-6 uppercase tracking-widest">
+                            Status: {{ $procurement->status }}
+                        </div>
+                        
+                        <h1 class="text-4xl font-black text-gray-800 dark:text-white mb-2">{{ $procurement->vendor->name }}</h1>
+                        <p class="text-gray-400 font-bold mb-8 uppercase tracking-tighter">{{ $procurement->reference_number }}</p>
+
+                        <div class="grid grid-cols-2 gap-8 pt-8 border-t border-gray-50 dark:border-gray-800">
+                            <div>
+                                <span class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Tanggal Pengadaan</span>
+                                <span class="text-lg font-bold text-gray-700 dark:text-gray-200">{{ $procurement->procurement_date->format('d F Y') }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Investasi</span>
+                                <span class="text-xl font-black text-primary-600">Rp {{ number_format($procurement->total_cost, 0, ',', '.') }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Items List -->
+                    <div class="bg-white dark:bg-gray-950 rounded-3xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm">
+                        <div class="px-8 py-6 border-b border-gray-50 dark:border-gray-800 flex justify-between items-center">
+                            <h3 class="text-lg font-black text-gray-800 dark:text-white uppercase tracking-wider">Item Barang</h3>
+                            @if($procurement->status == 'received' || $procurement->status == 'unit_delivered')
+                                @if($procurement->items->where('is_converted_to_asset', false)->count() > 0)
+                                    <button @click="showAssetConversion = true" class="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-xl text-xs font-bold transition-all shadow-lg shadow-primary-500/30">
+                                        Konversi ke Daftar Aset
+                                    </button>
+                                @else
+                                    <span class="text-xs font-bold text-green-500 bg-green-50 px-4 py-2 rounded-xl">Sudah dikonversi</span>
+                                @endif
+                            @endif
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead class="bg-gray-50/50 dark:bg-gray-900/50 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                    <tr>
+                                        <th class="py-4 px-8">Nama Barang</th>
+                                        <th class="py-4 px-6 text-center">Jumlah</th>
+                                        <th class="py-4 px-6">Satuan (Rp)</th>
+                                        <th class="py-4 px-8 text-right">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-50 dark:divide-gray-800">
+                                    @foreach($procurement->items as $item)
+                                        <tr class="hover:bg-gray-50/20 dark:hover:bg-gray-800/10">
+                                            <td class="py-5 px-8">
+                                                <div class="font-bold text-gray-800 dark:text-gray-200">{{ $item->name }}</div>
+                                                <div class="text-xs text-gray-400 font-medium">
+                                                    {{ $item->category->name ?? 'Tanpa Kategori' }} • {{ $item->institution->name ?? 'Tanpa Pemilik' }}
+                                                </div>
+                                                <div class="text-[10px] text-primary-500 italic mt-1">{{ $item->specs ?? '' }}</div>
+                                            </td>
+                                            <td class="py-5 px-6 text-center font-black text-gray-600 dark:text-gray-400">{{ $item->quantity }}</td>
+                                            <td class="py-5 px-6 font-bold text-gray-400">Rp {{ number_format($item->unit_price, 0, ',', '.') }}</td>
+                                            <td class="py-5 px-8 text-right font-black text-gray-800 dark:text-white">Rp {{ number_format($item->total_price, 0, ',', '.') }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side: Handovers & BAST -->
+                <div class="space-y-8">
+                    <!-- BAST History -->
+                    <div class="bg-white dark:bg-gray-950 rounded-3xl p-8 border border-gray-100 dark:border-gray-800 shadow-sm relative overflow-hidden">
+                        <div class="relative z-10">
+                            <h3 class="text-lg font-black text-gray-800 dark:text-white mb-8 uppercase tracking-wider">Dokumen BAST</h3>
+                            
+                            <div class="space-y-6">
+                                <!-- Step 1: Vendor to School -->
+                                <div class="flex gap-4">
+                                    <div class="flex flex-col items-center">
+                                        <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs {{ $procurement->status != 'pending' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-400' }}">1</div>
+                                        <div class="flex-1 w-0.5 bg-gray-100 dark:bg-gray-800 my-1"></div>
+                                    </div>
+                                    <div class="pb-6">
+                                        <h4 class="font-bold text-sm mb-1 text-gray-800 dark:text-white">Terima dari Vendor</h4>
+                                        @php
+                                            $bastVendor = $procurement->handovers->where('type', 'vendor_to_school')->first();
+                                        @endphp
+
+                                        @if($bastVendor)
+                                            <p class="text-[10px] text-gray-400 mb-2 uppercase tracking-tighter">{{ $bastVendor->document_number }}</p>
+                                            <a href="{{ route('procurements.downloadBast', [$procurement, 'vendor_to_school']) }}" class="inline-flex items-center text-xs font-bold text-primary-600 hover:text-primary-700">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                                Unduh PDF
+                                            </a>
+                                        @else
+                                            <button @click="showBastReceived = true" class="text-xs font-bold text-gray-400 hover:text-primary-600 transition-colors italic italicunderline decoration-dotted underline-offset-4 pointer-events-auto cursor-pointer">Belum Dibuat &rarr;</button>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <!-- Step 2: School to Unit -->
+                                <div class="flex gap-4">
+                                    <div class="flex flex-col items-center">
+                                        <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs {{ $procurement->status == 'unit_delivered' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-400' }}">2</div>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-sm mb-1 text-gray-800 dark:text-white">Serah Terima ke Unit</h4>
+                                        @php
+                                            $bastUnit = $procurement->handovers->where('type', 'school_to_unit')->first();
+                                        @endphp
+
+                                        @if($bastUnit)
+                                            <p class="text-[10px] text-gray-400 mb-2 uppercase tracking-tighter">{{ $bastUnit->document_number }}</p>
+                                            <a href="{{ route('procurements.downloadBast', [$procurement, 'school_to_unit']) }}" class="inline-flex items-center text-xs font-bold text-primary-600 hover:text-primary-700">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                                Unduh PDF
+                                            </a>
+                                        @elseif($bastVendor)
+                                            <button @click="showBastUnit = true" class="text-xs font-bold text-gray-400 hover:text-primary-600 transition-colors italic underline decoration-dotted underline-offset-4">Buat BAST Unit &rarr;</button>
+                                        @else
+                                            <span class="text-xs font-medium text-gray-300 italic">Menunggu Penerimaan...</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vendor Contact Box -->
+                    <div class="bg-gradient-to-br from-gray-900 to-black rounded-3xl p-8 text-white shadow-xl">
+                        <h3 class="text-xs font-bold text-primary-400 uppercase tracking-widest mb-4">Informasi Vendor</h3>
+                        <div class="font-black text-xl mb-4">{{ $procurement->vendor->name }}</div>
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <svg class="w-5 h-5 mr-3 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                <span class="text-sm font-medium text-gray-400">{{ $procurement->vendor->address ?? 'Alamat tidak tersedia' }}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 mr-3 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                                <span class="text-sm font-medium text-gray-400">{{ $procurement->vendor->phone ?? '-' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal: Convert to Assets -->
+        <div x-show="showAssetConversion" x-cloak class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen px-4 p-8">
+                <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" @click="showAssetConversion = false"></div>
+                
+                <div class="relative bg-white dark:bg-gray-950 rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden animate-slideUp border border-gray-100 dark:border-gray-800">
+                    <form action="{{ route('procurements.convertToAssets', $procurement) }}" method="POST" class="p-10">
+                        @csrf
+                        <div class="flex items-center justify-between mb-8">
+                            <h2 class="text-3xl font-black text-gray-800 dark:text-white">Konversi ke Daftar Aset</h2>
+                            <button type="button" @click="showAssetConversion = false" class="text-gray-400 hover:text-gray-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+
+                        <div class="bg-amber-50 dark:bg-amber-900/20 p-6 rounded-2xl mb-8 border border-amber-100 dark:border-amber-800/50">
+                            <div class="flex items-start">
+                                <svg class="w-6 h-6 text-amber-600 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                <div>
+                                    <p class="text-sm font-bold text-amber-800 dark:text-amber-400 mb-1">Penting!</p>
+                                    <p class="text-xs text-amber-700 dark:text-amber-500">Tentukan lokasi dan kepemilikan aset di bawah ini. Pengaturan ini akan diterapkan ke semua item dalam pengadaan ini yang belum dikonversi.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Gedung</label>
+                                    <select name="building_id" required class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-primary-500 focus:ring-primary-500 shadow-sm">
+                                        <option value="">Pilih Gedung</option>
+                                        @foreach($buildings as $item)
+                                            <option value="{{ $item->id }}">{{ $item->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Ruangan</label>
+                                    <select name="room_id" required class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-primary-500 focus:ring-primary-500 shadow-sm">
+                                        <option value="">Pilih Ruangan</option>
+                                        @foreach($rooms as $item)
+                                            <option value="{{ $item->id }}">{{ $item->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Fakultas / Direktorat</label>
+                                    <select name="faculty_id" required class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-primary-500 focus:ring-primary-500 shadow-sm">
+                                        <option value="">Pilih Fakultas</option>
+                                        @foreach($faculties as $item)
+                                            <option value="{{ $item->id }}">{{ $item->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Prodi / Unit</label>
+                                    <select name="department_id" required class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-primary-500 focus:ring-primary-500 shadow-sm">
+                                        <option value="">Pilih Unit</option>
+                                        @foreach($departments as $item)
+                                            <option value="{{ $item->id }}" @selected(isset($bastUnit) && $bastUnit->to_department_id == $item->id)>{{ $item->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Penanggung Jawab</label>
+                                    <select name="person_in_charge_id" required class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-primary-500 focus:ring-primary-500 shadow-sm">
+                                        <option value="">Pilih PIC</option>
+                                        @foreach($personsInCharge as $item)
+                                            <option value="{{ $item->id }}">{{ $item->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Fungsi Barang</label>
+                                    <select name="asset_function_id" required class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-primary-500 focus:ring-primary-500 shadow-sm">
+                                        <option value="">Pilih Fungsi</option>
+                                        @foreach($assetFunctions as $item)
+                                            <option value="{{ $item->id }}">{{ $item->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Sumber Dana</label>
+                                    <select name="funding_source_id" required class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-primary-500 focus:ring-primary-500 shadow-sm">
+                                        <option value="">Pilih Sumber Dana</option>
+                                        @foreach($fundingSources as $item)
+                                            <option value="{{ $item->id }}">{{ $item->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end pt-10 space-x-4">
+                            <button type="button" @click="showAssetConversion = false" class="px-6 py-3 font-bold text-gray-500 hover:text-gray-700 transition-colors">Batal</button>
+                            <button type="submit" class="px-10 py-4 bg-primary-600 hover:bg-primary-700 text-white font-black rounded-2xl shadow-xl shadow-primary-500/30 transition-all transform hover:-translate-y-1">
+                                Konfirmasi & Buat Aset
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal: BAST Received from Vendor -->
+        <div x-show="showBastReceived" x-cloak class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen px-4 p-8">
+                <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" @click="showBastReceived = false"></div>
+                
+                <div class="relative bg-white dark:bg-gray-950 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-slideUp border border-gray-100 dark:border-gray-800">
+                    <form action="{{ route('procurements.received', $procurement) }}" method="POST" class="p-10">
+                        @csrf
+                        <h2 class="text-2xl font-black text-gray-800 dark:text-white mb-6">Penerimaan Barang</h2>
+                        
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">No. BAST Vendor</label>
+                                <input type="text" name="document_number" required placeholder="Contoh: BAST/{{ date('Y') }}/001"
+                                    class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-primary-500 focus:ring-primary-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Tanggal Terima</label>
+                                <input type="date" name="handover_date" required value="{{ date('Y-m-d') }}"
+                                    class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-primary-500 focus:ring-primary-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Nama Penyerah (Vendor)</label>
+                                <input type="text" name="from_name" required x-bind:value="'{{ $procurement->vendor->contact_person }}'"
+                                    class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-primary-500 focus:ring-primary-500">
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end pt-8 space-x-4">
+                            <button type="button" @click="showBastReceived = false" class="px-6 py-3 font-bold text-gray-500 hover:text-gray-700">Batal</button>
+                            <button type="submit" class="px-8 py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-2xl shadow-lg shadow-primary-500/30 transition-all">
+                                Proses Penerimaan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal: BAST Handover to Unit -->
+        <div x-show="showBastUnit" x-cloak class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen px-4 p-8">
+                <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" @click="showBastUnit = false"></div>
+                
+                <div class="relative bg-white dark:bg-gray-950 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-slideUp border border-gray-100 dark:border-gray-800">
+                    <form action="{{ route('procurements.handoverUnit', $procurement) }}" method="POST" class="p-10">
+                        @csrf
+                        <h2 class="text-2xl font-black text-gray-800 dark:text-white mb-6">Penyerahan ke Unit</h2>
+                        
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">No. BAST Unit</label>
+                                <input type="text" name="document_number" required placeholder="Contoh: BAST-UNIT/{{ date('Y') }}/001"
+                                    class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-primary-500 focus:ring-primary-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Tanggal Serah</label>
+                                <input type="date" name="handover_date" required value="{{ date('Y-m-d') }}"
+                                    class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-primary-500 focus:ring-primary-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Unit / Departemen Penerima</label>
+                                <select name="to_department_id" required class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-primary-500 focus:ring-primary-500 shadow-sm">
+                                    <option value="">Pilih Unit</option>
+                                    @foreach($departments as $dept)
+                                        <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Nama Penerima (Unit)</label>
+                                <input type="text" name="to_name" required
+                                    class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-primary-500 focus:ring-primary-500">
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end pt-8 space-x-4">
+                            <button type="button" @click="showBastUnit = false" class="px-6 py-3 font-bold text-gray-500 hover:text-gray-700">Batal</button>
+                            <button type="submit" class="px-8 py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-2xl shadow-lg shadow-primary-500/30 transition-all">
+                                Proses Penyerahan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</x-app-layout>

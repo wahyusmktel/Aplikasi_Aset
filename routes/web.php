@@ -31,6 +31,8 @@ use App\Http\Controllers\EmployeeAccountController;
 use App\Http\Controllers\AssetMappingController;
 use App\Http\Controllers\Auth\SocialLoginController;
 use App\Http\Controllers\MaintenanceScheduleController;
+use App\Http\Controllers\VendorController;
+use App\Http\Controllers\ProcurementController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LabController;
 
@@ -237,6 +239,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/labs/log/{log}/bast/{type}', [LabController::class, 'downloadBast'])
         ->whereIn('type', ['in', 'out'])
         ->name('labs.log.downloadBast');
+
+    // Route Rekanan (Vendors)
+    Route::resource('vendors', VendorController::class)->except(['show', 'create', 'edit']);
+
+    // Route Pengadaan Aset (Procurements)
+    Route::resource('procurements', ProcurementController::class);
+    Route::post('/procurements/{procurement}/received', [ProcurementController::class, 'markAsReceived'])->name('procurements.received');
+    Route::post('/procurements/{procurement}/handover-unit', [ProcurementController::class, 'handoverToUnit'])->name('procurements.handoverUnit');
+    Route::get('/procurements/{procurement}/download-bast/{type}', [ProcurementController::class, 'downloadBast'])
+        ->whereIn('type', ['vendor_to_school', 'school_to_unit'])
+        ->name('procurements.downloadBast');
+    Route::post('/procurements/{procurement}/convert-to-assets', [ProcurementController::class, 'convertToAssets'])->name('procurements.convertToAssets');
 });
 
 require __DIR__ . '/auth.php';
