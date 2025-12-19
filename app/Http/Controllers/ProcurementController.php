@@ -212,13 +212,14 @@ class ProcurementController extends Controller
         }
 
         $request->validate([
-            'building_id' => 'required|exists:buildings,id',
-            'room_id' => 'required|exists:rooms,id',
-            'faculty_id' => 'required|exists:faculties,id',
-            'department_id' => 'required|exists:departments,id',
-            'person_in_charge_id' => 'required|exists:persons_in_charge,id',
-            'asset_function_id' => 'required|exists:asset_functions,id',
-            'funding_source_id' => 'required|exists:funding_sources,id',
+            'items' => 'required|array',
+            'items.*.building_id' => 'required|exists:buildings,id',
+            'items.*.room_id' => 'required|exists:rooms,id',
+            'items.*.faculty_id' => 'required|exists:faculties,id',
+            'items.*.department_id' => 'required|exists:departments,id',
+            'items.*.person_in_charge_id' => 'required|exists:persons_in_charge,id',
+            'items.*.asset_function_id' => 'required|exists:asset_functions,id',
+            'items.*.funding_source_id' => 'required|exists:funding_sources,id',
         ]);
 
         DB::beginTransaction();
@@ -227,8 +228,10 @@ class ProcurementController extends Controller
             $startSequence = $latestAsset ? intval($latestAsset->sequence_number) : 0;
             $count = 0;
 
-            foreach ($procurement->items as $item) {
-                if ($item->is_converted_to_asset) continue;
+            foreach ($request->items as $itemId => $details) {
+                $item = $procurement->items()->find($itemId);
+                
+                if (!$item || $item->is_converted_to_asset) continue;
 
                 for ($i = 0; $i < $item->quantity; $i++) {
                     $count++;
@@ -243,13 +246,13 @@ class ProcurementController extends Controller
                         'sequence_number' => $formattedSequence,
                         'status' => 'Aktif',
                         
-                        'building_id' => $request->building_id,
-                        'room_id' => $request->room_id,
-                        'faculty_id' => $request->faculty_id,
-                        'department_id' => $request->department_id,
-                        'person_in_charge_id' => $request->person_in_charge_id,
-                        'asset_function_id' => $request->asset_function_id,
-                        'funding_source_id' => $request->funding_source_id,
+                        'building_id' => $details['building_id'],
+                        'room_id' => $details['room_id'],
+                        'faculty_id' => $details['faculty_id'],
+                        'department_id' => $details['department_id'],
+                        'person_in_charge_id' => $details['person_in_charge_id'],
+                        'asset_function_id' => $details['asset_function_id'],
+                        'funding_source_id' => $details['funding_source_id'],
                     ]);
 
                     // Generate official YPT Asset Code
