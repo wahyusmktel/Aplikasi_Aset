@@ -1,364 +1,413 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Manajemen Aset') }}
-        </h2>
-    </x-slot>
-
-    {{-- === INI PERBAIKAN UTAMA: Panggil pageData() === --}}
-    <div x-data="pageData()" class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
-
-                    {{-- Layout Grid untuk Filter dan Aksi Utama --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-
-                        {{-- Kolom Kiri: Filter --}}
-                        <div class="flex flex-wrap gap-4 items-center">
-                            {{-- Filter Kategori --}}
-                            <div class="flex items-center space-x-2">
-                                <label for="category_filter" class="text-sm font-medium">Kategori:</label>
-                                {{-- Gunakan directive x-select2 --}}
-                                <select id="category_filter" name="category_ids[]" multiple="multiple"
-                                    x-ref="categorySelect" class="rounded-md dark:bg-gray-700 text-sm w-full sm:w-64">
-                                    @foreach ($categories as $category)
-                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <!-- Langkah 2: Dropdown KECUALIKAN Kategori -->
-                            <div class="flex items-center space-x-2">
-                                <label for="exclude_category_filter" class="text-sm font-medium">Kecualikan:</label>
-                                <select id="exclude_category_filter" name="exclude_category_ids[]" multiple="multiple"
-                                    x-ref="excludeCategorySelect"
-                                    class="rounded-md dark:bg-gray-700 text-sm w-full sm:w-64">
-                                    @foreach ($categories as $category)
-                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            {{-- Filter Tahun Pengadaan --}}
-                            <div class="flex items-center space-x-2">
-                                <label for="year_filter" class="text-sm font-medium">Tahun:</label>
-                                <select id="year_filter" x-model="selectedYear"
-                                    class="rounded-md dark:bg-gray-700 text-sm">
-                                    <option value="all">Semua Tahun</option>
-                                    @foreach ($years as $year)
-                                        <option value="{{ $year }}">{{ $year }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            {{-- Tombol Terapkan --}}
-                            <button @click="applyFilters"
-                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded text-sm">
-                                Terapkan
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h2 class="font-black text-3xl text-gray-800 dark:text-white leading-tight tracking-tight">
+                    {{ __('Manajemen Aset') }}
+                </h2>
+                <p class="text-sm text-gray-400 mt-1">Kelola dan pantau seluruh inventaris aset institusi Anda.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="{{ route('assets.create') }}"
+                    class="inline-flex items-center px-6 py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-black rounded-2xl transition-all shadow-xl shadow-red-500/30 transform hover:-translate-y-1">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" /></svg>
+                    Tambah Aset
+                </a>
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open" 
+                        class="p-3 bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-900 transition-all shadow-sm">
+                        <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" /></svg>
+                    </button>
+                    <div x-show="open" @click.away="open = false" 
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 scale-95"
+                        x-transition:enter-end="opacity-100 scale-100"
+                        class="absolute right-0 mt-3 w-56 bg-white dark:bg-gray-950 rounded-[24px] shadow-2xl border border-gray-100 dark:border-gray-800 z-50 overflow-hidden">
+                        <div class="p-2">
+                            <a href="{{ route('assets.batchCreate') }}" class="flex items-center px-4 py-3 text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 hover:text-red-600 rounded-xl transition-all">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z" /></svg>
+                                Tambah Massal
+                            </a>
+                            <button @click="showImportBatchModal = true; open = false" class="w-full flex items-center px-4 py-3 text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 hover:text-red-600 rounded-xl transition-all">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                                Impor Massal
                             </button>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </x-slot>
 
-                        {{-- Kolom Kanan: Tombol Aksi Utama & Pencarian --}}
-                        <div class="flex flex-col md:items-end gap-4">
-                            {{-- Grup Tombol Aksi Utama --}}
-                            <div class="flex flex-wrap gap-2 justify-end">
-                                <a href="{{ route('assets.create') }}"
-                                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm">
-                                    Tambah Aset
-                                </a>
-                                <a href="{{ route('assets.batchCreate') }}"
-                                    class="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded text-sm">
-                                    Tambah Massal
-                                </a>
-                                <button @click="showImportBatchModal = true"
-                                    class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded text-sm">
-                                    Impor Massal
-                                </button>
-                            </div>
-                            {{-- Form Pencarian --}}
-                            <form action="{{ route('assets.index') }}" method="GET" class="flex w-full md:w-auto">
-                                <!-- Langkah 2: bawa include categories -->
-                                <template x-for="categoryId in selectedCategories" :key="'inc-' + categoryId">
-                                    <input type="hidden" name="category_ids[]" :value="categoryId">
-                                </template>
+    <div x-data="pageData()" class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8 pb-24">
+            
+            {{-- Quick Stats --}}
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                @php
+                    $stats = [
+                        ['label' => 'Total Aset', 'icon' => 'cube', 'color' => 'red', 'count' => \App\Models\Asset::whereNull('disposal_date')->count()],
+                        ['label' => 'Tersedia', 'icon' => 'check-circle', 'color' => 'emerald', 'count' => \App\Models\Asset::whereNull('disposal_date')->where('current_status', 'Tersedia')->count()],
+                        ['label' => 'Dipinjam', 'icon' => 'user', 'color' => 'blue', 'count' => \App\Models\Asset::whereNull('disposal_date')->whereIn('current_status', ['Dipinjam', 'Digunakan'])->count()],
+                        ['label' => 'Rusak', 'icon' => 'exclamation-triangle', 'color' => 'amber', 'count' => \App\Models\Asset::whereNull('disposal_date')->where('current_status', 'Rusak')->count()],
+                    ];
+                @endphp
 
-                                <!-- Langkah 2: bawa EXCLUDE categories -->
-                                <template x-for="categoryId in selectedExcludeCategories" :key="'exc-' + categoryId">
-                                    <input type="hidden" name="exclude_category_ids[]" :value="categoryId">
-                                </template>
-
-                                <input type="hidden" name="purchase_year" :value="selectedYear">
-                                <input type="hidden" name="per_page" :value="perPage">
-
-                                <input type="text" name="search" placeholder="Cari nama atau kode aset..."
-                                    class="form-input rounded-l-md dark:bg-gray-700 w-full md:w-64"
-                                    value="{{ request('search') }}">
-                                <button type="submit"
-                                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-r-md">
-                                    Cari
-                                </button>
-                            </form>
+                @foreach($stats as $stat)
+                    <div class="bg-white dark:bg-gray-950 p-6 rounded-[32px] border border-gray-100 dark:border-gray-800 shadow-sm flex items-center gap-5 group hover:shadow-xl hover:translate-x-1 transition-all">
+                        <div class="w-14 h-14 bg-{{ $stat['color'] }}-600/10 rounded-2xl flex items-center justify-center border border-{{ $stat['color'] }}-500/20 group-hover:scale-110 transition-transform">
+                            @if($stat['icon'] == 'cube')
+                                <svg class="w-7 h-7 text-{{ $stat['color'] }}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                            @elseif($stat['icon'] == 'check-circle')
+                                <svg class="w-7 h-7 text-{{ $stat['color'] }}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            @elseif($stat['icon'] == 'user')
+                                <svg class="w-7 h-7 text-{{ $stat['color'] }}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                            @else
+                                <svg class="w-7 h-7 text-{{ $stat['color'] }}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                            @endif
+                        </div>
+                        <div>
+                            <p class="text-xs font-black text-gray-400 uppercase tracking-widest">{{ $stat['label'] }}</p>
+                            <h3 class="text-2xl font-black text-gray-800 dark:text-white">{{ $stat['count'] }}</h3>
                         </div>
                     </div>
+                @endforeach
+            </div>
 
-                    {{-- Grup Tombol Ekspor & Cetak Label --}}
-                    <div class="flex flex-wrap gap-2 mb-6 border-t dark:border-gray-700 pt-4">
-                        <button @click="openBulkEditModal" :disabled="selectedIds.length === 0"
-                            class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded text-sm disabled:bg-amber-300 disabled:cursor-not-allowed">
-                            Bulk Edit (<span x-text="selectedIds.length"></span>)
-                        </button>
-                        <button @click="printSelected" :disabled="selectedIds.length === 0"
-                            class="bg-purple-500 text-white font-bold py-2 px-4 rounded text-sm disabled:bg-purple-300 disabled:cursor-not-allowed">
-                            Cetak Label (<span x-text="selectedIds.length"></span>)
-                        </button>
-                        <a :href="generateExportUrl('{{ route('assets.exportActiveExcel') }}')"
-                            class="bg-green-600 hover:bg-green-800 text-white font-bold py-2 px-4 rounded text-sm">
-                            Export Excel (Filter)
-                        </a>
-                        <a :href="generateExportUrl('{{ route('assets.downloadActivePDF') }}')" target="_blank"
-                            class="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 rounded text-sm">
-                            Laporan PDF (Filter)
-                        </a>
-                    </div>
+            {{-- Filter Bar --}}
+            <div class="bg-white dark:bg-gray-950 p-6 rounded-[32px] border border-gray-100 dark:border-gray-800 shadow-sm" x-data="{ expanded: false }">
+                <div class="flex flex-col md:flex-row gap-6 items-end">
+                    <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+                        {{-- Search --}}
+                        <div class="md:col-span-1">
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Cari Aset</label>
+                            <div class="relative group">
+                                <input type="text" x-model="searchQuery" @keyup.enter="applyFilters"
+                                    placeholder="Nama atau Kode Aset..."
+                                    class="w-full pl-12 pr-4 py-3.5 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-red-500 focus:ring-red-500 transition-all shadow-sm">
+                                <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                </div>
+                            </div>
+                        </div>
 
-                    {{-- Tabel Data --}}
-                    <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
-                        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                            <thead
-                                class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                <tr>
-                                    <th scope="col" class="p-4">
-                                        <input type="checkbox" @click="toggleAll($event)"
-                                            class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800">
-                                    </th>
-                                    <th scope="col" class="py-3 px-6">No</th>
-                                    <th scope="col" class="py-3 px-6">Kode Aset YPT</th>
-                                    <th scope="col" class="py-3 px-6">Nama Barang</th>
-                                    <th scope="col" class="py-3 px-6">Tahun</th>
-                                    <th scope="col" class="py-3 px-6">Lokasi</th>
-                                    <th scope="col" class="py-3 px-6">Status</th>
-                                    <th scope="col" class="py-3 px-6">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($assets as $index => $asset)
-                                    <tr
-                                        class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                        <td class="p-4">
-                                            <input type="checkbox" :value="{{ $asset->id }}" x-model="selectedIds"
-                                                class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800">
-                                        </td>
-                                        <td class="py-4 px-6">
-                                            {{ ($assets->currentPage() - 1) * $assets->perPage() + $index + 1 }}</td>
-                                        <td class="py-4 px-6 font-mono text-xs">{{ $asset->asset_code_ypt }}</td>
-                                        <td class="py-4 px-6 font-semibold">{{ $asset->name }}</td>
-                                        <td class="py-4 px-6">{{ $asset->purchase_year }}</td>
-                                        <td class="py-4 px-6 text-xs">{{ $asset->building->name ?? '' }} /
-                                            {{ $asset->room->name ?? '' }}</td>
-                                        <td class="py-4 px-6">
-                                            <span @class([
-                                                'px-2 py-1 font-semibold leading-tight text-xs rounded-full',
-                                                'text-green-700 bg-green-100 dark:bg-green-700 dark:text-green-100' =>
-                                                    $asset->current_status == 'Tersedia',
-                                                'text-yellow-700 bg-yellow-100 dark:bg-yellow-700 dark:text-yellow-100' =>
-                                                    $asset->current_status == 'Dipinjam' ||
-                                                    $asset->current_status == 'Digunakan',
-                                                'text-red-700 bg-red-100 dark:bg-red-700 dark:text-red-100' =>
-                                                    $asset->current_status == 'Rusak',
-                                                'text-gray-700 bg-gray-100 dark:bg-gray-700 dark:text-gray-100' => !in_array(
-                                                    $asset->current_status,
-                                                    ['Tersedia', 'Dipinjam', 'Digunakan', 'Rusak']),
-                                            ])>
-                                                {{ $asset->current_status }}
-                                            </span>
-                                        </td>
-                                        <td class="py-4 px-6">
-                                            <div class="flex flex-nowrap gap-2">
-                                                <a href="{{ route('assets.show', $asset->id) }}"
-                                                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-xs">
-                                                    Detail
-                                                </a>
-                                                <a href="{{ route('assets.edit', $asset->id) }}"
-                                                    class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded text-xs">
-                                                    Edit
-                                                </a>
-                                                <button onclick="confirmDelete({{ $asset->id }})"
-                                                    class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs">
-                                                    Hapus
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="8" class="py-4 px-6 text-center">Tidak ada data aset.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {{-- Paginasi & "Per Halaman" --}}
-                    <div class="mt-4 flex flex-wrap justify-between items-center gap-4">
-                        <div class="flex items-center space-x-2 text-sm">
-                            <label for="per_page_select" class="text-gray-700 dark:text-gray-300">Tampilkan:</label>
-                            <select id="per_page_select" x-model="perPage" @change="applyFilters"
-                                class="rounded-md dark:bg-gray-700 text-sm border-gray-300 dark:border-gray-600 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600">
-                                @foreach ($allowedPerPages as $option)
-                                    <option value="{{ $option }}">{{ $option }} per halaman</option>
+                        {{-- Kategori (Select2) --}}
+                        <div class="md:col-span-1">
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Pilih Kategori</label>
+                            <select x-ref="categorySelect" multiple="multiple" class="rounded-2xl dark:bg-gray-900 border-gray-100 dark:border-gray-800 w-full">
+                                @foreach ($categories as $category)
+                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="flex-grow text-right">
-                            {{ $assets->links() }}
+
+                        {{-- Tahun --}}
+                        <div class="md:col-span-1">
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Tahun Pengadaan</label>
+                            <select x-model="selectedYear" class="w-full px-4 py-3.5 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-red-500 focus:ring-red-500 transition-all shadow-sm">
+                                <option value="all">Semua Tahun</option>
+                                @foreach ($years as $year)
+                                    <option value="{{ $year }}">{{ $year }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
 
+                    <div class="flex items-center gap-3 shrink-0">
+                        <button @click="expanded = !expanded" 
+                            class="px-5 py-3.5 bg-gray-50 dark:bg-gray-900 text-gray-500 font-bold rounded-2xl border border-gray-100 dark:border-gray-800 hover:bg-gray-100 transition-all flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+                            Lanjutan
+                        </button>
+                        <button @click="applyFilters"
+                            class="px-8 py-3.5 bg-gray-800 dark:bg-white dark:text-gray-900 text-white font-black rounded-2xl transition-all shadow-lg hover:-translate-y-1">
+                            Terapkan
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Expanded Filters --}}
+                <div x-show="expanded" x-collapse>
+                    <div class="pt-8 mt-6 border-t border-gray-50 dark:border-gray-900">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Kecualikan Kategori</label>
+                                <select x-ref="excludeCategorySelect" multiple="multiple" class="w-full">
+                                    @foreach ($categories as $category)
+                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Jumlah Per Halaman</label>
+                                <select x-model="perPage" class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
+                                    @foreach ($allowedPerPages as $option)
+                                        <option value="{{ $option }}">{{ $option }} item</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Table Wrapper --}}
+            <div class="bg-white dark:bg-gray-950 rounded-[40px] border border-gray-100 dark:border-gray-800 shadow-2xl overflow-hidden animate-fadeIn">
+                {{-- Bulk Action Bar --}}
+                <div x-show="selectedIds.length > 0" x-transition 
+                    class="bg-red-600 p-4 px-10 flex items-center justify-between text-white">
+                    <div class="flex items-center gap-4">
+                        <div class="flex -space-x-2">
+                            <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center border border-white/30 text-xs font-black" x-text="selectedIds.length"></div>
+                        </div>
+                        <span class="text-sm font-black uppercase tracking-widest">Item Terpilih</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button @click="openBulkEditModal" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-black transition-all">
+                            Bulk Edit
+                        </button>
+                        <button @click="printSelected" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-black transition-all">
+                            Cetak Label
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Export Actions --}}
+                <div class="p-4 px-10 border-b border-gray-50 dark:border-gray-900 flex justify-end gap-3 bg-gray-50/30 dark:bg-gray-900/10">
+                    <a :href="generateExportUrl('{{ route('assets.exportActiveExcel') }}')"
+                        class="px-4 py-2 bg-emerald-600/10 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-xl text-xs font-black transition-all flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        Export Excel
+                    </a>
+                    <a :href="generateExportUrl('{{ route('assets.downloadActivePDF') }}')" target="_blank"
+                        class="px-4 py-2 bg-blue-600/10 text-blue-600 hover:bg-blue-600 hover:text-white rounded-xl text-xs font-black transition-all flex items-center text-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        Laporan PDF
+                    </a>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-gray-50/50 dark:bg-gray-900/50">
+                                <th class="p-6 px-10 w-20">
+                                    <input type="checkbox" @click="toggleAll($event)"
+                                        class="rounded-lg bg-gray-100 dark:bg-gray-800 border-none text-red-600 focus:ring-red-600 p-2.5 transition-all">
+                                </th>
+                                <th class="py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Kode Aset & Nama</th>
+                                <th class="py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] hidden md:table-cell">Detail & Lokasi</th>
+                                <th class="py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-center">Status</th>
+                                <th class="py-6 px-10 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50 dark:divide-gray-900">
+                            @forelse ($assets as $asset)
+                                <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors group">
+                                    <td class="p-6 px-10">
+                                        <input type="checkbox" :value="{{ $asset->id }}" x-model="selectedIds"
+                                            class="rounded-lg bg-gray-100 dark:bg-gray-800 border-none text-red-600 focus:ring-red-600 p-2.5 transition-all">
+                                    </td>
+                                    <td class="py-6">
+                                        <div class="flex flex-col">
+                                            <span class="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1">{{ $asset->asset_code_ypt }}</span>
+                                            <span class="text-base font-bold text-gray-800 dark:text-white group-hover:text-red-600 transition-colors">{{ $asset->name }}</span>
+                                            <span class="text-[10px] font-bold text-gray-400 mt-1">{{ $asset->category->name ?? 'Tanpa Kategori' }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-6 hidden md:table-cell">
+                                        <div class="flex flex-col gap-1">
+                                            <div class="flex items-center text-xs text-gray-500 font-bold">
+                                                <svg class="w-3.5 h-3.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                                                {{ $asset->building->name ?? '-' }}
+                                            </div>
+                                            <div class="flex items-center text-xs text-gray-400">
+                                                <svg class="w-3.5 h-3.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                                                {{ $asset->room->name ?? '-' }}
+                                            </div>
+                                            <div class="flex items-center text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">
+                                                {{ $asset->purchase_year }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-6 text-center">
+                                        @php
+                                            $statusColors = [
+                                                'Tersedia' => 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
+                                                'Dipinjam' => 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+                                                'Digunakan' => 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+                                                'Rusak' => 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
+                                            ];
+                                            $cls = $statusColors[$asset->current_status] ?? 'bg-gray-100 text-gray-600';
+                                        @endphp
+                                        <span class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest {{ $cls }}">
+                                            {{ $asset->current_status }}
+                                        </span>
+                                    </td>
+                                    <td class="py-6 px-10 text-right">
+                                        <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0 transition-transform">
+                                            <a href="{{ route('assets.show', $asset->id) }}"
+                                                class="p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-red-600 rounded-xl transition-all shadow-sm">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                            </a>
+                                            <a href="{{ route('assets.edit', $asset->id) }}"
+                                                class="p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-red-600 rounded-xl transition-all shadow-sm">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                            </a>
+                                            <button onclick="confirmDelete({{ $asset->id }})"
+                                                class="p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-white hover:bg-red-600 rounded-xl transition-all shadow-sm">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="py-20 text-center">
+                                        <div class="flex flex-col items-center">
+                                            <div class="w-24 h-24 bg-gray-50 dark:bg-gray-900 rounded-full flex items-center justify-center mb-6">
+                                                <svg class="w-12 h-12 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                                            </div>
+                                            <p class="text-xl font-bold text-gray-400">Tidak ada data aset ditemukan.</p>
+                                            <p class="text-xs text-gray-300 mt-2 uppercase tracking-widest font-black">Coba sesuaikan filter atau tambahkan aset baru</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- Pagination --}}
+                <div class="p-10 border-t border-gray-50 dark:border-gray-900 bg-gray-50/20 dark:bg-gray-900/10 flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div class="text-sm font-bold text-gray-400">
+                        Menampilkan <span class="text-gray-800 dark:text-white">{{ $assets->firstItem() ?? 0 }}</span> - <span class="text-gray-800 dark:text-white">{{ $assets->lastItem() ?? 0 }}</span> dari <span class="text-gray-800 dark:text-white">{{ $assets->total() }}</span> Aset
+                    </div>
+                    <div>
+                        {{ $assets->links() }}
+                    </div>
                 </div>
             </div>
         </div>
 
-        {{-- Modal Impor (tidak berubah) --}}
+        {{-- Modal Impor Massal --}}
         <div x-show="showImportBatchModal" x-cloak
-            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-            @keydown.escape.window="showImportBatchModal = false">
-            <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md"
-                @click.away="showImportBatchModal = false">
-                <h2 class="text-2xl font-bold mb-6">Impor Aset Massal</h2>
-                <form action="{{ route('assets.importBatch') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    <div class="mb-4">
-                        <label for="file" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Pilih
-                            File Excel</label>
-                        <input type="file" name="file" id="file"
-                            class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0"
-                            required>
-                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                            Gunakan template yang sesuai. Pastikan nama-nama data master (gedung, ruangan, dll) sudah
-                            benar.
-                        </p>
-                    </div>
-                    <div class="flex justify-end space-x-4">
-                        <button type="button" @click="showImportBatchModal = false"
-                            class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Batal</button>
-                        <button type="submit"
-                            class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Impor</button>
-                    </div>
-                </form>
+            class="fixed inset-0 z-[100] overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen px-4 p-8">
+                <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" @click="showImportBatchModal = false"></div>
+                
+                <div class="relative bg-white dark:bg-gray-950 rounded-[40px] shadow-2xl w-full max-w-md overflow-hidden animate-slideUp border border-gray-100 dark:border-gray-800">
+                    <form action="{{ route('assets.importBatch') }}" method="POST" enctype="multipart/form-data" class="p-10">
+                        @csrf
+                        <div class="flex items-center justify-between mb-8">
+                            <h2 class="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Impor Massal</h2>
+                            <button type="button" @click="showImportBatchModal = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div class="p-8 border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-3xl flex flex-col items-center group hover:border-red-500/50 transition-all cursor-pointer relative overflow-hidden">
+                                <svg class="w-12 h-12 text-gray-300 mb-4 group-hover:scale-110 group-hover:text-red-600 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                                <p class="text-xs font-black text-gray-400 uppercase tracking-widest text-center">Klik untuk memilih file excel</p>
+                                <input type="file" name="file" required class="absolute inset-0 opacity-0 cursor-pointer">
+                            </div>
+                            
+                            <div class="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
+                                <p class="text-[10px] text-gray-500 italic leading-relaxed">
+                                    <span class="font-black text-red-600">Catatan:</span> Pastikan data master (gedung, ruangan, dll) sudah terdaftar di sistem agar impor berjalan lancar.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end mt-10 space-x-4">
+                            <button type="button" @click="showImportBatchModal = false" class="px-6 py-3 font-bold text-gray-400 hover:text-gray-600">Batal</button>
+                            <button type="submit" class="px-10 py-4 bg-red-600 hover:bg-red-700 text-white font-black rounded-2xl shadow-xl shadow-red-500/30 transition-all transform hover:-translate-y-1">Mulai Impor</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
-        <!-- Langkah 4B: Modal Bulk Edit -->
+        {{-- Modal Bulk Edit --}}
         <div x-show="showBulkEditModal" x-cloak
-            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-            @keydown.escape.window="showBulkEditModal = false">
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-2xl"
-                @click.away="showBulkEditModal = false">
-                <h2 class="text-xl font-bold mb-4">Bulk Edit Aset Terpilih</h2>
-
-                <form method="POST" action="{{ route('assets.bulkUpdateFields') }}">
-                    @csrf
-                    <!-- kirim ids -->
-                    <input type="hidden" name="ids" :value="selectedIds.join(',')">
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Nama Barang -->
-                        <div class="border dark:border-gray-700 rounded p-3">
-                            <label class="flex items-center gap-2 text-sm mb-2">
-                                <input type="checkbox" name="apply_name" x-model="apply.name" class="rounded">
-                                <span>Ubah Nama Barang</span>
-                            </label>
-                            <input type="text" name="name" x-bind:disabled="!apply.name"
-                                placeholder="Nama barang baru" class="w-full rounded-md dark:bg-gray-700">
+            class="fixed inset-0 z-[100] overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen px-4 p-8">
+                <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" @click="showBulkEditModal = false"></div>
+                
+                <div class="relative bg-white dark:bg-gray-950 rounded-[40px] shadow-2xl w-full max-w-2xl overflow-hidden animate-slideUp border border-gray-100 dark:border-gray-800">
+                    <form method="POST" action="{{ route('assets.bulkUpdateFields') }}" class="p-10">
+                        @csrf
+                        <input type="hidden" name="ids" :value="selectedIds.join(',')">
+                        
+                        <div class="flex items-center justify-between mb-8">
+                            <div>
+                                <h2 class="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Bulk Edit Aset</h2>
+                                <p class="text-xs text-gray-400 mt-1 uppercase tracking-widest font-bold"><span x-text="selectedIds.length"></span> Item Terpilih</p>
+                            </div>
+                            <button type="button" @click="showBulkEditModal = false" class="text-gray-400 hover:text-gray-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
                         </div>
 
-                        <!-- Jenis Pendanaan -->
-                        <div class="border dark:border-gray-700 rounded p-3">
-                            <label class="flex items-center gap-2 text-sm mb-2">
-                                <input type="checkbox" name="apply_funding" x-model="apply.funding" class="rounded">
-                                <span>Ubah Jenis Pendanaan</span>
-                            </label>
-                            <select name="funding_source_id" x-bind:disabled="!apply.funding"
-                                class="w-full rounded-md dark:bg-gray-700">
-                                <option value="">-- Pilih Pendanaan --</option>
-                                @foreach ($fundingSources as $fs)
-                                    <option value="{{ $fs->id }}">{{ $fs->name }}</option>
-                                @endforeach
-                            </select>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[50vh] overflow-y-auto px-1 custom-scrollbar">
+                            {{-- Field Edit Items (Cards) --}}
+                            @php
+                                $editFields = [
+                                    ['name' => 'apply_name', 'model' => 'apply.name', 'label' => 'Nama Barang', 'input_name' => 'name', 'type' => 'text', 'placeholder' => 'Nama barang baru'],
+                                    ['name' => 'apply_funding', 'model' => 'apply.funding', 'label' => 'Jenis Pendanaan', 'input_name' => 'funding_source_id', 'type' => 'select', 'options' => $fundingSources],
+                                    ['name' => 'apply_room', 'model' => 'apply.room', 'label' => 'Lokasi Ruangan', 'input_name' => 'room_id', 'type' => 'select', 'options' => $rooms],
+                                    ['name' => 'apply_year', 'model' => 'apply.year', 'label' => 'Tahun Pengadaan', 'input_name' => 'purchase_year', 'type' => 'number', 'placeholder' => 'YYYY'],
+                                    ['name' => 'apply_pic', 'model' => 'apply.pic', 'label' => 'Penanggung Jawab', 'input_name' => 'person_in_charge_id', 'type' => 'select', 'options' => $personsInCharge, 'full' => true],
+                                ];
+                            @endphp
+
+                            @foreach($editFields as $field)
+                                <div class="bg-gray-50/50 dark:bg-gray-900/30 p-5 rounded-3xl border border-gray-100 dark:border-gray-800 @if($field['full'] ?? false) md:col-span-2 @endif">
+                                    <label class="flex items-center gap-3 cursor-pointer mb-4">
+                                        <input type="checkbox" name="{{ $field['name'] }}" x-model="{{ $field['model'] }}" 
+                                            class="rounded-lg bg-white dark:bg-gray-800 border-none text-red-600 focus:ring-red-600 p-2.5 transition-all">
+                                        <span class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">{{ $field['label'] }}</span>
+                                    </label>
+                                    
+                                    @if($field['type'] == 'select')
+                                        <select name="{{ $field['input_name'] }}" x-bind:disabled="!{{ $field['model'] }}"
+                                            class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 disabled:opacity-30 disabled:grayscale transition-all">
+                                            <option value="">-- Pilih --</option>
+                                            @foreach ($field['options'] as $opt)
+                                                <option value="{{ $opt->id }}">{{ $opt->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    @else
+                                        <input type="{{ $field['type'] }}" name="{{ $field['input_name'] }}" x-bind:disabled="!{{ $field['model'] }}"
+                                            placeholder="{{ $field['placeholder'] }}"
+                                            class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 disabled:opacity-30 transition-all">
+                                    @endif
+                                </div>
+                            @endforeach
                         </div>
 
-                        <!-- Ruangan -->
-                        <div class="border dark:border-gray-700 rounded p-3">
-                            <label class="flex items-center gap-2 text-sm mb-2">
-                                <input type="checkbox" name="apply_room" x-model="apply.room" class="rounded">
-                                <span>Ubah Ruangan</span>
-                            </label>
-                            <select name="room_id" x-bind:disabled="!apply.room"
-                                class="w-full rounded-md dark:bg-gray-700">
-                                <option value="">-- Pilih Ruangan --</option>
-                                @foreach ($rooms as $r)
-                                    <option value="{{ $r->id }}">{{ $r->name }}</option>
-                                @endforeach
-                            </select>
+                        <div class="flex justify-end mt-10 space-x-4">
+                            <button type="button" @click="showBulkEditModal = false" class="px-6 py-3 font-bold text-gray-400 hover:text-gray-600">Batal</button>
+                            <button type="submit" 
+                                x-bind:disabled="Object.values(apply).every(v => v === false)"
+                                class="px-10 py-4 bg-red-600 hover:bg-red-700 text-white font-black rounded-2xl shadow-xl shadow-red-500/30 transition-all transform hover:-translate-y-1 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed">
+                                Simpan Perubahan Massal
+                            </button>
                         </div>
-
-                        <!-- Tahun Pengadaan -->
-                        <div class="border dark:border-gray-700 rounded p-3">
-                            <label class="flex items-center gap-2 text-sm mb-2">
-                                <input type="checkbox" name="apply_year" x-model="apply.year" class="rounded">
-                                <span>Ubah Tahun Pengadaan</span>
-                            </label>
-                            <input type="number" name="purchase_year" x-bind:disabled="!apply.year" min="1900"
-                                placeholder="YYYY" class="w-full rounded-md dark:bg-gray-700">
-                        </div>
-
-                        <!-- Penanggung Jawab -->
-                        <div class="border dark:border-gray-700 rounded p-3 md:col-span-2">
-                            <label class="flex items-center gap-2 text-sm mb-2">
-                                <input type="checkbox" name="apply_pic" x-model="apply.pic" class="rounded">
-                                <span>Ubah Penanggung Jawab</span>
-                            </label>
-                            <select name="person_in_charge_id" x-bind:disabled="!apply.pic"
-                                class="w-full rounded-md dark:bg-gray-700">
-                                <option value="">-- Pilih Penanggung Jawab --</option>
-                                @foreach ($personsInCharge as $pic)
-                                    <option value="{{ $pic->id }}">{{ $pic->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-end mt-6 gap-3">
-                        <button type="button" @click="showBulkEditModal = false"
-                            class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
-                            Batal
-                        </button>
-                        <button type="submit"
-                            class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded">
-                            Terapkan ke (<span x-text="selectedIds.length"></span>) Aset
-                        </button>
-                    </div>
-                </form>
-
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">
-                    Catatan: Jika Anda mengubah Tahun / Ruangan / Penanggung Jawab / Pendanaan, kode aset YPT akan
-                    diregenerasi otomatis.
-                </p>
+                    </form>
+                </div>
             </div>
         </div>
-
     </div>
 
-    {{-- Script JavaScript (tidak berubah dari sebelumnya, sudah benar) --}}
     @push('scripts')
         <script>
             document.addEventListener('alpine:init', () => {
                 Alpine.data('pageData', () => ({
                     selectedIds: [],
                     showImportBatchModal: false,
-
                     showBulkEditModal: false,
+                    searchQuery: '{{ request('search') }}',
                     apply: {
                         name: false,
                         funding: false,
@@ -367,59 +416,43 @@
                         pic: false
                     },
 
-                    // Langkah 3: state include & exclude dari request
                     selectedCategories: @json(request()->input('category_ids', [])).map(String),
                     selectedExcludeCategories: @json(request()->input('exclude_category_ids', [])).map(String),
-
                     selectedYear: '{{ request('purchase_year', 'all') }}',
                     perPage: '{{ $perPage }}',
 
                     init() {
-                        // Inisialisasi Select2 (INCLUDE)
-                        const $inc = $(this.$refs.categorySelect);
-                        $inc.select2({
-                            theme: 'classic',
-                            placeholder: 'Pilih kategori (TERMASUK)',
-                            width: 'resolve'
-                        });
-                        $inc.val(this.selectedCategories).trigger('change');
-                        $inc.on('change', () => {
-                            this.selectedCategories = ($inc.val() || []).map(String);
-                        });
+                        const styleSelect2 = (el, placeholder) => {
+                            $(el).select2({
+                                placeholder: placeholder,
+                                width: '100%',
+                                selectionCssClass: 'modern-select2-selection',
+                                dropdownCssClass: 'modern-select2-dropdown'
+                            });
+                        };
 
-                        // Langkah 3: Inisialisasi Select2 (EXCLUDE)
+                        const $inc = $(this.$refs.categorySelect);
+                        styleSelect2($inc, 'Filter Kategori...');
+                        $inc.val(this.selectedCategories).trigger('change');
+                        $inc.on('change', () => { this.selectedCategories = ($inc.val() || []).map(String); });
+
                         const $exc = $(this.$refs.excludeCategorySelect);
-                        $exc.select2({
-                            theme: 'classic',
-                            placeholder: 'Pilih kategori (KECUALIKAN)',
-                            width: 'resolve'
-                        });
+                        styleSelect2($exc, 'Kecualikan Kategori...');
                         $exc.val(this.selectedExcludeCategories).trigger('change');
-                        $exc.on('change', () => {
-                            this.selectedExcludeCategories = ($exc.val() || []).map(String);
-                        });
+                        $exc.on('change', () => { this.selectedExcludeCategories = ($exc.val() || []).map(String); });
                     },
 
                     toggleAll(event) {
                         let checkboxes = document.querySelectorAll('tbody input[type="checkbox"]');
-                        this.selectedIds = event.target.checked ?
-                            Array.from(checkboxes).map(cb => parseInt(cb.value)) : [];
+                        this.selectedIds = event.target.checked ? Array.from(checkboxes).map(cb => parseInt(cb.value)) : [];
                     },
 
-                    // Langkah 3: builder URL export yang menyertakan include & exclude
                     generateExportUrl(baseUrl) {
                         const url = new URL(baseUrl);
-                        url.searchParams.delete('category_ids[]');
-                        (this.selectedCategories || []).forEach(id => {
-                            url.searchParams.append('category_ids[]', id);
-                        });
-
-                        url.searchParams.delete('exclude_category_ids[]');
-                        (this.selectedExcludeCategories || []).forEach(id => {
-                            url.searchParams.append('exclude_category_ids[]', id);
-                        });
-
+                        (this.selectedCategories || []).forEach(id => url.searchParams.append('category_ids[]', id));
+                        (this.selectedExcludeCategories || []).forEach(id => url.searchParams.append('exclude_category_ids[]', id));
                         url.searchParams.set('purchase_year', this.selectedYear);
+                        if(this.searchQuery) url.searchParams.set('search', this.searchQuery);
                         return url.toString();
                     },
 
@@ -436,39 +469,32 @@
                         }
                     },
 
-                    // Langkah 3: applyFilters menyertakan include & exclude
                     applyFilters() {
-                        const inc = Array.isArray(this.selectedCategories) ? this.selectedCategories : [];
-                        const exc = Array.isArray(this.selectedExcludeCategories) ? this
-                            .selectedExcludeCategories : [];
-
                         const url = new URL('{{ route('assets.index') }}');
-                        inc.forEach(id => url.searchParams.append('category_ids[]', id));
-                        exc.forEach(id => url.searchParams.append('exclude_category_ids[]', id));
-
+                        this.selectedCategories.forEach(id => url.searchParams.append('category_ids[]', id));
+                        this.selectedExcludeCategories.forEach(id => url.searchParams.append('exclude_category_ids[]', id));
                         url.searchParams.set('purchase_year', this.selectedYear);
                         url.searchParams.set('per_page', this.perPage);
-                        url.searchParams.set('page', 1);
-
-                        const currentSearch = '{{ request('search') }}';
-                        if (currentSearch) url.searchParams.set('search', currentSearch);
-
+                        if (this.searchQuery) url.searchParams.set('search', this.searchQuery);
                         window.location.href = url.toString();
                     }
                 }));
             });
 
-            // Fungsi confirmDelete (tanpa perubahan)
             function confirmDelete(id) {
                 Swal.fire({
-                    title: 'Anda yakin?',
-                    text: "Data aset ini akan dihapus permanen!",
+                    title: '<span class="text-xl font-black uppercase tracking-tight">Hapus Aset?</span>',
+                    html: '<p class="text-sm text-gray-400">Tindakan ini tidak dapat dibatalkan dan data akan hilang permanen.</p>',
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Ya, hapus!',
-                    cancelButtonText: 'Batal'
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Ya, Hapus Sekarang',
+                    cancelButtonText: 'Batal',
+                    padding: '2rem',
+                    background: document.documentElement.classList.contains('dark') ? '#0a0a0a' : '#fff',
+                    color: document.documentElement.classList.contains('dark') ? '#fff' : '#000',
+                    borderRadius: '2rem'
                 }).then((result) => {
                     if (result.isConfirmed) {
                         let form = document.createElement('form');
@@ -481,5 +507,46 @@
                 })
             }
         </script>
+
+        <style>
+            .select2-container--default .select2-selection--multiple {
+                background: transparent !important;
+                border: 1px solid #f3f4f6 !important;
+                border-radius: 1rem !important;
+                padding: 4px 8px !important;
+            }
+            .dark .select2-container--default .select2-selection--multiple {
+                border-color: #1f2937 !important;
+                background-color: #111827 !important;
+            }
+            .select2-container--default .select2-selection--multiple .select2-selection__choice {
+                background-color: #dc2626 !important;
+                border: none !important;
+                color: white !important;
+                border-radius: 8px !important;
+                padding: 2px 8px !important;
+                font-weight: 800 !important;
+                font-size: 10px !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.05em !important;
+            }
+            .custom-scrollbar::-webkit-scrollbar {
+                width: 6px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: #e5e7eb;
+                border-radius: 10px;
+            }
+            .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: #374151;
+            }
+            .animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
+            @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+            .animate-slideUp { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+            @keyframes slideUp { from { opacity: 0; transform: translateY(40px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        </style>
     @endpush
 </x-app-layout>

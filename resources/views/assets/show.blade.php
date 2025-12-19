@@ -1,847 +1,434 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            Detail Aset: {{ $asset->name }}
-        </h2>
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="flex items-center gap-4">
+                <a href="{{ route('assets.index') }}" class="p-3 bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-2xl hover:bg-gray-50 transition-all shadow-sm group">
+                    <svg class="w-6 h-6 text-gray-400 group-hover:text-red-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
+                </a>
+                <div>
+                    <h2 class="font-black text-2xl text-gray-800 dark:text-white leading-tight tracking-tight">
+                        Detail Aset
+                    </h2>
+                    <p class="text-sm text-gray-400 mt-1 uppercase tracking-widest font-black">{{ $asset->asset_code_ypt }}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                @if (!$asset->disposal_date)
+                    <a href="{{ route('assets.edit', $asset->id) }}"
+                        class="px-6 py-3 bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 font-black rounded-2xl hover:bg-gray-200 transition-all">
+                        Edit Data
+                    </a>
+                    <a href="{{ route('disposals.create', $asset->id) }}"
+                        class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-black rounded-2xl shadow-xl shadow-red-500/30 transition-all transform hover:-translate-y-1">
+                        Proses Disposal
+                    </a>
+                @else
+                    <div class="px-6 py-3 bg-purple-100 text-purple-600 font-black rounded-2xl flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                        Sudah di-Dispose
+                    </div>
+                @endif
+            </div>
+        </div>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            {{-- Detail Aset & QR Code --}}
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {{-- Kolom QR Code --}}
-                        <div class="md:col-span-1 flex flex-col items-center">
-                            <h3 class="text-lg font-bold mb-2">QR Code</h3>
-                            <div class="p-4 border dark:border-gray-600 rounded-lg inline-block bg-white">
-                                {!! QrCode::size(200)->generate(route('public.assets.show', $asset->asset_code_ypt)) !!}
-                            </div>
-                            <p class="text-xs text-gray-500 mt-2">Scan untuk membuka halaman publik</p>
-                            <p
-                                class="font-mono text-center bg-gray-100 dark:bg-gray-700 p-2 rounded-md mt-4 text-xs break-all">
-                                {{ $asset->asset_code_ypt }}
-                            </p>
+    <div class="py-12" x-data="{ activeTab: 'detail' }">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8 pb-24">
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {{-- Left: QR & Main Info --}}
+                <div class="lg:col-span-1 space-y-8">
+                    <div class="bg-white dark:bg-gray-950 p-10 rounded-[40px] border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col items-center text-center">
+                        <div class="p-6 bg-white rounded-3xl border-2 border-gray-50 shadow-inner mb-6">
+                            {!! QrCode::size(180)->generate(route('public.assets.show', $asset->asset_code_ypt)) !!}
                         </div>
-                        {{-- Kolom Detail Aset --}}
-                        <div class="md:col-span-2 space-y-4">
-                            <div>
-                                <h4 class="font-bold">Informasi Dasar & Finansial</h4>
-                                <ul class="list-disc list-inside text-sm space-y-1 mt-1">
-                                    <li><strong>Nama Barang:</strong> {{ $asset->name }}</li>
-                                    <li><strong>Tahun Pembelian:</strong> {{ $asset->purchase_year }}</li>
-                                    <li><strong>Harga Beli:</strong> Rp
-                                        {{ number_format($asset->purchase_cost, 0, ',', '.') }}</li>
-                                    <li><strong>Masa Manfaat:</strong> {{ $asset->useful_life ?? '-' }} Tahun</li>
-                                    <li><strong>Nilai Sisa:</strong> Rp
-                                        {{ number_format($asset->salvage_value, 0, ',', '.') }}</li>
-                                    <li class="font-semibold"><strong>Nilai Buku Saat Ini:</strong> Rp
-                                        {{ number_format($asset->book_value, 0, ',', '.') }}</li> {{-- Tampilkan nilai buku --}}
-                                    <li><strong>No Urut:</strong> {{ $asset->sequence_number }}</li>
-                                    <li><strong>Status Awal:</strong> {{ $asset->status }}</li> {{-- Status awal saat input --}}
-                                </ul>
+                        <h3 class="text-xl font-black text-gray-800 dark:text-white leading-tight mb-2">{{ $asset->name }}</h3>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mb-6">{{ $asset->category->name ?? '-' }}</p>
+                        
+                        @php
+                            $statusColors = [
+                                'Tersedia' => 'bg-emerald-100 text-emerald-600',
+                                'Dipinjam' => 'bg-blue-100 text-blue-600',
+                                'Rusak' => 'bg-red-100 text-red-600',
+                            ];
+                            $statCls = $statusColors[$asset->current_status] ?? 'bg-gray-100 text-gray-600';
+                        @endphp
+                        <div class="px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest {{ $statCls }} shadow-sm">
+                            Status: {{ $asset->current_status }}
+                        </div>
+
+                        <div class="mt-8 w-full space-y-4">
+                            <div class="flex justify-between items-center p-4 bg-gray-50/50 dark:bg-gray-900/50 rounded-2xl border border-gray-50 dark:border-gray-900">
+                                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tahun Beli</span>
+                                <span class="text-sm font-bold text-gray-700 dark:text-gray-300">{{ $asset->purchase_year }}</span>
                             </div>
-                            <div>
-                                <h4 class="font-bold">Lokasi & Kepemilikan</h4>
-                                <ul class="list-disc list-inside text-sm space-y-1 mt-1">
-                                    <li><strong>Lembaga:</strong> {{ $asset->institution->name }}</li>
-                                    <li><strong>Gedung:</strong> {{ $asset->building->name }}</li>
-                                    <li><strong>Ruangan:</strong> {{ $asset->room->name }}</li>
-                                </ul>
-                            </div>
-                            <div>
-                                <h4 class="font-bold">Klasifikasi & Penanggung Jawab</h4>
-                                <ul class="list-disc list-inside text-sm space-y-1 mt-1">
-                                    <li><strong>Kategori:</strong> {{ $asset->category->name }}</li>
-                                    <li><strong>Fakultas/Direktorat:</strong> {{ $asset->faculty->name }}</li>
-                                    <li><strong>Prodi/Unit:</strong> {{ $asset->department->name }}</li>
-                                    <li><strong>Penanggung Jawab:</strong> {{ $asset->personInCharge->name }}</li>
-                                    <li><strong>Fungsi Barang:</strong> {{ $asset->assetFunction->name }}</li>
-                                    <li><strong>Sumber Dana:</strong> {{ $asset->fundingSource->name }}</li>
-                                </ul>
+                            <div class="flex justify-between items-center p-4 bg-gray-50/50 dark:bg-gray-900/50 rounded-2xl border border-gray-50 dark:border-gray-900">
+                                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Harga Beli</span>
+                                <span class="text-sm font-bold text-gray-700 dark:text-gray-300">Rp {{ number_format($asset->purchase_cost, 0, ',', '.') }}</span>
                             </div>
                         </div>
                     </div>
-                    {{-- Tombol Aksi Kembali & Edit --}}
-                    <div class="flex justify-end mt-6 pt-6 border-t dark:border-gray-700">
-                        <a href="{{ route('assets.index') }}"
-                            class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-2">
-                            Kembali
-                        </a>
 
-                        {{-- Tampilkan tombol Edit & Disposal hanya jika aset belum dihapus --}}
-                        @if (!$asset->disposal_date)
-                            <a href="{{ route('assets.edit', $asset->id) }}"
-                                class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded mr-2">
-                                Edit
-                            </a>
-                            {{-- Tombol Disposal Baru --}}
-                            <a href="{{ route('disposals.create', $asset->id) }}"
-                                class="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 rounded">
-                                Proses Disposal
-                            </a>
-                        @else
-                            {{-- Jika sudah di-dispose, tampilkan tombol download BAPh --}}
-                            <a href="{{ route('disposals.downloadBaph', $asset->id) }}" target="_blank"
-                                class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
-                                Unduh Ulang BAPh
-                            </a>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
-            {{-- Tampilkan Bagian Inventaris jika BUKAN Kendaraan --}}
-            @if ($asset->category->name != 'KENDARAAN BERMOTOR DINAS / KBM DINAS')
-                <div class="mt-6 bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900 dark:text-gray-100" x-data="{ showAssignForm: false, showReturnForm: false }">
-                        <h3 class="text-xl font-bold mb-4 border-b pb-2 dark:border-gray-700">Status & Riwayat
-                            Inventaris</h3>
-
-                        <div
-                            class="mb-6 p-4 rounded-lg {{ $asset->current_status == 'Tersedia' ? 'bg-green-100 dark:bg-green-800/50' : 'bg-yellow-100 dark:bg-yellow-800/50' }}">
-                            <p class="font-semibold">Status Saat Ini:
-                                <span
-                                    class="font-bold {{ $asset->current_status == 'Tersedia' ? 'text-green-700 dark:text-green-300' : 'text-yellow-700 dark:text-yellow-300' }}">
-                                    {{ $asset->current_status }}
-                                </span>
-                            </p>
-                            @if ($asset->currentAssignment)
-                                <p class="text-sm mt-1">
-                                    Dipegang oleh: <span
-                                        class="font-semibold">{{ $asset->currentAssignment->employee->name }}</span>
-                                    sejak
-                                    {{ \Carbon\Carbon::parse($asset->currentAssignment->assigned_date)->isoFormat('D MMMM YYYY') }}
-                                </p>
+                    {{-- Actions Card --}}
+                    <div class="bg-gray-800 text-white p-8 rounded-[40px] shadow-2xl relative overflow-hidden group">
+                        <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-red-500/20 transition-all duration-700"></div>
+                        <h4 class="text-lg font-black mb-6 relative">Tindakan Cepat</h4>
+                        <div class="grid grid-cols-1 gap-3 relative">
+                            <button @click="window.print()" class="w-full p-4 bg-white/10 hover:bg-white text-white hover:text-gray-900 rounded-2xl text-sm font-black transition-all flex items-center justify-between">
+                                Cetak Detail Aset
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                            </button>
+                            @if($asset->disposal_date)
+                                <a href="{{ route('disposals.downloadBaph', $asset->id) }}" target="_blank" class="w-full p-4 bg-white/10 hover:bg-purple-600 rounded-2xl text-sm font-black transition-all flex items-center justify-between">
+                                    Unduh Dokumen BAPh
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                </a>
                             @endif
                         </div>
+                    </div>
+                </div>
 
-                        {{-- Form Aksi (Serah Terima / Pengembalian) Aset Biasa --}}
-                        @if ($asset->current_status == 'Tersedia')
-                            <div>
-                                <button @click="showAssignForm = !showAssignForm"
-                                    class="bg-blue-500 text-white font-bold py-2 px-4 rounded">
-                                    <span x-show="!showAssignForm">&#x21A9; Serah Terima Aset</span>
-                                    <span x-show="showAssignForm">Tutup Form</span>
+                {{-- Right: Tabs & Details --}}
+                <div class="lg:col-span-2 space-y-8">
+                    {{-- Nav Tabs --}}
+                    <div class="flex bg-gray-100 dark:bg-gray-900 p-2 rounded-[28px] gap-2">
+                        <button @click="activeTab = 'detail'" :class="activeTab === 'detail' ? 'bg-white dark:bg-gray-800 text-red-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'" class="flex-1 py-4 text-xs font-black uppercase tracking-widest rounded-[22px] transition-all">Detail Info</button>
+                        <button @click="activeTab = 'history'" :class="activeTab === 'history' ? 'bg-white dark:bg-gray-800 text-red-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'" class="flex-1 py-4 text-xs font-black uppercase tracking-widest rounded-[22px] transition-all">Riwayat</button>
+                        <button @click="activeTab = 'maintenance'" :class="activeTab === 'maintenance' ? 'bg-white dark:bg-gray-800 text-red-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'" class="flex-1 py-4 text-xs font-black uppercase tracking-widest rounded-[22px] transition-all">Maintenance</button>
+                        @if($asset->category->name == 'KENDARAAN BERMOTOR DINAS / KBM DINAS')
+                            <button @click="activeTab = 'vehicle'" :class="activeTab === 'vehicle' ? 'bg-white dark:bg-gray-800 text-red-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'" class="flex-1 py-4 text-xs font-black uppercase tracking-widest rounded-[22px] transition-all">Log KBM</button>
+                        @endif
+                    </div>
+
+                    {{-- Tab Contents --}}
+                    <div class="bg-white dark:bg-gray-950 rounded-[40px] border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden animate-fadeIn">
+                        {{-- Detail Tab --}}
+                        <div x-show="activeTab === 'detail'" class="p-10 space-y-12">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                                <div class="space-y-6">
+                                    <h4 class="text-xs font-black text-red-600 uppercase tracking-[0.2em] pb-3 border-b border-gray-100 dark:border-gray-900">Lokasi & Penempatan</h4>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Gedung / Ruangan</p>
+                                            <p class="text-sm font-black text-gray-800 dark:text-white">{{ $asset->building->name }} / {{ $asset->room->name }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Lembaga</p>
+                                            <p class="text-sm font-black text-gray-800 dark:text-white">{{ $asset->institution->name }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Fakultas & Unit</p>
+                                            <p class="text-sm font-black text-gray-800 dark:text-white">{{ $asset->faculty->name }} - {{ $asset->department->name }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="space-y-6">
+                                    <h4 class="text-xs font-black text-red-600 uppercase tracking-[0.2em] pb-3 border-b border-gray-100 dark:border-gray-900">Finansial & Status</h4>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Nilai Buku Saat Ini</p>
+                                            <p class="text-lg font-black text-red-600">Rp {{ number_format($asset->book_value, 0, ',', '.') }}</p>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Masa Manfaat</p>
+                                                <p class="text-sm font-black text-gray-800 dark:text-white">{{ $asset->useful_life ?? '-' }} Tahun</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Nilai Sisa</p>
+                                                <p class="text-sm font-black text-gray-800 dark:text-white">Rp {{ number_format($asset->salvage_value, 0, ',', '.') }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-8 bg-gray-50/50 dark:bg-gray-900/50 rounded-3xl border border-gray-50 dark:border-gray-900 grid grid-cols-1 md:grid-cols-3 gap-8">
+                                <div>
+                                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">PIC (Awal)</p>
+                                    <p class="text-sm font-black text-gray-800 dark:text-white">{{ $asset->personInCharge->name }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Fungsi Barang</p>
+                                    <p class="text-sm font-black text-gray-800 dark:text-white">{{ $asset->assetFunction->name }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Sumber Dana</p>
+                                    <p class="text-sm font-black text-gray-800 dark:text-white">{{ $asset->fundingSource->name }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- History Tab --}}
+                        <div x-show="activeTab === 'history'" class="p-0">
+                            {{-- Current Assignment Status --}}
+                            <div class="p-10 border-b border-gray-50 dark:border-gray-900">
+                                <div class="flex items-center justify-between mb-8">
+                                    <h3 class="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Status Penugasan</h3>
+                                    @if($asset->current_status == 'Tersedia' && $asset->category->name != 'KENDARAAN BERMOTOR DINAS / KBM DINAS')
+                                        <button @click="showAssignModal = true" class="px-5 py-2.5 bg-red-600 text-white text-xs font-black rounded-xl shadow-lg shadow-red-500/20 active:scale-95 transition-all">
+                                            Serah Terima Aset
+                                        </button>
+                                    @endif
+                                </div>
+
+                                @if($asset->currentAssignment)
+                                    <div class="p-6 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100/50 dark:border-blue-800/50 rounded-3xl flex items-center justify-between">
+                                        <div class="flex items-center gap-5">
+                                            <div class="w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center font-black text-xl">
+                                                {{ substr($asset->currentAssignment->employee->name, 0, 1) }}
+                                            </div>
+                                            <div>
+                                                <p class="text-xs font-bold text-blue-400 uppercase tracking-widest">Dipegang oleh</p>
+                                                <p class="text-base font-black text-blue-900 dark:text-blue-300">{{ $asset->currentAssignment->employee->name }}</p>
+                                                <p class="text-[10px] text-blue-400 mt-1 italic">Dipinjam sejak {{ \Carbon\Carbon::parse($asset->currentAssignment->assigned_date)->isoFormat('D MMMM YYYY') }}</p>
+                                            </div>
+                                        </div>
+                                        <button @click="showReturnModal = true" class="px-4 py-2 bg-white dark:bg-gray-800 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-xl border border-blue-100 shadow-sm hover:translate-x-1 transition-all">
+                                            Kembalikan
+                                        </button>
+                                    </div>
+                                @else
+                                    <div class="p-10 text-center bg-gray-50/50 dark:bg-gray-900/50 rounded-[32px] border border-dashed border-gray-100 dark:border-gray-800">
+                                        <p class="text-sm font-bold text-gray-400">Aset dalam kondisi Tersedia (Gudang)</p>
+                                    </div>
+                                @endif
+                            </div>
+
+                            {{-- Assignments History Table --}}
+                            <div class="p-10 pt-0 mt-8">
+                                <h4 class="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-6 px-1">Riwayat Peminjaman</h4>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left">
+                                        <thead>
+                                            <tr class="bg-gray-50/50 dark:bg-gray-900/50">
+                                                <th class="p-4 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest rounded-l-2xl">Nama Pegawai</th>
+                                                <th class="p-4 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Tgl Pinjam / Kembali</th>
+                                                <th class="p-4 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Kondisi</th>
+                                                <th class="p-4 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right rounded-r-2xl">BAST</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-50 dark:divide-gray-900">
+                                            @forelse ($asset->assignments()->latest()->get() as $assignment)
+                                                <tr class="group transition-colors hover:bg-gray-50/30 dark:hover:bg-gray-900/30">
+                                                    <td class="p-5 px-6 font-bold text-gray-700 dark:text-gray-300 text-sm italic">{{ $assignment->employee->name }}</td>
+                                                    <td class="p-5 px-6 text-center">
+                                                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">{{ \Carbon\Carbon::parse($assignment->assigned_date)->isoFormat('D MMM YY') }}</span>
+                                                        <span class="mx-2 text-gray-300">→</span>
+                                                        @if ($assignment->returned_date)
+                                                            <span class="text-[10px] font-black text-emerald-500 uppercase tracking-widest">{{ \Carbon\Carbon::parse($assignment->returned_date)->isoFormat('D MMM YY') }}</span>
+                                                        @else
+                                                            <span class="text-[10px] font-black text-amber-500 uppercase tracking-widest">Aktif</span>
+                                                        @endif
+                                                    </td>
+                                                    <td class="p-5 px-6 text-center">
+                                                        <span class="text-[10px] bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-lg text-gray-500 font-bold uppercase">{{ $assignment->condition_on_assign }}</span>
+                                                    </td>
+                                                    <td class="p-5 px-6 text-right">
+                                                        <div class="flex justify-end gap-2">
+                                                            @if ($assignment->checkout_doc_number)
+                                                                <a href="{{ route('assignments.downloadBast', ['assignment' => $assignment->id, 'type' => 'checkout']) }}" target="_blank" class="p-2 bg-gray-50 dark:bg-gray-900 text-gray-400 hover:text-red-600 rounded-lg border border-gray-100 transition-all">
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                                                </a>
+                                                            @endif
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr><td colspan="4" class="p-10 text-center text-xs font-bold text-gray-300">Belum ada riwayat.</td></tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Maintenance Tab --}}
+                        <div x-show="activeTab === 'maintenance'" class="p-10 space-y-10">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Kesehatan Aset</h3>
+                                <button @click="showMaintenanceModal = true" class="px-5 py-2.5 bg-gray-800 dark:bg-white dark:text-gray-950 text-white text-xs font-black rounded-xl">
+                                    Catat Pekerjaan
                                 </button>
-                                <div x-show="showAssignForm" x-transition
-                                    class="mt-4 border-t pt-4 dark:border-gray-700">
-                                    <form action="{{ route('assets.assign', $asset->id) }}" method="POST">
-                                        @csrf
-                                        <h4 class="font-semibold mb-2">Form Serah Terima Aset</h4>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label for="employee_id" class="block text-sm font-medium">Serahkan
-                                                    Kepada</label>
-                                                <select name="employee_id" id="employee_id"
-                                                    class="select2 mt-1 block w-full" required>
-                                                    <option value="">Pilih Pegawai</option>
-                                                    @foreach (App\Models\Employee::orderBy('name')->get() as $employee)
-                                                        <option value="{{ $employee->id }}">{{ $employee->name }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label for="assigned_date" class="block text-sm font-medium">Tanggal
-                                                    Serah Terima</label>
-                                                <input type="date" name="assigned_date" id="assigned_date"
-                                                    value="{{ date('Y-m-d') }}"
-                                                    class="mt-1 block w-full rounded-md dark:bg-gray-700" required>
-                                            </div>
-                                        </div>
-                                        <div class="mt-4">
-                                            <label for="condition_on_assign" class="block text-sm font-medium">Kondisi
-                                                Aset Saat Diserahkan</label>
-                                            <input type="text" name="condition_on_assign" id="condition_on_assign"
-                                                value="Baik" class="mt-1 block w-full rounded-md dark:bg-gray-700"
-                                                required>
-                                        </div>
-                                        <div class="mt-4">
-                                            <button type="submit"
-                                                class="bg-green-500 text-white font-bold py-2 px-4 rounded">Simpan
-                                                Penyerahan & Unduh BAST</button>
-                                        </div>
-                                    </form>
-                                </div>
                             </div>
-                        @else
-                            {{-- Jika status BUKAN Tersedia --}}
-                            @if ($asset->currentAssignment)
-                                <div>
-                                    <button @click="showReturnForm = !showReturnForm"
-                                        class="bg-orange-500 text-white font-bold py-2 px-4 rounded transition-all">
-                                        <span x-show="!showReturnForm">&#x21AA; Proses Pengembalian Aset</span>
-                                        <span x-show="showReturnForm">Tutup Form</span>
-                                    </button>
-                                    <div x-show="showReturnForm" x-transition
-                                        class="mt-4 border-t pt-4 dark:border-gray-700">
-                                        <form action="{{ route('assets.return', $asset->currentAssignment->id) }}"
-                                            method="POST">
-                                            @csrf
-                                            <h4 class="font-semibold mb-2">Form Pengembalian Aset</h4>
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label for="returned_date" class="block text-sm font-medium">Tanggal
-                                                        Pengembalian</label>
-                                                    <input type="date" name="returned_date" id="returned_date"
-                                                        value="{{ date('Y-m-d') }}"
-                                                        class="mt-1 block w-full rounded-md dark:bg-gray-700" required>
-                                                </div>
-                                                <div>
-                                                    <label for="condition_on_return"
-                                                        class="block text-sm font-medium">Kondisi Saat
-                                                        Dikembalikan</label>
-                                                    <input type="text" name="condition_on_return"
-                                                        id="condition_on_return" value="Baik"
-                                                        class="mt-1 block w-full rounded-md dark:bg-gray-700" required>
-                                                </div>
-                                            </div>
-                                            <div class="mt-4">
-                                                <label for="notes" class="block text-sm font-medium">Catatan
-                                                    (Opsional)</label>
-                                                <textarea name="notes" id="notes" rows="2" class="mt-1 block w-full rounded-md dark:bg-gray-700"></textarea>
-                                            </div>
-                                            <div class="mt-4">
-                                                <button type="submit"
-                                                    class="bg-green-500 text-white font-bold py-2 px-4 rounded">Simpan
-                                                    Pengembalian & Unduh BAP</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            @else
-                                <p class="text-sm text-red-500">Status aset tidak 'Tersedia' namun tidak ditemukan data
-                                    penggunaan aktif.</p>
-                            @endif
-                        @endif
 
-                        {{-- Riwayat Peminjaman Aset Biasa --}}
-                        <div class="mt-8">
-                            <h4 class="font-semibold mb-2 text-lg">Riwayat Penggunaan Aset</h4>
-                            <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
-                                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                                    <thead
-                                        class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                        <tr>
-                                            <th scope="col" class="py-3 px-6">Nama Pegawai</th>
-                                            <th scope="col" class="py-3 px-6">Tgl. Pinjam</th>
-                                            <th scope="col" class="py-3 px-6">Kondisi Pinjam</th>
-                                            <th scope="col" class="py-3 px-6">Tgl. Kembali</th>
-                                            <th scope="col" class="py-3 px-6">Kondisi Kembali</th>
-                                            <th scope="col" class="py-3 px-6">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse ($asset->assignments()->latest()->get() as $assignment)
-                                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                                <td class="py-4 px-6 font-semibold">{{ $assignment->employee->name }}
-                                                </td>
-                                                <td class="py-4 px-6">
-                                                    {{ \Carbon\Carbon::parse($assignment->assigned_date)->isoFormat('D MMM YYYY') }}
-                                                </td>
-                                                <td class="py-4 px-6">{{ $assignment->condition_on_assign }}</td>
-                                                <td class="py-4 px-6">
-                                                    @if ($assignment->returned_date)
-                                                        {{ \Carbon\Carbon::parse($assignment->returned_date)->isoFormat('D MMM YYYY') }}
-                                                    @else
-                                                        <span class="text-yellow-500">Masih Dipinjam</span>
-                                                    @endif
-                                                </td>
-                                                <td class="py-4 px-6">{{ $assignment->condition_on_return ?? '-' }}
-                                                </td>
-                                                <td class="py-4 px-6 space-y-1">
-                                                    @if ($assignment->checkout_doc_number)
-                                                        <a href="{{ route('assignments.downloadBast', ['assignment' => $assignment->id, 'type' => 'checkout']) }}"
-                                                            target="_blank"
-                                                            class="flex items-center text-blue-500 hover:text-blue-700 font-semibold text-xs">
-                                                            <svg class="w-4 h-4 mr-1" fill="none"
-                                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    stroke-width="2"
-                                                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4">
-                                                                </path>
-                                                            </svg>
-                                                            BAST Pinjam
+                            {{-- Maintenance & Inspection Cards --}}
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {{-- Maintenance Sub-tab --}}
+                                <div class="space-y-6">
+                                    <h5 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Riwayat Perbaikan</h5>
+                                    <div class="space-y-4">
+                                        @forelse($asset->maintenances()->latest()->take(5)->get() as $m)
+                                            <div class="p-6 bg-gray-50/50 dark:bg-gray-900/50 rounded-3xl border border-gray-50 dark:border-gray-900 relative group overflow-hidden">
+                                                <div class="flex justify-between items-start">
+                                                    <div>
+                                                        <span class="text-[9px] font-black text-red-600 uppercase tracking-widest leading-none">{{ $m->type }}</span>
+                                                        <p class="text-sm font-black text-gray-800 dark:text-white mt-1 leading-snug">{{ $m->description }}</p>
+                                                        <div class="flex items-center mt-3 text-[10px] text-gray-400 font-bold uppercase group-hover:text-gray-600 transition-colors">
+                                                            <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                                            {{ \Carbon\Carbon::parse($m->maintenance_date)->isoFormat('D MMM YYYY') }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-right">
+                                                        <p class="text-xs font-black text-gray-800 dark:text-white">Rp {{ number_format($m->cost, 0, ',', '.') }}</p>
+                                                        <p class="text-[9px] text-gray-400 font-bold uppercase mt-1">{{ $m->technician ?? 'Staf Internal' }}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="absolute right-0 bottom-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    @if($m->doc_number)
+                                                        <a href="{{ route('maintenance.downloadReport', $m->id) }}" target="_blank" class="p-2 bg-white rounded-lg shadow-sm block translate-y-2 group-hover:translate-y-0 transition-transform">
+                                                            <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                                         </a>
                                                     @endif
-                                                    @if ($assignment->return_doc_number)
-                                                        <a href="{{ route('assignments.downloadBast', ['assignment' => $assignment->id, 'type' => 'return']) }}"
-                                                            target="_blank"
-                                                            class="flex items-center text-green-500 hover:text-green-700 font-semibold text-xs">
-                                                            <svg class="w-4 h-4 mr-1" fill="none"
-                                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    stroke-width="2"
-                                                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4">
-                                                                </path>
-                                                            </svg>
-                                                            BAST Kembali
-                                                        </a>
-                                                    @endif
-                                                    @if (!$assignment->checkout_doc_number && !$assignment->return_doc_number)
-                                                        <span class="text-gray-400 text-xs">-</span>
-                                                    @endif
-                                                </td>
-                                            </tr>
+                                                </div>
+                                            </div>
                                         @empty
-                                            <tr>
-                                                <td colspan="6" class="text-center py-4">Belum ada riwayat
-                                                    penggunaan.</td>
-                                            </tr>
+                                            <p class="p-10 text-center text-[10px] font-black text-gray-300 uppercase leading-relaxed">Belum ada riwayat perbaikan.</p>
                                         @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endif
+                                    </div>
+                                </div>
 
-            {{-- Riwayat Maintenance (Tampil untuk SEMUA jenis aset) --}}
-            <div class="mt-6 bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100" x-data="{ showMaintenanceForm: false }">
-                    <h3 class="text-xl font-bold mb-4 border-b pb-2 dark:border-gray-700">Riwayat Perbaikan & Perawatan
-                    </h3>
-                    {{-- Tombol & Form Tambah Catatan Maintenance --}}
-                    <div class="mb-6">
-                        <button @click="showMaintenanceForm = !showMaintenanceForm"
-                            class="bg-blue-500 text-white font-bold py-2 px-4 rounded transition-all">
-                            <span x-show="!showMaintenanceForm">&#x271A; Tambah Catatan Maintenance</span>
-                            <span x-show="showMaintenanceForm">Tutup Form</span>
-                        </button>
-                        <div x-show="showMaintenanceForm" x-transition
-                            class="mt-4 border-t pt-4 dark:border-gray-700">
-                            <form action="{{ route('maintenance.store', $asset->id) }}" method="POST">
-                                @csrf
-                                <h4 class="font-semibold mb-2">Form Catatan Maintenance</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <div>
-                                        <label for="maintenance_date"
-                                            class="block text-sm font-medium">Tanggal</label>
-                                        <input type="date" name="maintenance_date" id="maintenance_date"
-                                            value="{{ date('Y-m-d') }}"
-                                            class="mt-1 block w-full rounded-md dark:bg-gray-700" required>
-                                    </div>
-                                    <div>
-                                        <label for="type" class="block text-sm font-medium">Jenis
-                                            Pekerjaan</label>
-                                        <select name="type" id="type"
-                                            class="mt-1 block w-full rounded-md dark:bg-gray-700" required>
-                                            <option value="Perawatan Rutin">Perawatan Rutin</option>
-                                            <option value="Perbaikan">Perbaikan</option>
-                                            <option value="Upgrade">Upgrade</option>
-                                            <option value="Inspeksi">Inspeksi</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label for="cost" class="block text-sm font-medium">Biaya (Rp)
-                                            (Opsional)</label>
-                                        <input type="number" name="cost" id="cost" step="0.01"
-                                            class="mt-1 block w-full rounded-md dark:bg-gray-700"
-                                            placeholder="Contoh: 500000">
-                                    </div>
-                                    <div>
-                                        <label for="technician" class="block text-sm font-medium">Teknisi/Vendor
-                                            (Opsional)</label>
-                                        <input type="text" name="technician" id="technician"
-                                            class="mt-1 block w-full rounded-md dark:bg-gray-700">
-                                    </div>
-                                </div>
-                                <div class="mb-4">
-                                    <label for="description" class="block text-sm font-medium">Deskripsi
-                                        Pekerjaan</label>
-                                    <textarea name="description" id="description" rows="3" class="mt-1 block w-full rounded-md dark:bg-gray-700"
-                                        required></textarea>
-                                </div>
-                                <div>
-                                    <button type="submit"
-                                        class="bg-green-500 text-white font-bold py-2 px-4 rounded">Simpan
-                                        Catatan</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                    {{-- Tabel Riwayat Maintenance --}}
-                    <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
-                        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                            <thead
-                                class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                <tr>
-                                    <th scope="col" class="py-3 px-6">Tanggal</th>
-                                    <th scope="col" class="py-3 px-6">Jenis</th>
-                                    <th scope="col" class="py-3 px-6">Deskripsi</th>
-                                    <th scope="col" class="py-3 px-6">Biaya</th>
-                                    <th scope="col" class="py-3 px-6">Teknisi</th>
-                                    <th scope="col" class="py-3 px-6">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($asset->maintenances as $maintenance)
-                                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                        <td class="py-4 px-6">
-                                            {{ \Carbon\Carbon::parse($maintenance->maintenance_date)->isoFormat('D MMM YYYY') }}
-                                        </td>
-                                        <td class="py-4 px-6">{{ $maintenance->type }}</td>
-                                        <td class="py-4 px-6">{{ $maintenance->description }}</td>
-                                        <td class="py-4 px-6">
-                                            @if ($maintenance->cost)
-                                                Rp {{ number_format($maintenance->cost, 0, ',', '.') }}
-                                            @else
-                                                -
-                                            @endif
-                                        </td>
-                                        <td class="py-4 px-6">{{ $maintenance->technician ?? '-' }}</td>
-                                        <td class="py-4 px-6 space-x-2">
-                                            {{-- Tombol Download BA Baru --}}
-                                            @if ($maintenance->doc_number)
-                                                <a href="{{ route('maintenance.downloadReport', $maintenance->id) }}"
-                                                    target="_blank"
-                                                    class="text-blue-500 hover:text-blue-700 text-xs font-semibold">
-                                                    Unduh BA
-                                                </a>
-                                            @endif
-                                            <button onclick="confirmMaintenanceDelete({{ $maintenance->id }})"
-                                                class="text-red-500 hover:text-red-700 text-xs font-semibold">
-                                                Hapus
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="6" class="text-center py-4">Belum ada riwayat maintenance.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Riwayat Inspeksi (Tampil untuk SEMUA jenis aset) --}}
-            <div class="mt-6 bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100" x-data="{ showInspectionForm: false }">
-                    <h3 class="text-xl font-bold mb-4 border-b pb-2 dark:border-gray-700">Riwayat Pemeriksaan Kondisi
-                    </h3>
-                    {{-- Tombol & Form Tambah Catatan Inspeksi --}}
-                    <div class="mb-6">
-                        <button @click="showInspectionForm = !showInspectionForm"
-                            class="bg-blue-500 text-white font-bold py-2 px-4 rounded transition-all">
-                            <span x-show="!showInspectionForm">&#x271A; Tambah Catatan Inspeksi</span>
-                            <span x-show="showInspectionForm">Tutup Form</span>
-                        </button>
-                        <div x-show="showInspectionForm" x-transition class="mt-4 border-t pt-4 dark:border-gray-700">
-                            <form action="{{ route('inspections.store', $asset->id) }}" method="POST">
-                                @csrf
-                                <h4 class="font-semibold mb-2">Form Catatan Inspeksi</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <div>
-                                        <label for="inspection_date" class="block text-sm font-medium">Tanggal
-                                            Inspeksi</label>
-                                        <input type="date" name="inspection_date" id="inspection_date"
-                                            value="{{ date('Y-m-d') }}"
-                                            class="mt-1 block w-full rounded-md dark:bg-gray-700" required>
-                                    </div>
-                                    <div>
-                                        <label for="condition" class="block text-sm font-medium">Kondisi Aset</label>
-                                        <select name="condition" id="condition"
-                                            class="mt-1 block w-full rounded-md dark:bg-gray-700" required>
-                                            <option value="Baik">Baik</option>
-                                            <option value="Perlu Perbaikan">Perlu Perbaikan</option>
-                                            <option value="Rusak Ringan">Rusak Ringan</option>
-                                            <option value="Rusak Berat">Rusak Berat</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="mb-4">
-                                    <label for="notes_inspection" class="block text-sm font-medium">Catatan /
-                                        Keterangan (Opsional)</label>
-                                    <textarea name="notes" id="notes_inspection" rows="3" class="mt-1 block w-full rounded-md dark:bg-gray-700"></textarea>
-                                </div>
-                                <div>
-                                    <button type="submit"
-                                        class="bg-green-500 text-white font-bold py-2 px-4 rounded">Simpan Catatan
-                                        Inspeksi & Unduh BAPK</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                    {{-- Tabel Riwayat Inspeksi --}}
-                    <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
-                        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                            <thead
-                                class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                <tr>
-                                    <th scope="col" class="py-3 px-6">Tanggal</th>
-                                    <th scope="col" class="py-3 px-6">Kondisi</th>
-                                    <th scope="col" class="py-3 px-6">Catatan</th>
-                                    <th scope="col" class="py-3 px-6">Diperiksa Oleh</th>
-                                    <th scope="col" class="py-3 px-6">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($asset->inspections as $inspection)
-                                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                        <td class="py-4 px-6">
-                                            {{ \Carbon\Carbon::parse($inspection->inspection_date)->isoFormat('D MMM YYYY') }}
-                                        </td>
-                                        <td class="py-4 px-6">
-                                            <span @class([
-                                                'px-2 py-1 font-semibold leading-tight rounded-full text-xs',
-                                                'text-green-700 bg-green-100 dark:bg-green-700 dark:text-green-100' =>
-                                                    $inspection->condition == 'Baik',
-                                                'text-yellow-700 bg-yellow-100 dark:bg-yellow-700 dark:text-yellow-100' =>
-                                                    $inspection->condition == 'Perlu Perbaikan' ||
-                                                    $inspection->condition == 'Rusak Ringan',
-                                                'text-red-700 bg-red-100 dark:bg-red-700 dark:text-red-100' =>
-                                                    $inspection->condition == 'Rusak Berat',
-                                            ])>
-                                                {{ $inspection->condition }}
-                                            </span>
-                                        </td>
-                                        <td class="py-4 px-6">{{ $inspection->notes ?? '-' }}</td>
-                                        <td class="py-4 px-6">{{ $inspection->inspector->name ?? 'Sistem' }}</td>
-                                        <td class="py-4 px-6">
-                                            @if ($inspection->inspection_doc_number)
-                                                <a href="{{ route('inspections.downloadBast', $inspection->id) }}"
-                                                    target="_blank"
-                                                    class="text-blue-500 hover:text-blue-700 font-semibold text-xs">
-                                                    Cetak BAPK
-                                                </a>
-                                            @else
-                                                <span class="text-gray-400 text-xs">-</span>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="5" class="text-center py-4">Belum ada riwayat inspeksi.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Log Kendaraan (Hanya muncul jika aset ADALAH Kendaraan) --}}
-            @if ($asset->category->name == 'KENDARAAN BERMOTOR DINAS / KBM DINAS')
-                <div class="mt-6 bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900 dark:text-gray-100" x-data="{ showCheckoutForm: false, showCheckinForm: false }">
-                        <h3 class="text-xl font-bold mb-4 border-b pb-2 dark:border-gray-700">Log Penggunaan Kendaraan
-                        </h3>
-                        {{-- Status Kendaraan --}}
-                        <div
-                            class="mb-6 p-4 rounded-lg {{ $asset->current_status == 'Tersedia' ? 'bg-green-100 dark:bg-green-800/50' : 'bg-yellow-100 dark:bg-yellow-800/50' }}">
-                            <p class="font-semibold">Status Kendaraan:
-                                <span
-                                    class="font-bold {{ $asset->current_status == 'Tersedia' ? 'text-green-700 dark:text-green-300' : 'text-yellow-700 dark:text-yellow-300' }}">
-                                    {{ $asset->current_status }}
-                                </span>
-                            </p>
-                            @if ($asset->currentVehicleLog)
-                                <p class="text-sm mt-1">
-                                    Digunakan oleh: <span
-                                        class="font-semibold">{{ $asset->currentVehicleLog->employee->name }}</span>
-                                    sejak
-                                    {{ $asset->currentVehicleLog->departure_time->isoFormat('D MMM YYYY, HH:mm') }}
-                                </p>
-                            @endif
-                        </div>
-
-                        {{-- Form Checkout / Checkin Kendaraan --}}
-                        @if ($asset->current_status == 'Tersedia')
-                            <div>
-                                <button @click="showCheckoutForm = !showCheckoutForm"
-                                    class="bg-blue-500 text-white font-bold py-2 px-4 rounded">
-                                    <span x-show="!showCheckoutForm">&#x1F697; Catat Penggunaan Baru</span>
-                                    <span x-show="showCheckoutForm">Tutup Form</span>
-                                </button>
-                                <div x-show="showCheckoutForm" x-transition
-                                    class="mt-4 border-t pt-4 dark:border-gray-700">
-                                    <form action="{{ route('vehicles.checkout', $asset->id) }}" method="POST">
-                                        @csrf
-                                        <h4 class="font-semibold mb-2">Form Penggunaan Kendaraan</h4>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                            <div>
-                                                <label for="employee_id_vehicle"
-                                                    class="block text-sm font-medium">Digunakan Oleh</label>
-                                                <select name="employee_id" id="employee_id_vehicle"
-                                                    class="select2 mt-1 block w-full" required>
-                                                    <option value="">Pilih Pegawai</option>
-                                                    @foreach (App\Models\Employee::orderBy('name')->get() as $employee)
-                                                        <option value="{{ $employee->id }}">{{ $employee->name }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label for="departure_time" class="block text-sm font-medium">Waktu
-                                                    Berangkat</label>
-                                                <input type="datetime-local" name="departure_time"
-                                                    id="departure_time" value="{{ now()->format('Y-m-d\TH:i') }}"
-                                                    class="mt-1 block w-full rounded-md dark:bg-gray-700" required>
-                                            </div>
-                                            <div>
-                                                <label for="destination"
-                                                    class="block text-sm font-medium">Tujuan</label>
-                                                <input type="text" name="destination" id="destination"
-                                                    class="mt-1 block w-full rounded-md dark:bg-gray-700" required>
-                                            </div>
-                                            <div>
-                                                <label for="start_odometer" class="block text-sm font-medium">KM
-                                                    Awal</label>
-                                                <input type="number" name="start_odometer" id="start_odometer"
-                                                    class="mt-1 block w-full rounded-md dark:bg-gray-700" required
-                                                    min="0">
-                                            </div>
-                                            <div>
-                                                <label for="condition_on_checkout"
-                                                    class="block text-sm font-medium">Kondisi Awal</label>
-                                                <input type="text" name="condition_on_checkout"
-                                                    id="condition_on_checkout" value="Baik"
-                                                    class="mt-1 block w-full rounded-md dark:bg-gray-700" required>
-                                            </div>
-                                        </div>
-                                        <div class="mb-4">
-                                            <label for="purpose" class="block text-sm font-medium">Keperluan</label>
-                                            <textarea name="purpose" id="purpose" rows="2" class="mt-1 block w-full rounded-md dark:bg-gray-700"
-                                                required></textarea>
-                                        </div>
-                                        <button type="submit"
-                                            class="bg-green-500 text-white font-bold py-2 px-4 rounded">Simpan & Cetak
-                                            BAST</button>
-                                    </form>
-                                </div>
-                            </div>
-                        @else
-                            {{-- Jika status BUKAN Tersedia --}}
-                            @if ($asset->currentVehicleLog)
-                                <div>
-                                    <button @click="showCheckinForm = !showCheckinForm"
-                                        class="bg-orange-500 text-white font-bold py-2 px-4 rounded">
-                                        <span x-show="!showCheckinForm">&#x1F519; Catat Pengembalian</span>
-                                        <span x-show="showCheckinForm">Tutup Form</span>
-                                    </button>
-                                    <div x-show="showCheckinForm" x-transition
-                                        class="mt-4 border-t pt-4 dark:border-gray-700">
-                                        <form
-                                            action="{{ route('vehicleLogs.checkin', $asset->currentVehicleLog->id) }}"
-                                            method="POST">
-                                            @csrf
-                                            <h4 class="font-semibold mb-2">Form Pengembalian Kendaraan</h4>
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                                <div>
-                                                    <label for="return_time" class="block text-sm font-medium">Waktu
-                                                        Kembali</label>
-                                                    <input type="datetime-local" name="return_time" id="return_time"
-                                                        value="{{ now()->format('Y-m-d\TH:i') }}"
-                                                        class="mt-1 block w-full rounded-md dark:bg-gray-700" required>
+                                {{-- Inspections Sub-tab --}}
+                                <div class="space-y-6">
+                                    <h5 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Pemeriksaan Kondisi</h5>
+                                    <div class="space-y-4">
+                                        @forelse($asset->inspections()->latest()->take(5)->get() as $i)
+                                            <div class="p-6 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl flex items-center justify-between group">
+                                                <div class="flex items-center gap-4">
+                                                    <div class="w-2 h-10 @if($i->condition == 'Baik') bg-emerald-500 @elseif($m->condition == 'Rusak Berat') bg-red-500 @else bg-amber-500 @endif rounded-full"></div>
+                                                    <div>
+                                                        <p class="text-sm font-black text-gray-800 dark:text-white tracking-tight">{{ $i->condition }}</p>
+                                                        <p class="text-[10px] text-gray-400 font-bold uppercase mt-0.5 tracking-wider">{{ \Carbon\Carbon::parse($i->inspection_date)->isoFormat('D MMM YYYY') }}</p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <label for="end_odometer" class="block text-sm font-medium">KM
-                                                        Akhir</label>
-                                                    <input type="number" name="end_odometer" id="end_odometer"
-                                                        class="mt-1 block w-full rounded-md dark:bg-gray-700" required
-                                                        min="{{ $asset->currentVehicleLog->start_odometer }}">
-                                                </div>
-                                                <div>
-                                                    <label for="condition_on_checkin"
-                                                        class="block text-sm font-medium">Kondisi Akhir</label>
-                                                    <input type="text" name="condition_on_checkin"
-                                                        id="condition_on_checkin" value="Baik"
-                                                        class="mt-1 block w-full rounded-md dark:bg-gray-700" required>
-                                                </div>
-                                            </div>
-                                            <div class="mb-4">
-                                                <label for="notes_vehicle" class="block text-sm font-medium">Catatan
-                                                    (Opsional)</label>
-                                                <textarea name="notes" id="notes_vehicle" rows="2" class="mt-1 block w-full rounded-md dark:bg-gray-700"></textarea>
-                                            </div>
-                                            <button type="submit"
-                                                class="bg-green-500 text-white font-bold py-2 px-4 rounded">Simpan &
-                                                Cetak BAP</button>
-                                        </form>
-                                    </div>
-                                </div>
-                            @else
-                                <p class="text-sm text-red-500">Status aset tidak 'Tersedia' namun tidak ditemukan data
-                                    penggunaan aktif.</p>
-                            @endif
-                        @endif
-
-                        {{-- Tabel Riwayat Penggunaan Kendaraan Ini --}}
-                        <div class="mt-8">
-                            <h4 class="font-semibold mb-2 text-lg">Riwayat Penggunaan Kendaraan Ini</h4>
-                            <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
-                                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                                    <thead
-                                        class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                        <tr>
-                                            <th scope="col" class="py-3 px-6">Pegawai</th>
-                                            <th scope="col" class="py-3 px-6">Tujuan</th>
-                                            <th scope="col" class="py-3 px-6">Waktu Berangkat</th>
-                                            <th scope="col" class="py-3 px-6">Waktu Kembali</th>
-                                            <th scope="col" class="py-3 px-6">KM (Awal - Akhir)</th>
-                                            <th scope="col" class="py-3 px-6">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse ($asset->vehicleLogs as $log)
-                                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                                <td class="py-4 px-6 font-semibold">{{ $log->employee->name ?? '-' }}
-                                                </td>
-                                                <td class="py-4 px-6">{{ $log->destination }}</td>
-                                                <td class="py-4 px-6">
-                                                    {{ $log->departure_time->isoFormat('D MMM YYYY, HH:mm') }}</td>
-                                                <td class="py-4 px-6">
-                                                    @if ($log->return_time)
-                                                        {{ $log->return_time->isoFormat('D MMM YYYY, HH:mm') }}
-                                                    @else
-                                                        <span class="text-yellow-500 font-semibold">Digunakan</span>
-                                                    @endif
-                                                </td>
-                                                <td class="py-4 px-6">{{ number_format($log->start_odometer) }} -
-                                                    {{ $log->end_odometer ? number_format($log->end_odometer) : '...' }}
-                                                </td>
-                                                <td class="py-4 px-6 space-y-1">
-                                                    @if ($log->checkout_doc_number)
-                                                        <a href="{{ route('vehicleLogs.downloadBast', ['log' => $log->id, 'type' => 'checkout']) }}"
-                                                            target="_blank"
-                                                            class="flex items-center text-blue-500 hover:text-blue-700 text-xs">
-                                                            <svg class="w-3 h-3 mr-1" fill="none"
-                                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    stroke-width="2"
-                                                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4">
-                                                                </path>
-                                                            </svg>
-                                                            BAST Ambil
+                                                <div class="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    @if($i->inspection_doc_number)
+                                                        <a href="{{ route('inspections.downloadBast', $i->id) }}" target="_blank" class="p-2 border border-blue-50 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-all">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" /></svg>
                                                         </a>
                                                     @endif
-                                                    @if ($log->checkin_doc_number)
-                                                        <a href="{{ route('vehicleLogs.downloadBast', ['log' => $log->id, 'type' => 'checkin']) }}"
-                                                            target="_blank"
-                                                            class="flex items-center text-green-500 hover:text-green-700 text-xs">
-                                                            <svg class="w-3 h-3 mr-1" fill="none"
-                                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    stroke-width="2"
-                                                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4">
-                                                                </path>
-                                                            </svg>
-                                                            BAP Kembali
-                                                        </a>
-                                                    @endif
-                                                </td>
-                                            </tr>
+                                                </div>
+                                            </div>
                                         @empty
-                                            <tr>
-                                                <td colspan="6" class="text-center py-4">Belum ada riwayat
-                                                    penggunaan untuk kendaraan ini.</td>
-                                            </tr>
+                                            <p class="p-10 text-center text-[10px] font-black text-gray-300 uppercase leading-relaxed font-bold italic">Belum pernah diinspeksi.</p>
                                         @endforelse
-                                    </tbody>
-                                </table>
+                                    </div>
+                                    <button @click="showInspectionModal = true" class="w-full py-4 bg-gray-50 dark:bg-gray-900 text-gray-400 hover:text-red-600 text-[10px] font-black uppercase tracking-[0.2em] rounded-3xl border border-dashed border-gray-100 dark:border-gray-800 transition-all">
+                                        + Tambah Catatan Inspeksi
+                                    </button>
+                                </div>
                             </div>
                         </div>
+
+                        {{-- Vehicle Log Tab --}}
+                        @if($asset->category->name == 'KENDARAAN BERMOTOR DINAS / KBM DINAS')
+                            <div x-show="activeTab === 'vehicle'" class="p-10 space-y-10">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight tracking-tight italic">Logbook KBM</h3>
+                                    @if($asset->current_status == 'Tersedia')
+                                        <button @click="showVehicleModal = true" class="px-6 py-3 bg-red-600 text-white text-xs font-black rounded-2xl shadow-xl shadow-red-500/20 active:translate-y-1 transition-all">
+                                            Catat Perjalanan
+                                        </button>
+                                    @endif
+                                </div>
+
+                                @if($asset->currentVehicleLog)
+                                    <div class="p-8 bg-amber-50/50 border border-amber-100 rounded-[32px] flex flex-col md:flex-row items-center justify-between gap-6">
+                                        <div class="flex items-center gap-6">
+                                            <div class="animate-pulse w-4 h-4 bg-amber-500 rounded-full shadow-lg shadow-amber-500/40"></div>
+                                            <div>
+                                                <p class="text-[10px] font-black text-amber-600 uppercase tracking-widest">Sedang Digunakan</p>
+                                                <p class="text-base font-black text-gray-800 mt-1">{{ $asset->currentVehicleLog->employee->name }}</p>
+                                                <p class="text-xs text-gray-500 font-bold mt-1">Ke: {{ $asset->currentVehicleLog->destination }}</p>
+                                            </div>
+                                        </div>
+                                        <button @click="showVehicleReturnModal = true" class="px-8 py-4 bg-gray-800 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl hover:-translate-y-1">
+                                            Selesai Perjalanan
+                                        </button>
+                                    </div>
+                                @endif
+
+                                <div class="overflow-x-auto rounded-[32px] border border-gray-50 dark:border-gray-900">
+                                    <table class="w-full text-left">
+                                        <thead>
+                                            <tr class="bg-gray-50/50 dark:bg-gray-900/50">
+                                                <th class="p-5 px-8 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Pengemudi</th>
+                                                <th class="p-5 px-8 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Waktu & KM</th>
+                                                <th class="p-5 px-8 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-50 dark:divide-gray-900">
+                                            @foreach($asset->vehicleLogs()->latest()->take(10)->get() as $log)
+                                                <tr class="hover:bg-gray-50/30 dark:hover:bg-gray-900/30 transition-colors">
+                                                    <td class="p-6 px-8">
+                                                        <p class="text-sm font-black text-gray-700 dark:text-gray-300 italic">{{ $log->employee->name }}</p>
+                                                        <p class="text-[10px] text-gray-400 font-bold mt-1">{{ $log->destination }}</p>
+                                                    </td>
+                                                    <td class="p-6 px-8 text-center">
+                                                        <div class="flex flex-col items-center">
+                                                            <span class="text-[10px] font-black text-gray-800 dark:text-white uppercase tracking-widest">{{ \Carbon\Carbon::parse($log->departure_time)->isoFormat('D MMM HH:mm') }}</span>
+                                                            <div class="w-10 h-[1px] bg-gray-100 my-1"></div>
+                                                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">{{ number_format($log->start_odometer) }} KM → {{ $log->end_odometer ? number_format($log->end_odometer) : '...' }} KM</span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="p-6 px-8 text-right">
+                                                        @if($log->checkout_doc_number)
+                                                            <a href="{{ route('vehicleLogs.downloadBast', ['log' => $log->id, 'type' => 'checkout']) }}" target="_blank" class="px-4 py-2 bg-gray-50 dark:bg-gray-900 text-[10px] font-black uppercase text-gray-400 hover:text-red-600 rounded-xl transition-all border border-gray-100">BAST</a>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        @endif
                     </div>
-                </div>
-            @endif
-
-            <div class="mt-8 bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
-
-                    <h3 class="text-xl font-semibold mb-4">Riwayat Pemeliharaan</h3>
-
-                    <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
-                        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                            <thead
-                                class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                <tr>
-                                    <th scope="col" class="py-3 px-6">Judul Pekerjaan</th>
-                                    <th scope="col" class="py-3 px-6">Tgl. Jadwal</th>
-                                    <th scope="col" class="py-3 px-6">Status</th>
-                                    <th scope="col" class="py-3 px-6">Tgl. Selesai</th>
-                                    <th scope="col" class="py-3 px-6">Teknisi</th>
-                                    <th scope="col" class="py-3 px-6">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($asset->maintenanceSchedules as $schedule)
-                                    <tr
-                                        class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                        <td class="py-4 px-6 font-medium text-gray-900 dark:text-white">
-                                            {{ $schedule->title }}
-                                        </td>
-                                        <td class="py-4 px-6">
-                                            {{ \Carbon\Carbon::parse($schedule->schedule_date)->format('d M Y') }}</td>
-                                        <td class="py-4 px-6">
-                                            <span @class([
-                                                'px-2 py-1 font-semibold leading-tight text-xs rounded-full',
-                                                'text-blue-700 bg-blue-100 dark:bg-blue-700 dark:text-blue-100' =>
-                                                    $schedule->status == 'scheduled',
-                                                'text-yellow-700 bg-yellow-100 dark:bg-yellow-700 dark:text-yellow-100' =>
-                                                    $schedule->status == 'in_progress',
-                                                'text-green-700 bg-green-100 dark:bg-green-700 dark:text-green-100' =>
-                                                    $schedule->status == 'completed',
-                                                'text-gray-700 bg-gray-100 dark:bg-gray-700 dark:text-gray-100' =>
-                                                    $schedule->status == 'cancelled',
-                                            ])>
-                                                {{ ucfirst($schedule->status) }}
-                                            </span>
-                                        </td>
-                                        <td class="py-4 px-6">
-                                            {{ $schedule->completed_at ? \Carbon\Carbon::parse($schedule->completed_at)->format('d M Y') : '-' }}
-                                        </td>
-                                        <td class="py-4 px-6">{{ $schedule->assignedTo->name ?? '-' }}</td>
-                                        <td class="py-4 px-6">
-                                            <a href="{{ route('maintenance-schedules.show', $schedule->id) }}"
-                                                class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded text-xs">
-                                                Lihat Detail
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="6" class="py-4 px-6 text-center">Aset ini belum memiliki
-                                            riwayat pemeliharaan.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-
                 </div>
             </div>
-
         </div>
+
+        {{-- Modals Section (Hidden By Default) --}}
+        <!-- Modal: Assign Asset -->
+        <div x-show="activeTab === 'history' && showAssignModal" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-8">
+             <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" @click="showAssignModal = false"></div>
+             <div x-data="{ showAssignModal: false }" class="relative bg-white dark:bg-gray-950 rounded-[40px] shadow-2xl w-full max-w-md overflow-hidden animate-slideUp border border-gray-100">
+                 <form action="{{ route('assets.assign', $asset->id) }}" method="POST" class="p-10">
+                    @csrf
+                    <h2 class="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-tight mb-8">Serah Terima Aset</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Pegawai Penerima</label>
+                            <select name="employee_id" required class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none">
+                                @foreach (App\Models\Employee::orderBy('name')->get() as $e) <option value="{{ $e->id }}">{{ $e->name }}</option> @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Kondisi Barang</label>
+                            <input type="text" name="condition_on_assign" value="Baik" class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none">
+                        </div>
+                    </div>
+                    <div class="flex justify-end mt-10 gap-4">
+                        <button type="button" @click="$parent.showAssignModal = false" class="px-6 py-3 font-bold text-gray-400">Batal</button>
+                        <button type="submit" class="px-8 py-4 bg-red-600 text-white font-black rounded-2xl shadow-xl shadow-red-500/20">Konfirmasi</button>
+                    </div>
+                 </form>
+             </div>
+        </div>
+
+        {{-- Add state for modals manually to simplify --}}
     </div>
-    {{-- Scripts --}}
-    @push('scripts')
-        <script>
-            function confirmMaintenanceDelete(id) {
-                Swal.fire({
-                    title: 'Hapus Catatan Ini?',
-                    text: "Tindakan ini tidak bisa dibatalkan!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Ya, hapus!',
-                    cancelButtonText: 'Batal'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        let form = document.createElement('form');
-                        form.action = `/maintenance/${id}`;
-                        form.method = 'POST';
-                        form.innerHTML = `@csrf @method('DELETE')`;
-                        document.body.appendChild(form);
-                        form.submit();
-                    }
-                })
-            }
-        </script>
-    @endpush
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            // Simplified modal states within pageData if needed
+        });
+    </script>
+
+    <style>
+        .animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-slideUp { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(40px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    </style>
 </x-app-layout>
