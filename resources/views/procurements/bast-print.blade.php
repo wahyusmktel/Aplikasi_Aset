@@ -35,7 +35,7 @@
         </div>
 
         <div class="content">
-            <p>Pada hari ini <strong>{{ $handover->handover_date->isoFormat('dddd') }}</strong>, tanggal <strong>{{ $handover->handover_date->isoFormat('D MMMM Y') }}</strong>, kami yang bertanda tangan di bawah ini:</p>
+            <p>Pada hari ini <strong>{{ $handover->handover_date->locale('id')->isoFormat('dddd') }}</strong>, tanggal <strong>{{ $handover->handover_date->locale('id')->isoFormat('D MMMM Y') }}</strong>, kami yang bertanda tangan di bawah ini:</p>
             
             <div style="margin-left: 20px;">
                 @if($type == 'vendor_to_school')
