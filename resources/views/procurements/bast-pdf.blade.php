@@ -113,7 +113,7 @@
         <!-- Specific Document Info -->
         <div style="text-align: center; margin-bottom: 20px;">
             <div style="font-weight: bold; font-size: 12px;">BERITA ACARA SERAH TERIMA (BAST)</div>
-            <div style="font-size: 10px;">Nomor: {{ $handover->document_number }}</div>
+            <!-- <div style="font-size: 10px;">Nomor: {{ $handover->document_number }}</div> -->
         </div>
 
         <div class="content">
