@@ -12,7 +12,7 @@ class ProcurementHandover extends Model
     protected $fillable = [
         'procurement_id', 'type', 'document_number', 'handover_date', 
         'from_name', 'from_user_id', 'to_name', 'to_user_id', 
-        'to_department_id', 'notes'
+        'to_department_id', 'to_person_in_charge_id', 'notes'
     ];
 
     protected $casts = [
@@ -37,5 +37,10 @@ class ProcurementHandover extends Model
     public function toDepartment()
     {
         return $this->belongsTo(Department::class, 'to_department_id');
+    }
+
+    public function toPersonInCharge()
+    {
+        return $this->belongsTo(PersonInCharge::class, 'to_person_in_charge_id');
     }
 }

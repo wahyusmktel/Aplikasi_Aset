@@ -172,7 +172,7 @@ class ProcurementController extends Controller
         $request->validate([
             'handover_date' => 'required|date',
             'document_number' => 'required|string|unique:procurement_handovers,document_number',
-            'to_department_id' => 'required|exists:departments,id',
+            'to_person_in_charge_id' => 'required|exists:persons_in_charge,id',
             'to_name' => 'required|string', // Name of Unit Representative
         ]);
 
@@ -187,7 +187,7 @@ class ProcurementController extends Controller
                 'handover_date' => $request->handover_date,
                 'from_user_id' => Auth::id(),
                 'to_name' => $request->to_name,
-                'to_department_id' => $request->to_department_id,
+                'to_person_in_charge_id' => $request->to_person_in_charge_id,
                 'notes' => $request->notes,
             ]);
 
@@ -342,7 +342,9 @@ class ProcurementController extends Controller
      */
     public function downloadBast(Procurement $procurement, $type)
     {
-        $handover = $procurement->handovers()->where('type', $type)->first();
+        $handover = $procurement->handovers()->where('type', $type)
+            ->with(['toDepartment', 'toPersonInCharge'])
+            ->first();
         if (!$handover) {
             alert()->error('Gagal!', 'Dokumen BAST belum tersedia.');
             return back();

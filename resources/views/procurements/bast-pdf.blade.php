@@ -133,7 +133,7 @@
                         $p1_name = $schoolRepName;
                         $p1_jabatan = $schoolRepPosition;
                         $p2_name = $handover->to_name;
-                        $p2_jabatan = $handover->toDepartment->name ?? 'Unit Terkait';
+                        $p2_jabatan = '' . ($handover->toPersonInCharge->name ?? $handover->toDepartment->name ?? 'Terlampir');
                     }
                 @endphp
 
@@ -224,7 +224,7 @@
                     <td>
                         <div>PIHAK KEDUA,</div>
                         <div class="sign-name">{{ $type == 'vendor_to_school' ? $schoolRepName : $handover->to_name }}</div>
-                        <div class="sign-role">{{ $type == 'vendor_to_school' ? $schoolRepPosition : ' ' . ($handover->toDepartment->name ?? 'KAUR LAB') }}</div>
+                        <div class="sign-role">{{ $type == 'vendor_to_school' ? $schoolRepPosition : $p2_jabatan }}</div>
                     </td>
                     <td>
                         <div>MENGETAHUI,</div>

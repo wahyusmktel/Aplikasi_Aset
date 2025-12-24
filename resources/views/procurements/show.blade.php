@@ -423,11 +423,11 @@
                                     class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-primary-500 focus:ring-primary-500">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Unit / Departemen Penerima</label>
-                                <select name="to_department_id" required class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-primary-500 focus:ring-primary-500 shadow-sm">
-                                    <option value="">Pilih Unit</option>
-                                    @foreach($departments as $dept)
-                                        <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Penanggung Jawab Penerima</label>
+                                <select name="to_person_in_charge_id" required class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-primary-500 focus:ring-primary-500 shadow-sm">
+                                    <option value="">Pilih Penanggung Jawab</option>
+                                    @foreach($personsInCharge as $pic)
+                                        <option value="{{ $pic->id }}">{{ $pic->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
