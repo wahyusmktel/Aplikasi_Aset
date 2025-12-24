@@ -111,7 +111,7 @@
                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
                                                 </a>
                                             @endif
-                                            <button @click="showModal = true; isEditMode = true; form.id = {{ $employee->id }}; form.name = '{{ $employee->name }}'; form.nip = '{{ $employee->nip }}'; form.position = '{{ $employee->position }}'"
+                                            <button @click="showModal = true; isEditMode = true; form.id = {{ $employee->id }}; form.name = '{{ $employee->name }}'; form.nip = '{{ $employee->nip }}'; form.position = '{{ $employee->position }}'; form.is_sarpra_it_lab = {{ $employee->is_sarpra_it_lab ? 'true' : 'false' }}; form.is_headmaster = {{ $employee->is_headmaster ? 'true' : 'false' }}"
                                                 class="p-2 text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-xl transition-colors shadow-sm bg-white dark:bg-gray-800 border border-amber-100 dark:border-amber-900/30"
                                                 title="Edit Pegawai">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
@@ -192,6 +192,26 @@
                             placeholder="Masukkan jabatan...">
                     </div>
 
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex items-center">
+                            <input type="hidden" name="is_sarpra_it_lab" value="0">
+                            <input type="checkbox" name="is_sarpra_it_lab" id="is_sarpra_it_lab" x-model="form.is_sarpra_it_lab" value="1"
+                                class="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500 transition-all">
+                            <label for="is_sarpra_it_lab" class="ml-3 text-sm font-bold text-gray-700 dark:text-gray-300">
+                                Waka Bid. Sarpra IT & Lab
+                            </label>
+                        </div>
+
+                        <div class="flex items-center">
+                            <input type="hidden" name="is_headmaster" value="0">
+                            <input type="checkbox" name="is_headmaster" id="is_headmaster" x-model="form.is_headmaster" value="1"
+                                class="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500 transition-all">
+                            <label for="is_headmaster" class="ml-3 text-sm font-bold text-gray-700 dark:text-gray-300">
+                                Kepala Sekolah
+                            </label>
+                        </div>
+                    </div>
+
                     <div class="flex gap-3 mt-8">
                         <button type="button" @click="showModal = false"
                             class="flex-1 px-6 py-3 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-bold rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
@@ -270,11 +290,15 @@
                     name: '',
                     nip: '',
                     position: '',
+                    is_sarpra_it_lab: false,
+                    is_headmaster: false,
                     reset() {
                         this.id = null;
                         this.name = '';
                         this.nip = '';
                         this.position = '';
+                        this.is_sarpra_it_lab = false;
+                        this.is_headmaster = false;
                     }
                 },
                 confirmDelete(id) {

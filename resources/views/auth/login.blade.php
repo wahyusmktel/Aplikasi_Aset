@@ -2,14 +2,21 @@
     <!-- Header: Logo & Title -->
     <div class="text-center mb-8">
         <div class="flex justify-center mb-4">
-            <div
-                class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-600/20">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                    stroke="currentColor" class="w-7 h-7">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
-                </svg>
-            </div>
+            @php
+                $logo = \App\Models\Setting::get('app_logo');
+            @endphp
+            @if($logo)
+                <img src="{{ asset('storage/' . $logo) }}" class="h-16 w-auto object-contain">
+            @else
+                <div
+                    class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-600/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                        stroke="currentColor" class="w-7 h-7">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+                    </svg>
+                </div>
+            @endif
         </div>
         <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
             Selamat Datang Kembali

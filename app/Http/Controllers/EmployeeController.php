@@ -30,6 +30,8 @@ class EmployeeController extends Controller
             'name' => 'required|string|max:255',
             'nip' => 'nullable|string|max:255|unique:employees,nip',
             'position' => 'required|string|max:255',
+            'is_sarpra_it_lab' => 'boolean',
+            'is_headmaster' => 'boolean',
         ]);
         Employee::create($request->all());
         alert()->success('Berhasil!', 'Data pegawai berhasil ditambahkan.');
@@ -42,6 +44,8 @@ class EmployeeController extends Controller
             'name' => 'required|string|max:255',
             'nip' => 'nullable|string|max:255|unique:employees,nip,' . $employee->id,
             'position' => 'required|string|max:255',
+            'is_sarpra_it_lab' => 'boolean',
+            'is_headmaster' => 'boolean',
         ]);
         $employee->update($request->all());
         alert()->success('Berhasil!', 'Data pegawai berhasil diperbarui.');

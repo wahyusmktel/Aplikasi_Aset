@@ -348,7 +348,10 @@ class ProcurementController extends Controller
             return back();
         }
 
-        $pdf = Pdf::loadView('procurements.bast-pdf', compact('procurement', 'handover', 'type'))
+        $wakaSarpra = \App\Models\Employee::where('is_sarpra_it_lab', true)->first();
+        $headmaster = \App\Models\Employee::where('is_headmaster', true)->first();
+
+        $pdf = Pdf::loadView('procurements.bast-pdf', compact('procurement', 'handover', 'type', 'wakaSarpra', 'headmaster'))
                   ->setPaper('a4', 'portrait');
 
         $fileName = 'BAST-' . str_replace('/', '-', $handover->document_number) . '.pdf';

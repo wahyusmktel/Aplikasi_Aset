@@ -78,7 +78,14 @@
 
 <body>
     <div class="header">
-        <h1>{{ $title }}</h1>
+        @php
+            $kop = \App\Models\Setting::get('app_kop_surat');
+        @endphp
+        @if($kop)
+            <img src="{{ public_path('storage/' . $kop) }}" style="width: 100%; margin-bottom: 10px;">
+        @else
+            <h1>{{ $title }}</h1>
+        @endif
         <p>Nomor: {{ $assignment->checkout_doc_number ?? $assignment->return_doc_number }}</p>
     </div>
 
