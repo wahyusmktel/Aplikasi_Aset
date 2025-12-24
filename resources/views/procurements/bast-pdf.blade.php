@@ -119,29 +119,66 @@
         <div class="content">
             <p>Pada hari ini <strong>{{ $handover->handover_date->isoFormat('dddd') }}</strong>, tanggal <strong>{{ $handover->handover_date->isoFormat('D MMMM Y') }}</strong>, kami yang bertanda tangan di bawah ini:</p>
             
-            <div style="margin-left: 20px;">
+            <div style="margin-top: 10px;">
                 @php
                     $schoolRepName = $wakaSarpra ? $wakaSarpra->name : Auth::user()->name;
                     $schoolRepPosition = $wakaSarpra ? 'Waka Bid. Sarpra IT dan Lab' : 'Waka Sarana Prasarana';
+
+                    if($type == 'vendor_to_school') {
+                        $p1_name = $handover->from_name;
+                        $p1_jabatan = "Perwakilan Rekanan (" . $procurement->vendor->name . ")";
+                        $p2_name = $schoolRepName;
+                        $p2_jabatan = $schoolRepPosition;
+                    } else {
+                        $p1_name = $schoolRepName;
+                        $p1_jabatan = $schoolRepPosition;
+                        $p2_name = $handover->to_name;
+                        $p2_jabatan = $handover->toDepartment->name ?? 'Unit Terkait';
+                    }
                 @endphp
 
-                @if($type == 'vendor_to_school')
-                    <p><strong>I. Nama: {{ $handover->from_name }}</strong><br>
-                    Jabatan: Perwakilan Rekanan ({{ $procurement->vendor->name }})<br>
-                    Selanjutnya disebut sebagai <strong>PIHAK PERTAMA</strong>.</p>
+                <table style="width: 100%; border: none; border-collapse: collapse; margin-left: 10px;">
+                    <!-- PIHAK PERTAMA -->
+                    <tr>
+                        <td style="width: 25px; vertical-align: top; font-weight: bold;">I.</td>
+                        <td style="width: 60px; vertical-align: top;">Nama</td>
+                        <td style="width: 15px; vertical-align: top; text-align: center;">:</td>
+                        <td style="vertical-align: top;"><strong>{{ $p1_name }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td style="vertical-align: top;">Jabatan</td>
+                        <td style="vertical-align: top; text-align: center;">:</td>
+                        <td style="vertical-align: top;">{{ $p1_jabatan }}</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td colspan="2"></td>
+                        <td style="vertical-align: top;">Selanjutnya disebut sebagai <strong>PIHAK PERTAMA</strong>.</td>
+                    </tr>
 
-                    <p><strong>II. Nama: {{ $schoolRepName }}</strong><br>
-                    Jabatan: {{ $schoolRepPosition }}<br>
-                    Selanjutnya disebut sebagai <strong>PIHAK KEDUA</strong>.</p>
-                @else
-                    <p><strong>I. Nama: {{ $schoolRepName }}</strong><br>
-                    Jabatan: {{ $schoolRepPosition }}<br>
-                    Selanjutnya disebut sebagai <strong>PIHAK PERTAMA</strong>.</p>
+                    <!-- Spacer -->
+                    <tr><td colspan="4" style="height: 15px;"></td></tr>
 
-                    <p><strong>II. Nama: {{ $handover->to_name }}</strong><br>
-                    Jabatan:  {{ $handover->toDepartment->name ?? 'Unit Terkait' }}<br>
-                    Selanjutnya disebut sebagai <strong>PIHAK KEDUA</strong>.</p>
-                @endif
+                    <!-- PIHAK KEDUA -->
+                    <tr>
+                        <td style="vertical-align: top; font-weight: bold;">II.</td>
+                        <td style="vertical-align: top;">Nama</td>
+                        <td style="vertical-align: top; text-align: center;">:</td>
+                        <td style="vertical-align: top;"><strong>{{ $p2_name }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td style="vertical-align: top;">Jabatan</td>
+                        <td style="vertical-align: top; text-align: center;">:</td>
+                        <td style="vertical-align: top;">{{ $p2_jabatan }}</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td colspan="2"></td>
+                        <td style="vertical-align: top;">Selanjutnya disebut sebagai <strong>PIHAK KEDUA</strong>.</td>
+                    </tr>
+                </table>
             </div>
 
             <p>PIHAK PERTAMA menyerahkan kepada PIHAK KEDUA, dan PIHAK KEDUA menyatakan telah menerima dari PIHAK PERTAMA barang-barang dengan rincian sebagai berikut:</p>
