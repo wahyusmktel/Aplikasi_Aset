@@ -23,6 +23,11 @@
         {{ __('Riwayat Disposal') }}
     </x-sidebar-link>
 
+    <!-- Lapor Kerusakan -->
+    <x-sidebar-link :href="route('asset-reports.index')" :active="request()->routeIs('asset-reports.*')" icon="exclamation-circle">
+        {{ __('Lapor Kerusakan') }}
+    </x-sidebar-link>
+
     <!-- Ringkasan Aset -->
     <x-sidebar-link :href="route('assets.summary')" :active="request()->routeIs('assets.summary')" icon="chart-bar">
         {{ __('Ringkasan Aset') }}
@@ -45,6 +50,10 @@
         <x-sidebar-dropdown-link :href="route('inspection.history')" :active="request()->routeIs('inspection.history')">{{ __('Riwayat Inspeksi') }}</x-sidebar-dropdown-link>
         <x-sidebar-dropdown-link :href="route('books.index')" :active="request()->routeIs('books.index')">{{ __('Aset Buku') }}</x-sidebar-dropdown-link>
         <x-sidebar-dropdown-link :href="route('asset-mapping.index')" :active="request()->routeIs('asset-mapping.index')">{{ __('Mapping Aset (AI)') }}</x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('asset-reports.index')" :active="request()->routeIs('asset-reports.index')">{{ __('Laporan Saya') }}</x-sidebar-dropdown-link>
+        @if(Auth::user()->isAdmin())
+            <x-sidebar-dropdown-link :href="route('admin.asset-reports.index')" :active="request()->routeIs('admin.asset-reports.index')">{{ __('Kelola Laporan Kerusakan') }}</x-sidebar-dropdown-link>
+        @endif
         <x-sidebar-dropdown-link :href="route('labs.history')" :active="request()->routeIs('labs.history')">{{ __('Riwayat Penggunaan Lab') }}</x-sidebar-dropdown-link>
     </x-sidebar-dropdown>
 

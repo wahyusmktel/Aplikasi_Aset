@@ -36,6 +36,7 @@ use App\Http\Controllers\ProcurementController;
 use App\Http\Controllers\SettingController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LabController;
+use App\Http\Controllers\AssetReportController;
 
 // === Rute untuk Google SSO ===
 Route::get('/auth/google/redirect', [SocialLoginController::class, 'redirectToGoogle'])
@@ -256,6 +257,18 @@ Route::middleware('auth')->group(function () {
     // System Settings
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
     Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
+
+    // Pelaporan Kerusakan Aset
+    Route::get('/asset-reports', [AssetReportController::class, 'index'])->name('asset-reports.index');
+    Route::get('/asset-reports/scan', [AssetReportController::class, 'scan'])->name('asset-reports.scan');
+    Route::get('/asset-reports/create', [AssetReportController::class, 'create'])->name('asset-reports.create');
+    Route::post('/asset-reports', [AssetReportController::class, 'store'])->name('asset-reports.store');
+
+    // Admin Asset Reports
+    Route::get('/admin/asset-reports', [AssetReportController::class, 'adminIndex'])->name('admin.asset-reports.index');
+    Route::patch('/admin/asset-reports/{report}/status', [AssetReportController::class, 'updateStatus'])->name('admin.asset-reports.status');
 });
+
+
 
 require __DIR__ . '/auth.php';
