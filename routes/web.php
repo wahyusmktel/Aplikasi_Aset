@@ -35,6 +35,7 @@ use App\Http\Controllers\VendorController;
 use App\Http\Controllers\ProcurementController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\RkasController;
+use App\Http\Controllers\RabController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LabController;
 use App\Http\Controllers\AssetReportController;
@@ -273,6 +274,11 @@ Route::middleware('auth')->group(function () {
     Route::get('rkas/template', [RkasController::class, 'downloadTemplate'])->name('rkas.template');
     Route::post('rkas/import', [RkasController::class, 'import'])->name('rkas.import');
     Route::resource('rkas', RkasController::class);
+
+    // RAB Management
+    Route::get('rab/{rab}/export-pdf', [RabController::class, 'exportPdf'])->name('rab.exportPdf');
+    Route::get('get-mta-details', [RabController::class, 'getMtaDetails'])->name('rab.getMtaDetails');
+    Route::resource('rab', RabController::class);
 });
 
 

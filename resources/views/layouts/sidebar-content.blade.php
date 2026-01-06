@@ -71,6 +71,11 @@
         {{ __('RKAS') }}
     </x-sidebar-link>
 
+    <!-- RAB -->
+    <x-sidebar-link :href="route('rab.index')" :active="request()->routeIs('rab.*')" icon="document-text">
+        {{ __('RAB') }}
+    </x-sidebar-link>
+
     <!-- Rekanan -->
     <x-sidebar-link :href="route('vendors.index')" :active="request()->routeIs('vendors.*')" icon="user-group">
         {{ __('Rekanan/Vendor') }}
