@@ -91,6 +91,7 @@ class RabController extends Controller
         foreach ($request->selected_rkas as $rkasId) {
             $rkas = Rkas::find($rkasId);
             $alias = $request->alias[$rkasId] ?? $rkas->rincian_kegiatan;
+            $specification = $request->specification[$rkasId] ?? '';
             
             $amount = $rkas->quantity * $rkas->tarif;
             $totalAmount += $amount;
@@ -99,6 +100,7 @@ class RabController extends Controller
                 'rab_id' => $rab->id,
                 'rkas_id' => $rkas->id,
                 'alias_name' => $alias,
+                'specification' => $specification,
                 'quantity' => $rkas->quantity,
                 'unit' => $rkas->satuan,
                 'price' => $rkas->tarif,
@@ -109,6 +111,97 @@ class RabController extends Controller
         $rab->update(['total_amount' => $totalAmount]);
 
         Alert::success('Berhasil', 'Data RAB berhasil disimpan.');
+        return redirect()->route('rab.index');
+    }
+
+    public function edit(Rab $rab)
+    {
+        $rab->load(['details']);
+        $activeYear = $rab->academicYear;
+        
+        // Ambil MTA unik dari RKAS tahun terkait
+        $mtaList = Rkas::where('academic_year_id', $activeYear->id)
+            ->select('mta', 'nama_akun')
+            ->distinct()
+            ->get();
+
+        $employees = Employee::orderBy('name')->get();
+        $headmaster = Employee::where('is_headmaster', true)->first();
+
+        // Prepare selected items for JSON (Alpine.js)
+        $selectedItemsData = Rkas::where('academic_year_id', $activeYear->id)
+            ->where('mta', $rab->mta)
+            ->get()
+            ->map(function($item) use ($rab) {
+                $detail = $rab->details->where('rkas_id', $item->id)->first();
+                return [
+                    'id' => $item->id,
+                    'rincian_kegiatan' => $item->rincian_kegiatan,
+                    'quantity' => $item->quantity,
+                    'satuan' => $item->satuan,
+                    'tarif' => $item->tarif,
+                    'is_selected' => !!$detail,
+                    'alias_name' => $detail ? $detail->alias_name : $item->rincian_kegiatan,
+                    'specification' => $detail ? $detail->specification : '',
+                ];
+            });
+
+        return view('pages.rab.edit', compact('rab', 'activeYear', 'mtaList', 'employees', 'headmaster', 'selectedItemsData'));
+    }
+
+    public function update(Request $request, Rab $rab)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'mta' => 'required',
+            'kebutuhan_waktu' => 'required',
+            'created_by_id' => 'required|exists:employees,id',
+            'checked_by_id' => 'required|exists:employees,id',
+            'approved_by_id' => 'required|exists:employees,id',
+            'headmaster_id' => 'required|exists:employees,id',
+            'selected_rkas' => 'required|array',
+        ]);
+
+        $rab->update([
+            'name' => $request->name,
+            'mta' => $request->mta,
+            'nama_akun' => $request->nama_akun_hidden,
+            'drk' => $request->drk_hidden,
+            'kebutuhan_waktu' => $request->kebutuhan_waktu,
+            'created_by_id' => $request->created_by_id,
+            'checked_by_id' => $request->checked_by_id,
+            'approved_by_id' => $request->approved_by_id,
+            'headmaster_id' => $request->headmaster_id,
+            'notes' => $request->notes,
+        ]);
+
+        // Sync details: Delete existing and recreate
+        $rab->details()->delete();
+
+        $totalAmount = 0;
+        foreach ($request->selected_rkas as $rkasId) {
+            $rkas = Rkas::find($rkasId);
+            $alias = $request->alias[$rkasId] ?? $rkas->rincian_kegiatan;
+            $specification = $request->specification[$rkasId] ?? '';
+            
+            $amount = $rkas->quantity * $rkas->tarif;
+            $totalAmount += $amount;
+
+            RabDetail::create([
+                'rab_id' => $rab->id,
+                'rkas_id' => $rkas->id,
+                'alias_name' => $alias,
+                'specification' => $specification,
+                'quantity' => $rkas->quantity,
+                'unit' => $rkas->satuan,
+                'price' => $rkas->tarif,
+                'amount' => $amount,
+            ]);
+        }
+
+        $rab->update(['total_amount' => $totalAmount]);
+
+        Alert::success('Berhasil', 'Data RAB berhasil diperbarui.');
         return redirect()->route('rab.index');
     }
 

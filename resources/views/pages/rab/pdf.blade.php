@@ -68,12 +68,13 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th width="30">NO</th>
+                <th width="20">NO</th>
                 <th>URAIAN KEGIATAN</th>
-                <th width="50">VOL</th>
-                <th width="60">SATUAN</th>
-                <th width="90">HARGA</th>
-                <th width="100">JUMLAH</th>
+                <th>SPESIFIKASI</th>
+                <th width="40">VOL</th>
+                <th width="50">SATUAN</th>
+                <th width="80">HARGA</th>
+                <th width="90">JUMLAH</th>
             </tr>
         </thead>
         <tbody>
@@ -81,6 +82,7 @@
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
                     <td>{{ $detail->alias_name }}</td>
+                    <td>{{ $detail->specification ?? '-' }}</td>
                     <td class="text-center">{{ number_format($detail->quantity, 0, ',', '.') }}</td>
                     <td class="text-center">{{ $detail->unit }}</td>
                     <td class="text-right">Rp {{ number_format($detail->price, 0, ',', '.') }}</td>
@@ -90,7 +92,7 @@
         </tbody>
         <tfoot>
             <tr style="background-color: #f9f9f9; font-weight: bold;">
-                <td colspan="5" style="text-align: right;">TOTAL ANGGARAN</td>
+                <td colspan="6" style="text-align: right;">TOTAL ANGGARAN</td>
                 <td class="text-right">Rp {{ number_format($rab->total_amount, 0, ',', '.') }}</td>
             </tr>
         </tfoot>

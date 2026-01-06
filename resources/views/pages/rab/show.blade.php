@@ -48,6 +48,7 @@
                             <tr class="bg-gray-50/50 dark:bg-gray-900/50">
                                 <th class="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">No</th>
                                 <th class="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Uraian Kegiatan</th>
+                                <th class="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Spesifikasi</th>
                                 <th class="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Vol & Satuan</th>
                                 <th class="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Harga Satuan</th>
                                 <th class="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Subtotal</th>
@@ -63,6 +64,9 @@
                                             <span class="text-[10px] text-gray-400">{{ $detail->rkas->rincian_kegiatan }}</span>
                                         </div>
                                     </td>
+                                    <td class="p-6">
+                                        <span class="text-sm font-medium text-gray-600 dark:text-gray-300">{{ $detail->specification ?? '-' }}</span>
+                                    </td>
                                     <td class="p-6 text-right">
                                         <span class="text-sm font-bold text-gray-800 dark:text-white">{{ number_format($detail->quantity, 0, ',', '.') }} {{ $detail->unit }}</span>
                                     </td>
@@ -77,7 +81,7 @@
                         </tbody>
                         <tfoot>
                             <tr class="bg-gray-50/50 dark:bg-gray-900/50">
-                                <td colspan="4" class="p-8 text-right text-xs font-black text-gray-400 uppercase tracking-widest">Total Keseluruhan Anggaran:</td>
+                                <td colspan="5" class="p-8 text-right text-xs font-black text-gray-400 uppercase tracking-widest">Total Keseluruhan Anggaran:</td>
                                 <td class="p-8 text-right">
                                     <span class="text-2xl font-black text-red-600">Rp {{ number_format($rab->total_amount, 0, ',', '.') }}</span>
                                 </td>

@@ -6,17 +6,18 @@
             </a>
             <div>
                 <h2 class="font-black text-3xl text-gray-800 dark:text-white leading-tight tracking-tight">
-                    {{ __('Buat RAB Baru') }}
+                    {{ __('Edit RAB') }}
                 </h2>
-                <p class="text-sm text-gray-400 mt-1 uppercase tracking-widest font-black">Tahun Pelajaran Aktif: <span class="text-red-600">{{ $activeYear->year }}</span></p>
+                <p class="text-sm text-gray-400 mt-1 uppercase tracking-widest font-black">Tahun Pelajaran: <span class="text-red-600">{{ $activeYear->year }}</span></p>
             </div>
         </div>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 pb-24">
-            <form action="{{ route('rab.store') }}" method="POST" class="space-y-8">
+            <form action="{{ route('rab.update', $rab->id) }}" method="POST" class="space-y-8">
                 @csrf
+                @method('PUT')
                 <input type="hidden" name="academic_year_id" value="{{ $activeYear->id }}">
                 <input type="hidden" name="nama_akun_hidden" x-model="namaAkun">
                 <input type="hidden" name="drk_hidden" x-model="drk">
@@ -31,13 +32,13 @@
 
                         <div class="space-y-2">
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Nama RAB</label>
-                            <input type="text" name="name" required placeholder="Contoh: Panitia PPDB 2025"
+                            <input type="text" name="name" required value="{{ old('name', $rab->name) }}"
                                 class="w-full px-6 py-4 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-red-500 shadow-sm font-bold">
                         </div>
 
                         <div class="space-y-2">
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Kebutuhan Waktu</label>
-                            <input type="text" name="kebutuhan_waktu" required placeholder="Contoh: Januari 2025"
+                            <input type="text" name="kebutuhan_waktu" required value="{{ old('kebutuhan_waktu', $rab->kebutuhan_waktu) }}"
                                 class="w-full px-6 py-4 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-red-500 shadow-sm font-bold">
                         </div>
 
@@ -101,11 +102,11 @@
                                                         <span class="text-xs font-medium text-gray-400" x-text="item.rincian_kegiatan"></span>
                                                     </td>
                                                     <td class="p-4">
-                                                        <input type="text" :name="'alias[' + item.id + ']'" :value="item.rincian_kegiatan"
+                                                        <input type="text" :name="'alias[' + item.id + ']'" x-model="item.alias_name"
                                                             class="w-full px-4 py-2 text-sm rounded-xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 font-bold focus:border-red-500">
                                                     </td>
                                                     <td class="p-4">
-                                                        <input type="text" :name="'specification[' + item.id + ']'" placeholder="Spesifikasi..."
+                                                        <input type="text" :name="'specification[' + item.id + ']'" x-model="item.specification" placeholder="Spesifikasi..."
                                                             class="w-full px-4 py-2 text-sm rounded-xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 font-bold focus:border-red-500">
                                                     </td>
                                                     <td class="p-4 text-right">
@@ -122,23 +123,13 @@
                                         </tbody>
                                         <tfoot>
                                             <tr class="bg-gray-50/50 dark:bg-gray-900/50">
-                                                <td colspan="5" class="p-6 text-right text-xs font-black text-gray-400 uppercase tracking-widest">Total Anggaran Terpilih:</td>
+                                                <td colspan="6" class="p-6 text-right text-xs font-black text-gray-400 uppercase tracking-widest">Total Anggaran Terpilih:</td>
                                                 <td class="p-6 text-right">
                                                     <span class="text-xl font-black text-red-600" x-text="'Rp ' + formatNumber(totalAmount)"></span>
                                                 </td>
                                             </tr>
                                         </tfoot>
                                     </table>
-                                </div>
-                            </template>
-                            <template x-if="items.length === 0 && selectedMta">
-                                <div class="p-10 text-center bg-gray-50 dark:bg-gray-900 rounded-3xl">
-                                    <p class="text-sm font-bold text-gray-400">Memuat rincian kegiatan...</p>
-                                </div>
-                            </template>
-                            <template x-if="!selectedMta">
-                                <div class="p-10 text-center bg-gray-50 dark:bg-gray-900 rounded-3xl border-2 border-dashed border-gray-100 dark:border-gray-800">
-                                    <p class="text-xs font-black text-gray-300 uppercase tracking-widest">Silakan pilih MTA terlebih dahulu</p>
                                 </div>
                             </template>
                         </div>
@@ -154,7 +145,7 @@
                             <select name="created_by_id" required class="form-select-premium">
                                 <option value="">Pilih Pegawai</option>
                                 @foreach($employees as $emp)
-                                    <option value="{{ $emp->id }}" {{ old('created_by_id') == $emp->id ? 'selected' : '' }}>{{ $emp->name }}</option>
+                                    <option value="{{ $emp->id }}" {{ (old('created_by_id', $rab->created_by_id) == $emp->id) ? 'selected' : '' }}>{{ $emp->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -164,7 +155,7 @@
                             <select name="checked_by_id" required class="form-select-premium">
                                 <option value="">Pilih Pegawai</option>
                                 @foreach($employees as $emp)
-                                    <option value="{{ $emp->id }}" {{ old('checked_by_id') == $emp->id ? 'selected' : '' }}>{{ $emp->name }}</option>
+                                    <option value="{{ $emp->id }}" {{ (old('checked_by_id', $rab->checked_by_id) == $emp->id) ? 'selected' : '' }}>{{ $emp->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -174,7 +165,7 @@
                             <select name="approved_by_id" required class="form-select-premium">
                                 <option value="">Pilih Pegawai</option>
                                 @foreach($employees as $emp)
-                                    <option value="{{ $emp->id }}" {{ old('approved_by_id') == $emp->id ? 'selected' : '' }}>{{ $emp->name }}</option>
+                                    <option value="{{ $emp->id }}" {{ (old('approved_by_id', $rab->approved_by_id) == $emp->id) ? 'selected' : '' }}>{{ $emp->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -183,7 +174,7 @@
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Kepala Sekolah</label>
                             <select name="headmaster_id" required class="form-select-premium">
                                 @foreach($employees as $emp)
-                                    <option value="{{ $emp->id }}" {{ ($headmaster && $headmaster->id == $emp->id) ? 'selected' : '' }}>{{ $emp->name }}</option>
+                                    <option value="{{ $emp->id }}" {{ (old('headmaster_id', $rab->headmaster_id) == $emp->id) ? 'selected' : '' }}>{{ $emp->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -191,14 +182,14 @@
                         <div class="md:col-span-2 space-y-2">
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Catatan Tambahan (Akan muncul di PDF)</label>
                             <textarea name="notes" rows="3" placeholder="Berikan catatan jika diperlukan..."
-                                class="w-full px-6 py-4 rounded-3xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 border font-bold focus:border-red-500"></textarea>
+                                class="w-full px-6 py-4 rounded-3xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 border font-bold focus:border-red-500">{{ old('notes', $rab->notes) }}</textarea>
                         </div>
                     </div>
 
                     <div class="flex justify-end mt-12 pt-8 border-t border-gray-50 dark:border-gray-900 gap-4">
                         <button type="submit" 
                             class="px-12 py-4 bg-red-600 hover:bg-red-700 text-white font-black rounded-2xl shadow-xl shadow-red-500/30 transition-all transform hover:-translate-y-1 uppercase tracking-widest text-xs">
-                            Simpan & Cetak Preview
+                            Perbarui & Simpan
                         </button>
                     </div>
                 </div>
@@ -210,12 +201,12 @@
         <script>
             function rabForm() {
                 return {
-                    selectedMta: '',
-                    namaAkun: '',
-                    drk: '',
-                    items: [],
-                    selectedItems: [],
-                    totalAmount: 0,
+                    selectedMta: '{{ $rab->mta }}',
+                    namaAkun: '{{ $rab->nama_akun }}',
+                    drk: '{{ $rab->drk }}',
+                    items: @json($selectedItemsData),
+                    selectedItems: @json($rab->details->pluck('rkas_id')->map(fn($id) => (string)$id)),
+                    totalAmount: {{ $rab->total_amount }},
 
                     fetchMtaDetails() {
                         if (!this.selectedMta) {
@@ -230,7 +221,15 @@
                             .then(data => {
                                 this.namaAkun = data.nama_akun;
                                 this.drk = data.drk;
-                                this.items = data.items;
+                                // Map items to include default attributes for edit
+                                this.items = data.items.map(item => {
+                                    return {
+                                        ...item,
+                                        is_selected: false,
+                                        alias_name: item.rincian_kegiatan,
+                                        specification: ''
+                                    };
+                                });
                                 this.selectedItems = [];
                                 this.calculateTotal();
                             });

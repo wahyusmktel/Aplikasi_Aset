@@ -10,6 +10,7 @@ class RabDetail extends Model
         'rab_id',
         'rkas_id',
         'alias_name',
+        'specification',
         'quantity',
         'unit',
         'price',
