@@ -66,6 +66,11 @@
         {{ __('Pengadaan Aset') }}
     </x-sidebar-link>
 
+    <!-- RKAS -->
+    <x-sidebar-link :href="route('rkas.index')" :active="request()->routeIs('rkas.*')" icon="calculator">
+        {{ __('RKAS') }}
+    </x-sidebar-link>
+
     <!-- Rekanan -->
     <x-sidebar-link :href="route('vendors.index')" :active="request()->routeIs('vendors.*')" icon="user-group">
         {{ __('Rekanan/Vendor') }}

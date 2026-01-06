@@ -34,6 +34,7 @@ use App\Http\Controllers\MaintenanceScheduleController;
 use App\Http\Controllers\VendorController;
 use App\Http\Controllers\ProcurementController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\RkasController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LabController;
 use App\Http\Controllers\AssetReportController;
@@ -267,6 +268,11 @@ Route::middleware('auth')->group(function () {
     // Admin Asset Reports
     Route::get('/admin/asset-reports', [AssetReportController::class, 'adminIndex'])->name('admin.asset-reports.index');
     Route::patch('/admin/asset-reports/{report}/status', [AssetReportController::class, 'updateStatus'])->name('admin.asset-reports.status');
+
+    // RKAS Management
+    Route::get('rkas/template', [RkasController::class, 'downloadTemplate'])->name('rkas.template');
+    Route::post('rkas/import', [RkasController::class, 'import'])->name('rkas.import');
+    Route::resource('rkas', RkasController::class);
 });
 
 
