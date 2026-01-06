@@ -26,7 +26,7 @@
             padding: 20px 40px;
         }
         .header { text-align: center; margin-bottom: 20px; text-transform: uppercase; }
-        .header h1 { margin: 0; font-size: 16px; border-bottom: 2px solid #000; display: inline-block; padding-bottom: 5px; }
+        .header h1 { margin: 0; font-size: 14px; display: inline-block; padding-bottom: 5px; }
         .header p { margin: 5px 0 0; font-size: 12px; font-weight: bold; }
         
         .info-table { width: 100%; margin-bottom: 20px; }
@@ -40,11 +40,11 @@
         table.data-table .text-right { text-align: right; }
         table.data-table .text-center { text-align: center; }
         
-        .signature-table { width: 100%; border-collapse: collapse; margin-top: 20px; page-break-inside: avoid; font-size: 9px; }
-        .signature-table th, .signature-table td { border: 1px solid #000; padding: 4px 6px; vertical-align: middle; }
-        .signature-table th { background-color: #f2f2f2; text-transform: uppercase; font-size: 8px; text-align: center; }
+        .signature-table { width: 100%; border-collapse: collapse; margin-top: 20px; page-break-inside: avoid; font-size: 10px; }
+        .signature-table th, .signature-table td { border: 1px solid #000; padding: 5px 6px; vertical-align: middle; }
+        .signature-table th { background-color: #f2f2f2; text-transform: uppercase; font-size: 9px; text-align: center; }
         .signature-table td { height: 35px; }
-        .signature-label { font-weight: bold; font-size: 8px; }
+        .signature-label { font-weight: bold; font-size: 9px; }
         .signature-name { text-align: center; }
         .signature-jabatan { text-align: center; }
         .signature-tanggal { text-align: center; }
@@ -72,22 +72,20 @@
     <div class="content">
         <div class="header">
             <h1>RENCANA ANGGARAN BIAYA (RAB)</h1>
-            <p>{{ $rab->name }}</p>
+            <br>
+            <h1>{{ $rab->name }}</h1>
+            <br>
+            <h1>TAHUN ANGGARAN {{ $rab->academicYear->year }}</h1>
         </div>
 
         <table class="info-table">
-            <tr>
+            <!-- <tr>
                 <td class="label">TAHUN ANGGARAN</td>
                 <td class="separator">:</td>
                 <td>{{ $rab->academicYear->year }}</td>
-            </tr>
+            </tr> -->
             <tr>
-                <td class="label">KEBUTUHAN WAKTU</td>
-                <td class="separator">:</td>
-                <td>{{ $rab->kebutuhan_waktu }}</td>
-            </tr>
-            <tr>
-                <td class="label">NOMOR AKUN (MTA)</td>
+                <td class="label">NOMOR AKUN</td>
                 <td class="separator">:</td>
                 <td>{{ $rab->mta }}</td>
             </tr>
@@ -95,12 +93,17 @@
                 <td class="label">NAMA AKUN</td>
                 <td class="separator">:</td>
                 <td>{{ $rab->nama_akun }}</td>
-            </tr>
+            </tr>                       
             <tr>
-                <td class="label">D R K</td>
+                <td class="label">DRK</td>
                 <td class="separator">:</td>
                 <td>{{ $rab->drk }}</td>
             </tr>
+            <tr>
+                <td class="label">KEBUTUHAN WAKTU</td>
+                <td class="separator">:</td>
+                <td>{{ $rab->kebutuhan_waktu }}</td>
+            </tr> 
         </table>
 
         <table class="data-table">
@@ -108,9 +111,9 @@
                 <tr>
                     <th width="20">NO</th>
                     <th>URAIAN KEGIATAN</th>
-                    <th>SPESIFIKASI</th>
-                    <th width="40">VOL</th>
+                    <th>SPESIFIKASI</th>                    
                     <th width="50">SATUAN</th>
+                    <th width="40">VOL</th>
                     <th width="80">HARGA</th>
                     <th width="90">JUMLAH</th>
                 </tr>
@@ -120,9 +123,9 @@
                     <tr>
                         <td class="text-center">{{ $index + 1 }}</td>
                         <td>{{ $detail->alias_name }}</td>
-                        <td>{{ $detail->specification ?? '-' }}</td>
-                        <td class="text-center">{{ number_format($detail->quantity, 0, ',', '.') }}</td>
+                        <td>{{ $detail->specification ?? '-' }}</td>                        
                         <td class="text-center">{{ $detail->unit }}</td>
+                        <td class="text-center">{{ number_format($detail->quantity, 0, ',', '.') }}</td>
                         <td class="text-right">Rp {{ number_format($detail->price, 0, ',', '.') }}</td>
                         <td class="text-right">Rp {{ number_format($detail->amount, 0, ',', '.') }}</td>
                     </tr>
@@ -162,6 +165,12 @@
                     <td class="signature-box"></td>
                 </tr>
                 <tr>
+                    <td colspan="5" style="text-align: left; padding: 8px; height: 50px; vertical-align: top;">
+                        <strong style="text-transform: uppercase; font-size: 9px;">Catatan Anggaran:</strong><br>
+                        {{ $rab->notes ?? '-' }}
+                    </td>
+                </tr>
+                <tr>
                     <td class="signature-label">Diperiksa & Disetujui oleh</td>
                     <td class="signature-name">{{ $rab->approver->name }} / {{ $rab->approver->nip ?? '-' }}</td>
                     <td class="signature-jabatan">{{ $rab->approver->position ?? '-' }}</td>
@@ -179,8 +188,8 @@
         </table>
 
         <div class="notes-section">
-            <strong>Catatan Anggaran:</strong><br>
-            {{ $rab->notes ?? '-' }}
+            <strong>CATATAN:</strong><br>
+            -
         </div>
     </div>
 </body>
