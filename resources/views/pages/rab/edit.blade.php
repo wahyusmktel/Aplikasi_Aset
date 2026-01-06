@@ -161,7 +161,7 @@
                         </div>
 
                         <div class="space-y-2">
-                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Disetujui Oleh</label>
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Diperiksa & Disetujui oleh</label>
                             <select name="approved_by_id" required class="form-select-premium">
                                 <option value="">Pilih Pegawai</option>
                                 @foreach($employees as $emp)
@@ -171,7 +171,7 @@
                         </div>
 
                         <div class="space-y-2">
-                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Kepala Sekolah</label>
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Diperiksa & Disetujui Realisasi</label>
                             <select name="headmaster_id" required class="form-select-premium">
                                 @foreach($employees as $emp)
                                     <option value="{{ $emp->id }}" {{ (old('headmaster_id', $rab->headmaster_id) == $emp->id) ? 'selected' : '' }}>{{ $emp->name }}</option>

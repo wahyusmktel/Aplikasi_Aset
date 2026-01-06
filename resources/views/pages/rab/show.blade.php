@@ -90,32 +90,56 @@
                     </table>
                 </div>
 
-                {{-- Signatures --}}
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mt-12 pt-12 border-t border-gray-50 dark:border-gray-900 text-center">
-                    <div>
-                        <span class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-12">Dibuat Oleh</span>
-                        <span class="block text-sm font-black text-gray-800 dark:text-white underline">{{ $rab->creator->name }}</span>
-                    </div>
-                    <div>
-                        <span class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-12">Diperiksa Oleh</span>
-                        <span class="block text-sm font-black text-gray-800 dark:text-white underline">{{ $rab->checker->name }}</span>
-                    </div>
-                    <div>
-                        <span class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-12">Disetujui Oleh</span>
-                        <span class="block text-sm font-black text-gray-800 dark:text-white underline">{{ $rab->approver->name }}</span>
-                    </div>
-                    <div>
-                        <span class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-12">Kepala Sekolah</span>
-                        <span class="block text-sm font-black text-gray-800 dark:text-white underline">{{ $rab->headmaster->name }}</span>
-                    </div>
+                {{-- Signature Table --}}
+                <div class="mt-12 overflow-x-auto rounded-3xl border border-gray-100 dark:border-gray-800">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-gray-50/50 dark:bg-gray-900/50">
+                                <th class="p-4 text-[10px] font-black text-gray-400 uppercase tracking-widest w-40"></th>
+                                <th class="p-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">NAMA / NIK</th>
+                                <th class="p-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">JABATAN</th>
+                                <th class="p-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">TANGGAL</th>
+                                <th class="p-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">TANDA TANGAN</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50 dark:divide-gray-900">
+                            <tr>
+                                <td class="p-4 text-xs font-black text-gray-400 uppercase tracking-widest">Dibuat oleh</td>
+                                <td class="p-4 text-sm font-bold text-gray-800 dark:text-white">{{ $rab->creator->name }} / {{ $rab->creator->nip ?? '-' }}</td>
+                                <td class="p-4 text-sm text-gray-500">{{ $rab->creator->position ?? '-' }}</td>
+                                <td class="p-4 text-sm text-center text-gray-500">{{ $rab->created_at->format('d-M-y') }}</td>
+                                <td class="p-4"></td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-xs font-black text-gray-400 uppercase tracking-widest">Diperiksa oleh</td>
+                                <td class="p-4 text-sm font-bold text-gray-800 dark:text-white">{{ $rab->checker->name }} / {{ $rab->checker->nip ?? '-' }}</td>
+                                <td class="p-4 text-sm text-gray-500">{{ $rab->checker->position ?? '-' }}</td>
+                                <td class="p-4 text-sm text-center text-gray-500">{{ $rab->created_at->format('d-M-y') }}</td>
+                                <td class="p-4"></td>
+                            </tr>
+                            <tr class="bg-gray-50/20">
+                                <td colspan="5" class="p-6">
+                                    <span class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Catatan Anggaran:</span>
+                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-300">{{ $rab->notes ?? '-' }}</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-xs font-black text-gray-400 uppercase tracking-widest">Diperiksa & Disetujui oleh</td>
+                                <td class="p-4 text-sm font-bold text-gray-800 dark:text-white">{{ $rab->approver->name }} / {{ $rab->approver->nip ?? '-' }}</td>
+                                <td class="p-4 text-sm text-gray-500">{{ $rab->approver->position ?? '-' }}</td>
+                                <td class="p-4 text-sm text-center text-gray-500">{{ $rab->created_at->format('d-M-y') }}</td>
+                                <td class="p-4"></td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-xs font-black text-gray-400 uppercase tracking-widest">Diperiksa & Disetujui Realisasi</td>
+                                <td class="p-4 text-sm font-bold text-gray-800 dark:text-white">{{ $rab->headmaster->name }} / {{ $rab->headmaster->nip ?? '-' }}</td>
+                                <td class="p-4 text-sm text-gray-500">Kepala Sekolah</td>
+                                <td class="p-4 text-sm text-center text-gray-500">{{ $rab->created_at->format('d-M-y') }}</td>
+                                <td class="p-4"></td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-
-                @if($rab->notes)
-                    <div class="mt-12 p-8 bg-gray-50 dark:bg-gray-900 rounded-3xl border-l-4 border-red-600">
-                        <span class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Catatan Khusus:</span>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-300">{{ $rab->notes }}</p>
-                    </div>
-                @endif
             </div>
         </div>
     </div>

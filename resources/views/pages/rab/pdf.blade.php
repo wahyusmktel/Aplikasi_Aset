@@ -98,43 +98,67 @@
         </tfoot>
     </table>
 
-    <div class="notes-section">
-        <h4>CATATAN:</h4>
-        <p>{{ $rab->notes ?? '-' }}</p>
-    </div>
 
-    <div class="signature-container">
-        <table class="signature-table">
+
+    <style>
+        .signature-table { width: 100%; border-collapse: collapse; margin-top: 20px; page-break-inside: avoid; }
+        .signature-table th, .signature-table td { border: 1px solid #000; padding: 6px 8px; vertical-align: middle; }
+        .signature-table th { background-color: #f2f2f2; text-transform: uppercase; font-size: 9px; text-align: center; }
+        .signature-table td { height: 40px; }
+        .signature-label { width: 150px; font-weight: bold; }
+        .signature-name { width: 200px; text-align: center; }
+        .signature-jabatan { width: 150px; text-align: center; }
+        .signature-tanggal { width: 80px; text-align: center; }
+        .signature-box { width: 100px; }
+        .notes-row { height: 60px; vertical-align: top !important; }
+    </style>
+
+    <table class="signature-table">
+        <thead>
             <tr>
-                <td>
-                    <p class="signature-role">Dibuat Oleh,</p>
-                    <div class="signature-space"></div>
-                    <p class="signature-name">{{ $rab->creator->name }}</p>
-                    <p class="signature-role">Pegawai</p>
-                </td>
-                <td>
-                    <p class="signature-role">Diperiksa Oleh,</p>
-                    <div class="signature-space"></div>
-                    <p class="signature-name">{{ $rab->checker->name }}</p>
-                    <p class="signature-role">Verifikator</p>
-                </td>
-                <td>
-                    <p class="signature-role">Disetujui Oleh,</p>
-                    <div class="signature-space"></div>
-                    <p class="signature-name">{{ $rab->approver->name }}</p>
-                    <p class="signature-role">Pejabat Berwenang</p>
+                <th class="signature-label"></th>
+                <th>NAMA / NIK</th>
+                <th>JABATAN</th>
+                <th>TANGGAL</th>
+                <th>TANDA TANGAN</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="signature-label">Dibuat oleh</td>
+                <td class="signature-name">{{ $rab->creator->name }} / {{ $rab->creator->nip ?? '-' }}</td>
+                <td class="signature-jabatan">{{ $rab->creator->position ?? '-' }}</td>
+                <td class="signature-tanggal">{{ $rab->created_at->format('d-M-y') }}</td>
+                <td class="signature-box"></td>
+            </tr>
+            <tr>
+                <td class="signature-label">Diperiksa oleh</td>
+                <td class="signature-name">{{ $rab->checker->name }} / {{ $rab->checker->nip ?? '-' }}</td>
+                <td class="signature-jabatan">{{ $rab->checker->position ?? '-' }}</td>
+                <td class="signature-tanggal">{{ $rab->created_at->format('d-M-y') }}</td>
+                <td class="signature-box"></td>
+            </tr>
+            <tr>
+                <td colspan="5" class="notes-row">
+                    <strong>Catatan Anggaran:</strong><br>
+                    {{ $rab->notes ?? '-' }}
                 </td>
             </tr>
             <tr>
-                <td colspan="3">
-                    <p style="margin-top: 20px;" class="signature-role">Mengetahui,</p>
-                    <p class="signature-role">Kepala Sekolah</p>
-                    <div class="signature-space"></div>
-                    <p class="signature-name">{{ $rab->headmaster->name }}</p>
-                    <p class="signature-role">NIP. {{ $rab->headmaster->nip ?? '-' }}</p>
-                </td>
+                <td class="signature-label">Diperiksa & Disetujui oleh</td>
+                <td class="signature-name">{{ $rab->approver->name }} / {{ $rab->approver->nip ?? '-' }}</td>
+                <td class="signature-jabatan">{{ $rab->approver->position ?? '-' }}</td>
+                <td class="signature-tanggal">{{ $rab->created_at->format('d-M-y') }}</td>
+                <td class="signature-box"></td>
             </tr>
-        </table>
-    </div>
+            <tr>
+                <td class="signature-label">Diperiksa & Disetujui Realisasi</td>
+                <td class="signature-name">{{ $rab->headmaster->name }} / {{ $rab->headmaster->nip ?? '-' }}</td>
+                <td class="signature-jabatan">Kepala Sekolah</td>
+                <td class="signature-tanggal">{{ $rab->created_at->format('d-M-y') }}</td>
+                <td class="signature-box"></td>
+            </tr>
+        </tbody>
+    </table>
 </body>
 </html>
