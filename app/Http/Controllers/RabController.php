@@ -221,7 +221,8 @@ class RabController extends Controller
     public function exportPdf(Rab $rab)
     {
         $rab->load(['academicYear', 'creator', 'checker', 'approver', 'headmaster', 'details.rkas']);
-        $pdf = Pdf::loadView('pages.rab.pdf', compact('rab'))->setPaper('a4', 'portrait');
+        $kopSurat = \App\Models\Setting::get('kop_surat');
+        $pdf = Pdf::loadView('pages.rab.pdf', compact('rab', 'kopSurat'))->setPaper('a4', 'portrait');
         return $pdf->download('RAB_' . str_replace(' ', '_', $rab->name) . '.pdf');
     }
 }
