@@ -143,6 +143,9 @@ class RabController extends Controller
                     'is_selected' => !!$detail,
                     'alias_name' => $detail ? $detail->alias_name : $item->rincian_kegiatan,
                     'specification' => $detail ? $detail->specification : '',
+                    'customVol' => $detail ? (float)$detail->quantity : (float)$item->quantity,
+                    'customPrice' => $detail ? (float)$detail->price : (float)$item->tarif,
+                    'customAmount' => $detail ? (float)$detail->amount : (float)($item->quantity * $item->tarif),
                 ];
             });
 

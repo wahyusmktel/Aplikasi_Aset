@@ -92,6 +92,7 @@
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-gray-50 dark:divide-gray-900">
+                                            <template x-for="item in items" :key="item.id">
                                                 <tr class="hover:bg-gray-50/30 dark:hover:bg-gray-900/30" :class="{'bg-red-50/50 dark:bg-red-900/10': item.customAmount > (item.tarif * item.quantity)}">
                                                     <td class="p-4 text-center">
                                                         <input type="checkbox" name="selected_rkas[]" :value="item.id" x-model="selectedItems" @change="calculateTotal()"
@@ -134,10 +135,11 @@
                                                         </div>
                                                     </td>
                                                 </tr>
+                                            </template>
                                         </tbody>
                                         <tfoot>
                                             <tr class="bg-gray-50/50 dark:bg-gray-900/50">
-                                                <td colspan="5" class="p-6 text-right text-xs font-black text-gray-400 uppercase tracking-widest">Total Anggaran Terpilih:</td>
+                                                <td colspan="7" class="p-6 text-right text-xs font-black text-gray-400 uppercase tracking-widest">Total Anggaran Terpilih:</td>
                                                 <td class="p-6 text-right">
                                                     <span class="text-xl font-black text-red-600" x-text="'Rp ' + formatNumber(totalAmount)"></span>
                                                 </td>
