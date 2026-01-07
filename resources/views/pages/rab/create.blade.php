@@ -85,14 +85,14 @@
                                                 <th class="p-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Rincian Asli (RKAS)</th>
                                                 <th class="p-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Nama Alias (Uraian RAB)</th>
                                                 <th class="p-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Spesifikasi</th>
-                                                <th class="p-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Vol</th>
-                                                <th class="p-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Harga</th>
+                                                <th class="p-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Vol & Harga (RKAS)</th>
+                                                <th class="p-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-24">Custom Vol</th>
+                                                <th class="p-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-32">Custom Harga</th>
                                                 <th class="p-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Subtotal</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-gray-50 dark:divide-gray-900">
-                                            <template x-for="item in items" :key="item.id">
-                                                <tr class="hover:bg-gray-50/30 dark:hover:bg-gray-900/30">
+                                                <tr class="hover:bg-gray-50/30 dark:hover:bg-gray-900/30" :class="{'bg-red-50/50 dark:bg-red-900/10': item.customAmount > (item.tarif * item.quantity)}">
                                                     <td class="p-4 text-center">
                                                         <input type="checkbox" name="selected_rkas[]" :value="item.id" x-model="selectedItems" @change="calculateTotal()"
                                                             class="w-5 h-5 rounded-lg border-gray-300 text-red-600 focus:ring-red-600">
@@ -109,16 +109,31 @@
                                                             class="w-full px-4 py-2 text-sm rounded-xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 font-bold focus:border-red-500">
                                                     </td>
                                                     <td class="p-4 text-right">
-                                                        <span class="text-sm font-bold text-gray-800 dark:text-white" x-text="item.quantity + ' ' + item.satuan"></span>
+                                                        <div class="flex flex-col">
+                                                            <span class="text-[10px] font-bold text-gray-400" x-text="item.quantity + ' ' + item.satuan"></span>
+                                                            <span class="text-[10px] font-bold text-gray-400" x-text="'@ Rp ' + formatNumber(item.tarif)"></span>
+                                                            <span class="text-[10px] font-black text-gray-400" x-text="'Limit: Rp ' + formatNumber(item.tarif * item.quantity)"></span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="p-4">
+                                                        <input type="number" step="any" :name="'custom_vol[' + item.id + ']'" x-model="item.customVol" @input="updateItemAmount(item)"
+                                                            class="w-full px-3 py-2 text-sm rounded-xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 font-bold focus:border-red-500 text-center"
+                                                            :class="{'border-red-500 focus:ring-red-500': item.customAmount > (item.tarif * item.quantity)}">
+                                                    </td>
+                                                    <td class="p-4">
+                                                        <input type="number" step="any" :name="'custom_price[' + item.id + ']'" x-model="item.customPrice" @input="updateItemAmount(item)"
+                                                            class="w-full px-3 py-2 text-sm rounded-xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 font-bold focus:border-red-500 text-center"
+                                                            :class="{'border-red-500 focus:ring-red-500': item.customAmount > (item.tarif * item.quantity)}">
                                                     </td>
                                                     <td class="p-4 text-right">
-                                                        <span class="text-sm font-bold text-gray-800 dark:text-white" x-text="'Rp ' + formatNumber(item.tarif)"></span>
-                                                    </td>
-                                                    <td class="p-4 text-right">
-                                                        <span class="text-sm font-black text-red-600" x-text="'Rp ' + formatNumber(item.tarif * item.quantity)"></span>
+                                                        <div class="flex flex-col">
+                                                            <span class="text-sm font-black" :class="item.customAmount > (item.tarif * item.quantity) ? 'text-red-600' : 'text-gray-800 dark:text-white'" x-text="'Rp ' + formatNumber(item.customAmount)"></span>
+                                                            <template x-if="item.customAmount > (item.tarif * item.quantity)">
+                                                                <span class="text-[8px] font-black text-red-600 uppercase tracking-tighter">Melebihi Limit!</span>
+                                                            </template>
+                                                        </div>
                                                     </td>
                                                 </tr>
-                                            </template>
                                         </tbody>
                                         <tfoot>
                                             <tr class="bg-gray-50/50 dark:bg-gray-900/50">
@@ -197,8 +212,8 @@
                     </div>
 
                     <div class="flex justify-end mt-12 pt-8 border-t border-gray-50 dark:border-gray-900 gap-4">
-                        <button type="submit" 
-                            class="px-12 py-4 bg-red-600 hover:bg-red-700 text-white font-black rounded-2xl shadow-xl shadow-red-500/30 transition-all transform hover:-translate-y-1 uppercase tracking-widest text-xs">
+                        <button type="submit" :disabled="hasInvalidItems"
+                            class="px-12 py-4 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-black rounded-2xl shadow-xl shadow-red-500/30 transition-all transform hover:-translate-y-1 uppercase tracking-widest text-xs">
                             Simpan & Cetak Preview
                         </button>
                     </div>
@@ -231,16 +246,33 @@
                             .then(data => {
                                 this.namaAkun = data.nama_akun;
                                 this.drk = data.drk;
-                                this.items = data.items;
+                                this.items = data.items.map(item => ({
+                                    ...item,
+                                    customVol: item.quantity,
+                                    customPrice: item.tarif,
+                                    customAmount: item.quantity * item.tarif
+                                }));
                                 this.selectedItems = [];
                                 this.calculateTotal();
                             });
                     },
 
+                    updateItemAmount(item) {
+                        item.customAmount = (parseFloat(item.customVol) || 0) * (parseFloat(item.customPrice) || 0);
+                        this.calculateTotal();
+                    },
+
+                    get hasInvalidItems() {
+                        return this.items.some(item => 
+                            this.selectedItems.includes(item.id.toString()) && 
+                            item.customAmount > (item.tarif * item.quantity)
+                        );
+                    },
+
                     calculateTotal() {
                         this.totalAmount = this.items
                             .filter(item => this.selectedItems.includes(item.id.toString()) || this.selectedItems.includes(item.id))
-                            .reduce((sum, item) => sum + (parseFloat(item.tarif) * parseFloat(item.quantity)), 0);
+                            .reduce((sum, item) => sum + item.customAmount, 0);
                     },
 
                     formatNumber(num) {
