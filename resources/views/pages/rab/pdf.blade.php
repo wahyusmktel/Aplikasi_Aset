@@ -4,7 +4,9 @@
     <meta charset="utf-8">
     <title>Rencana Anggaran Biaya - {{ $rab->name }}</title>
     <style>
-        @page { margin: 0; }
+        @page { 
+            margin: 40px 0; 
+        }
         body { 
             font-family: 'Helvetica', 'Arial', sans-serif; 
             font-size: 11px; 
@@ -23,7 +25,7 @@
             display: block;
         }
         .content {
-            padding: 20px 40px;
+            padding: 0 40px;
         }
         .header { text-align: center; margin-bottom: 20px; text-transform: uppercase; }
         .header h1 { margin: 0; font-size: 14px; display: inline-block; padding-bottom: 5px; }
