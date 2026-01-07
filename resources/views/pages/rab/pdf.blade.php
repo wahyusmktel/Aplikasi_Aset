@@ -76,6 +76,7 @@
 
     <div class="content">
         <div class="header">
+            <br>
             <h1>RENCANA ANGGARAN BIAYA (RAB)</h1>
             <br>
             <h1>{{ $rab->name }}</h1>
