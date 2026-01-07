@@ -102,11 +102,11 @@
                                                         <span class="text-xs font-medium text-gray-400" x-text="item.rincian_kegiatan"></span>
                                                     </td>
                                                     <td class="p-4">
-                                                        <input type="text" :name="'alias[' + item.id + ']'" :value="item.rincian_kegiatan"
+                                                        <input type="text" :name="'alias[' + item.id + ']'" x-model="item.alias_name"
                                                             class="w-full px-4 py-2 text-sm rounded-xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 font-bold focus:border-red-500">
                                                     </td>
                                                     <td class="p-4">
-                                                        <input type="text" :name="'specification[' + item.id + ']'" placeholder="Spesifikasi..."
+                                                        <input type="text" :name="'specification[' + item.id + ']'" x-model="item.specification" placeholder="Spesifikasi..."
                                                             class="w-full px-4 py-2 text-sm rounded-xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 font-bold focus:border-red-500">
                                                     </td>
                                                     <td class="p-4 text-right">
@@ -250,6 +250,8 @@
                                 this.drk = data.drk;
                                 this.items = data.items.map(item => ({
                                     ...item,
+                                    alias_name: item.rincian_kegiatan,
+                                    specification: '',
                                     customVol: item.quantity,
                                     customPrice: item.tarif,
                                     customAmount: item.quantity * item.tarif

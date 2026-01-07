@@ -93,7 +93,17 @@ class RabController extends Controller
             $alias = $request->alias[$rkasId] ?? $rkas->rincian_kegiatan;
             $specification = $request->specification[$rkasId] ?? '';
             
-            $amount = $rkas->quantity * $rkas->tarif;
+            $customVol = $request->custom_vol[$rkasId] ?? $rkas->quantity;
+            $customPrice = $request->custom_price[$rkasId] ?? $rkas->tarif;
+            $amount = $customVol * $customPrice;
+
+            // Limit validation
+            if ($amount > ($rkas->quantity * $rkas->tarif)) {
+                $amount = $rkas->quantity * $rkas->tarif;
+                $customVol = $rkas->quantity;
+                $customPrice = $rkas->tarif;
+            }
+
             $totalAmount += $amount;
 
             RabDetail::create([
@@ -101,9 +111,9 @@ class RabController extends Controller
                 'rkas_id' => $rkas->id,
                 'alias_name' => $alias,
                 'specification' => $specification,
-                'quantity' => $rkas->quantity,
+                'quantity' => $customVol,
                 'unit' => $rkas->satuan,
-                'price' => $rkas->tarif,
+                'price' => $customPrice,
                 'amount' => $amount,
             ]);
         }
@@ -187,7 +197,17 @@ class RabController extends Controller
             $alias = $request->alias[$rkasId] ?? $rkas->rincian_kegiatan;
             $specification = $request->specification[$rkasId] ?? '';
             
-            $amount = $rkas->quantity * $rkas->tarif;
+            $customVol = $request->custom_vol[$rkasId] ?? $rkas->quantity;
+            $customPrice = $request->custom_price[$rkasId] ?? $rkas->tarif;
+            $amount = $customVol * $customPrice;
+
+            // Limit validation
+            if ($amount > ($rkas->quantity * $rkas->tarif)) {
+                $amount = $rkas->quantity * $rkas->tarif;
+                $customVol = $rkas->quantity;
+                $customPrice = $rkas->tarif;
+            }
+
             $totalAmount += $amount;
 
             RabDetail::create([
@@ -195,9 +215,9 @@ class RabController extends Controller
                 'rkas_id' => $rkas->id,
                 'alias_name' => $alias,
                 'specification' => $specification,
-                'quantity' => $rkas->quantity,
+                'quantity' => $customVol,
                 'unit' => $rkas->satuan,
-                'price' => $rkas->tarif,
+                'price' => $customPrice,
                 'amount' => $amount,
             ]);
         }
