@@ -103,6 +103,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50 dark:divide-gray-900">
+                        @if($rab->creator)
                             <tr>
                                 <td class="p-4 text-xs font-black text-gray-400 uppercase tracking-widest">Dibuat oleh</td>
                                 <td class="p-4 text-sm font-bold text-gray-800 dark:text-white">{{ $rab->creator->name }} / {{ $rab->creator->nip ?? '-' }}</td>
@@ -110,6 +111,8 @@
                                 <td class="p-4 text-sm text-center text-gray-500">{{ $rab->created_at->format('d-M-y') }}</td>
                                 <td class="p-4"></td>
                             </tr>
+                        @endif
+                        @if($rab->checker)
                             <tr>
                                 <td class="p-4 text-xs font-black text-gray-400 uppercase tracking-widest">Diperiksa oleh</td>
                                 <td class="p-4 text-sm font-bold text-gray-800 dark:text-white">{{ $rab->checker->name }} / {{ $rab->checker->nip ?? '-' }}</td>
@@ -117,12 +120,14 @@
                                 <td class="p-4 text-sm text-center text-gray-500">{{ $rab->created_at->format('d-M-y') }}</td>
                                 <td class="p-4"></td>
                             </tr>
-                            <tr class="bg-gray-50/20">
-                                <td colspan="5" class="p-6">
-                                    <span class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Catatan Anggaran:</span>
-                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-300">{{ $rab->notes ?? '-' }}</p>
-                                </td>
-                            </tr>
+                        @endif
+                        <tr class="bg-gray-50/20">
+                            <td colspan="5" class="p-6">
+                                <span class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Catatan Anggaran:</span>
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-300">{{ $rab->notes ?? '-' }}</p>
+                            </td>
+                        </tr>
+                        @if($rab->approver)
                             <tr>
                                 <td class="p-4 text-xs font-black text-gray-400 uppercase tracking-widest">Diperiksa & Disetujui oleh</td>
                                 <td class="p-4 text-sm font-bold text-gray-800 dark:text-white">{{ $rab->approver->name }} / {{ $rab->approver->nip ?? '-' }}</td>
@@ -130,6 +135,8 @@
                                 <td class="p-4 text-sm text-center text-gray-500">{{ $rab->created_at->format('d-M-y') }}</td>
                                 <td class="p-4"></td>
                             </tr>
+                        @endif
+                        @if($rab->headmaster)
                             <tr>
                                 <td class="p-4 text-xs font-black text-gray-400 uppercase tracking-widest">Diperiksa & Disetujui Realisasi</td>
                                 <td class="p-4 text-sm font-bold text-gray-800 dark:text-white">{{ $rab->headmaster->name }} / {{ $rab->headmaster->nip ?? '-' }}</td>
@@ -137,6 +144,7 @@
                                 <td class="p-4 text-sm text-center text-gray-500">{{ $rab->created_at->format('d-M-y') }}</td>
                                 <td class="p-4"></td>
                             </tr>
+                        @endif
                         </tbody>
                     </table>
                 </div>

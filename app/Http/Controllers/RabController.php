@@ -65,10 +65,10 @@ class RabController extends Controller
             'academic_year_id' => 'required|exists:academic_years,id',
             'mta' => 'required',
             'kebutuhan_waktu' => 'required',
-            'created_by_id' => 'required|exists:employees,id',
-            'checked_by_id' => 'required|exists:employees,id',
-            'approved_by_id' => 'required|exists:employees,id',
-            'headmaster_id' => 'required|exists:employees,id',
+            'created_by_id' => 'nullable|exists:employees,id',
+            'checked_by_id' => 'nullable|exists:employees,id',
+            'approved_by_id' => 'nullable|exists:employees,id',
+            'headmaster_id' => 'nullable|exists:employees,id',
             'selected_rkas' => 'required|array',
         ]);
 
@@ -155,10 +155,10 @@ class RabController extends Controller
             'name' => 'required|string|max:255',
             'mta' => 'required',
             'kebutuhan_waktu' => 'required',
-            'created_by_id' => 'required|exists:employees,id',
-            'checked_by_id' => 'required|exists:employees,id',
-            'approved_by_id' => 'required|exists:employees,id',
-            'headmaster_id' => 'required|exists:employees,id',
+            'created_by_id' => 'nullable|exists:employees,id',
+            'checked_by_id' => 'nullable|exists:employees,id',
+            'approved_by_id' => 'nullable|exists:employees,id',
+            'headmaster_id' => 'nullable|exists:employees,id',
             'selected_rkas' => 'required|array',
         ]);
 

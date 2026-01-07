@@ -150,6 +150,7 @@
                 </tr>
             </thead>
             <tbody>
+                @if($rab->creator)
                 <tr>
                     <td class="signature-label">Dibuat oleh</td>
                     <td class="signature-name">{{ $rab->creator->name }} / {{ $rab->creator->nip ?? '-' }}</td>
@@ -157,6 +158,8 @@
                     <td class="signature-tanggal">{{ $rab->created_at->format('d-M-y') }}</td>
                     <td class="signature-box"></td>
                 </tr>
+                @endif
+                @if($rab->checker)
                 <tr>
                     <td class="signature-label">Diperiksa oleh</td>
                     <td class="signature-name">{{ $rab->checker->name }} / {{ $rab->checker->nip ?? '-' }}</td>
@@ -164,12 +167,14 @@
                     <td class="signature-tanggal">{{ $rab->created_at->format('d-M-y') }}</td>
                     <td class="signature-box"></td>
                 </tr>
+                @endif
                 <tr>
                     <td colspan="5" style="text-align: left; padding: 8px; height: 50px; vertical-align: top;">
                         <strong style="text-transform: uppercase; font-size: 9px;">Catatan Anggaran:</strong><br>
                         {{ $rab->notes ?? '-' }}
                     </td>
                 </tr>
+                @if($rab->approver)
                 <tr>
                     <td class="signature-label">Diperiksa & Disetujui oleh</td>
                     <td class="signature-name">{{ $rab->approver->name }} / {{ $rab->approver->nip ?? '-' }}</td>
@@ -177,6 +182,8 @@
                     <td class="signature-tanggal">{{ $rab->created_at->format('d-M-y') }}</td>
                     <td class="signature-box"></td>
                 </tr>
+                @endif
+                @if($rab->headmaster)
                 <tr>
                     <td class="signature-label">Diperiksa & Disetujui Realisasi</td>
                     <td class="signature-name">{{ $rab->headmaster->name }} / {{ $rab->headmaster->nip ?? '-' }}</td>
@@ -184,6 +191,7 @@
                     <td class="signature-tanggal">{{ $rab->created_at->format('d-M-y') }}</td>
                     <td class="signature-box"></td>
                 </tr>
+                @endif
             </tbody>
         </table>
 

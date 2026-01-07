@@ -142,7 +142,7 @@
 
                         <div class="space-y-2">
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Dibuat Oleh</label>
-                            <select name="created_by_id" required class="form-select-premium">
+                            <select name="created_by_id" class="form-select-premium">
                                 <option value="">Pilih Pegawai</option>
                                 @foreach($employees as $emp)
                                     <option value="{{ $emp->id }}" {{ (old('created_by_id', $rab->created_by_id) == $emp->id) ? 'selected' : '' }}>{{ $emp->name }}</option>
@@ -152,7 +152,7 @@
 
                         <div class="space-y-2">
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Diperiksa Oleh</label>
-                            <select name="checked_by_id" required class="form-select-premium">
+                            <select name="checked_by_id" class="form-select-premium">
                                 <option value="">Pilih Pegawai</option>
                                 @foreach($employees as $emp)
                                     <option value="{{ $emp->id }}" {{ (old('checked_by_id', $rab->checked_by_id) == $emp->id) ? 'selected' : '' }}>{{ $emp->name }}</option>
@@ -162,7 +162,7 @@
 
                         <div class="space-y-2">
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Diperiksa & Disetujui oleh</label>
-                            <select name="approved_by_id" required class="form-select-premium">
+                            <select name="approved_by_id" class="form-select-premium">
                                 <option value="">Pilih Pegawai</option>
                                 @foreach($employees as $emp)
                                     <option value="{{ $emp->id }}" {{ (old('approved_by_id', $rab->approved_by_id) == $emp->id) ? 'selected' : '' }}>{{ $emp->name }}</option>
@@ -172,7 +172,8 @@
 
                         <div class="space-y-2">
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Diperiksa & Disetujui Realisasi</label>
-                            <select name="headmaster_id" required class="form-select-premium">
+                            <select name="headmaster_id" class="form-select-premium">
+                                <option value="">Pilih Pegawai</option>
                                 @foreach($employees as $emp)
                                     <option value="{{ $emp->id }}" {{ (old('headmaster_id', $rab->headmaster_id) == $emp->id) ? 'selected' : '' }}>{{ $emp->name }}</option>
                                 @endforeach
