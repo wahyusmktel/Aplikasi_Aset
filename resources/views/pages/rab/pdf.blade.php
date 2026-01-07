@@ -7,6 +7,9 @@
         @page { 
             margin: 40px 0; 
         }
+        @page:first {
+            margin-top: 0;
+        }
         body { 
             font-family: 'Helvetica', 'Arial', sans-serif; 
             font-size: 11px; 
