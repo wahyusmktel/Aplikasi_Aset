@@ -428,7 +428,7 @@
     @php
         $perPage = ($style == 'a4') ? 10 : 12;
         $generator = new Picqer\Barcode\BarcodeGeneratorSVG();
-        $logo = \App\Models\Setting::where('key', 'logo')->first()?->value;
+        $logo = \App\Models\Setting::where('key', 'app_logo')->first()?->value;
     @endphp
 
     @foreach ($assets->chunk($perPage) as $chunk)
@@ -437,9 +437,9 @@
                 <div class="label-container template-{{ $template }}">
                     <div class="label-header">
                         <div class="flex items-center gap-3">
-                            @if($logo)
+                            <!-- @if($logo)
                                 <img src="{{ asset('storage/' . $logo) }}" class="h-8 md:h-10 w-auto object-contain">
-                            @endif
+                            @endif -->
                             <div class="inst-info">
                                 <p class="inst-label">Property Of</p>
                                 <p class="inst-name">{{ $asset->institution->name }}</p>

@@ -42,14 +42,13 @@
                                 @if($settings['kop_surat'])
                                     <div class="relative group">
                                         <img src="{{ Storage::url($settings['kop_surat']) }}" alt="Kop Surat" class="w-full rounded-2xl border border-gray-100 dark:border-gray-800 shadow-lg">
-                                        <form action="{{ route('settings.deleteKopSurat') }}" method="POST" class="absolute top-2 right-2">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" onclick="return confirm('Hapus Kop Surat ini?')" 
+                                        <div class="absolute top-2 right-2">
+                                            <button type="button" 
+                                                onclick="if(confirm('Hapus Kop Surat ini?')) document.getElementById('delete-kop-form').submit();"
                                                 class="p-2 bg-red-600 text-white rounded-xl opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                             </button>
-                                        </form>
+                                        </div>
                                     </div>
                                 @else
                                     <div class="w-full h-32 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-dashed border-gray-200 dark:border-gray-800 flex items-center justify-center">
@@ -118,4 +117,8 @@
             </form>
         </div>
     </div>
+    <form id="delete-kop-form" action="{{ route('settings.deleteKopSurat') }}" method="POST" class="hidden">
+        @csrf
+        @method('DELETE')
+    </form>
 </x-app-layout>
