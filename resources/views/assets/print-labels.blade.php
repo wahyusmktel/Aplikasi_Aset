@@ -94,6 +94,7 @@
             flex-direction: column;
             overflow: hidden;
             background: var(--label-bg);
+            z-index: 1;
             @if($style == 'a4')
                 width: 95mm;
                 height: 55mm;
@@ -103,6 +104,28 @@
                 height: 30mm;
                 padding: 2mm;
             @endif
+        }
+
+        .watermark-bg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg);
+            width: 70%;
+            height: 70%;
+            opacity: 0.05;
+            z-index: -1;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .watermark-bg img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            filter: grayscale(100%);
         }
 
         /* --- TEMPLATE: CLASSIC --- */
@@ -435,6 +458,11 @@
         <div class="sheet">
             @foreach ($chunk as $asset)
                 <div class="label-container template-{{ $template }}">
+                    @if($logo)
+                        <div class="watermark-bg">
+                            <img src="{{ asset('storage/' . $logo) }}" alt="Watermark">
+                        </div>
+                    @endif
                     <div class="label-header">
                         <div class="flex items-center gap-3">
                             <!-- @if($logo)
