@@ -71,9 +71,9 @@
                 height: 297mm;
                 padding: 10mm 10mm;
                 grid-template-columns: repeat(2, 95mm);
-                grid-auto-rows: 46mm;
+                grid-auto-rows: 55mm;
                 column-gap: 0mm;
-                row-gap: 0mm;
+                row-gap: 1mm;
             @else
                 width: 190mm;
                 height: 134mm;
@@ -96,7 +96,7 @@
             background: var(--label-bg);
             @if($style == 'a4')
                 width: 95mm;
-                height: 46mm;
+                height: 55mm;
                 padding: 4mm 6mm;
             @else
                 width: 60mm;
@@ -160,8 +160,8 @@
             justify-content: space-between;
             align-items: flex-start;
             border-bottom: 1px solid #f1f5f9;
-            padding-bottom: 2mm;
-            margin-bottom: 3mm;
+            padding-bottom: 1.5mm;
+            margin-bottom: 1.5mm;
         }
 
         .inst-info {
@@ -213,7 +213,7 @@
 
         .asset-name {
             font-weight: 700;
-            color: var(--accent);
+            color: #ef4444;
             margin: 0 0 1mm 0;
             line-height: 1.1;
             @if($style == 'a4') font-size: 11pt; @else font-size: 8pt; @endif
@@ -240,9 +240,10 @@
         .label-footer {
             margin-top: auto;
             display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            padding-top: 2mm;
+            flex-direction: column;
+            align-items: center;
+            gap: 1mm;
+            padding-top: 1.5mm;
             border-top: 1px solid #f1f5f9;
         }
 
@@ -250,10 +251,71 @@
             font-family: 'JetBrains Mono', monospace;
             font-weight: 600;
             background: #f1f5f9;
-            padding: 1mm 2mm;
+            padding: 1mm 4mm;
             border-radius: 3px;
             color: var(--text-main);
-            @if($style == 'a4') font-size: 10pt; @else font-size: 6pt; @endif
+            @if($style == 'a4') font-size: 9pt; @else font-size: 6pt; @endif
+        }
+
+        .hologram-badge {
+            font-size: 6pt;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 1.5mm 3mm;
+            border-radius: 4px;
+            background: linear-gradient(
+                45deg, 
+                #f0f9ff 0%, 
+                #e0f2fe 10%, 
+                #dcfce7 20%, 
+                #fefce8 30%, 
+                #fff7ed 40%, 
+                #fee2e2 50%, 
+                #fae8ff 60%, 
+                #f5f3ff 70%, 
+                #e0e7ff 80%, 
+                #e0f2fe 90%, 
+                #f0f9ff 100%
+            );
+            background-size: 300% 300%;
+            border: 1px solid #e2e8f0;
+            color: #475569;
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            animation: rainbowMove 10s ease infinite;
+        }
+
+        @keyframes rainbowMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .hologram-badge::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(
+                90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.6), 
+                transparent
+            );
+            transform: skewX(-20deg);
+            animation: sheenMove 3s infinite;
+        }
+
+        @keyframes sheenMove {
+            0% { left: -100%; }
+            50% { left: 100%; }
+            100% { left: 100%; }
         }
 
         .warning-text {
@@ -261,7 +323,7 @@
             text-transform: uppercase;
             color: #ef4444;
             letter-spacing: 0.02em;
-            @if($style == 'a4') font-size: 7pt; @else font-size: 4.5pt; @endif
+            @if($style == 'a4') font-size: 6.5pt; @else font-size: 4.5pt; @endif
         }
 
         .barcode-wrapper svg {
@@ -308,7 +370,7 @@
                             </a>
                             <a href="{{ request()->fullUrlWithQuery(['style' => 'a4']) }}" 
                                class="flex-1 text-center py-2.5 rounded-xl text-xs font-black transition-all {{ $style == 'a4' ? 'bg-white text-blue-600 shadow-md' : 'text-slate-500 hover:text-slate-700' }}">
-                                STANDAR A4 (12 Label)
+                                STANDAR A4 (10 Label)
                             </a>
                         </div>
                     </div>
@@ -364,7 +426,7 @@
     </div>
 
     @php
-        $perPage = ($style == 'a4') ? 12 : 12;
+        $perPage = ($style == 'a4') ? 10 : 12;
         $generator = new Picqer\Barcode\BarcodeGeneratorSVG();
         $logo = \App\Models\Setting::where('key', 'logo')->first()?->value;
     @endphp
@@ -383,7 +445,7 @@
                                 <p class="inst-name">{{ $asset->institution->name }}</p>
                             </div>
                         </div>
-                        <div class="warning-text">Security Sealed</div>
+                        <div class="hologram-badge">Security Sealed</div>
                     </div>
 
                     <div class="label-body">
@@ -394,7 +456,7 @@
                                     $relativePath = route('public.assets.show', $asset->asset_code_ypt, false);
                                     $fullPublicUrl = $publicDomain . $relativePath;
                                 @endphp
-                                {!! QrCode::size($style == 'a4' ? 85 : 55)->generate($fullPublicUrl) !!}
+                                {!! QrCode::size($style == 'a4' ? 70 : 55)->generate($fullPublicUrl) !!}
                             @else
                                 <div class="barcode-wrapper">
                                     {!! $generator->getBarcode($asset->asset_code_ypt, $generator::TYPE_CODE_128, $style == 'a4' ? 1.5 : 1, $style == 'a4' ? 50 : 30) !!}
@@ -410,14 +472,14 @@
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">Sumber Dana</span>
-                                <span class="detail-val">{{ Str::limit($asset->fundingSource->name ?? '-', 15) }}</span>
+                                <span class="detail-val">{{ Str::limit($asset->fundingSource->name ?? '-', 25) }}</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="label-footer">
                         <div class="asset-code-text">{{ $asset->asset_code_ypt }}</div>
-                        <div class="warning-text">Don't Remove</div>
+                        <div class="warning-text">Do Not Remove This Label</div>
                     </div>
                 </div>
             @endforeach
