@@ -50,4 +50,9 @@ class Rab extends Model
     {
         return $this->hasMany(RabDetail::class);
     }
+
+    public function realization()
+    {
+        return $this->hasOne(RabRealization::class);
+    }
 }

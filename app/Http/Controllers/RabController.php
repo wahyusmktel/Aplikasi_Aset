@@ -7,15 +7,18 @@ use App\Models\Rkas;
 use App\Models\Employee;
 use App\Models\AcademicYear;
 use App\Models\RabDetail;
+use App\Models\RabRealization;
+use App\Models\RabRealizationDetail;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use RealRashid\SweetAlert\Facades\Alert;
+use Illuminate\Support\Facades\DB;
 
 class RabController extends Controller
 {
     public function index()
     {
-        $rabs = Rab::with(['academicYear', 'creator'])->latest()->paginate(10);
+        $rabs = Rab::with(['academicYear', 'creator', 'realization'])->latest()->paginate(10);
         return view('pages.rab.index', compact('rabs'));
     }
 
@@ -230,7 +233,7 @@ class RabController extends Controller
 
     public function show(Rab $rab)
     {
-        $rab->load(['academicYear', 'creator', 'checker', 'approver', 'headmaster', 'details.rkas']);
+        $rab->load(['academicYear', 'creator', 'checker', 'approver', 'headmaster', 'details.rkas', 'realization.details']);
         return view('pages.rab.show', compact('rab'));
     }
 
@@ -247,5 +250,66 @@ class RabController extends Controller
         $kopSurat = \App\Models\Setting::get('kop_surat');
         $pdf = Pdf::loadView('pages.rab.pdf', compact('rab', 'kopSurat'))->setPaper('a4', 'portrait');
         return $pdf->download('RAB_' . str_replace(' ', '_', $rab->name) . '.pdf');
+    }
+
+    public function realizationPdf(Request $request, Rab $rab)
+    {
+        $rab->load(['academicYear', 'creator', 'checker', 'approver', 'headmaster', 'details.rkas']);
+        $kopSurat = \App\Models\Setting::get('kop_surat');
+        
+        $items = [];
+        $totalPenerimaan = 0;
+        $totalPengeluaran = 0;
+
+        DB::beginTransaction();
+        try {
+            // Delete existing realization for this RAB to overwrite
+            if ($rab->realization) {
+                $rab->realization->details()->delete();
+                $rab->realization->delete();
+            }
+
+            $realization = $rab->realization()->create([
+                'total_penerimaan' => 0, // placeholder
+                'total_pengeluaran' => 0, // placeholder
+                'final_balance' => 0, // placeholder
+            ]);
+
+            if ($request->has('uraian')) {
+                foreach ($request->uraian as $index => $uraian) {
+                    $penerimaan = (float) str_replace(['Rp', '.', ' '], '', $request->penerimaan[$index] ?? 0);
+                    $pengeluaran = (float) str_replace(['Rp', '.', ' '], '', $request->pengeluaran[$index] ?? 0);
+                    
+                    $detailData = [
+                        'tgl' => $request->tgl[$index] ?? '-',
+                        'uraian' => $uraian,
+                        'penerimaan' => $penerimaan,
+                        'pengeluaran' => $pengeluaran,
+                        'keterangan' => $request->keterangan[$index] ?? '-'
+                    ];
+
+                    $realization->details()->create($detailData);
+
+                    $items[] = $detailData;
+                    $totalPenerimaan += $penerimaan;
+                    $totalPengeluaran += $pengeluaran;
+                }
+            }
+
+            $realization->update([
+                'total_penerimaan' => $totalPenerimaan,
+                'total_pengeluaran' => $totalPengeluaran,
+                'final_balance' => $totalPenerimaan - $totalPengeluaran,
+            ]);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Alert::error('Error', 'Gagal menyimpan data realisasi: ' . $e->getMessage());
+            return back();
+        }
+
+        $pdf = Pdf::loadView('pages.rab.realization-pdf', compact('rab', 'kopSurat', 'items'))->setPaper('a4', 'portrait');
+        return $pdf->download('REALISASI_' . str_replace(' ', '_', $rab->name) . '.pdf');
     }
 }
