@@ -74,10 +74,10 @@
                         <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-red-500/20 transition-all duration-700"></div>
                         <h4 class="text-lg font-black mb-6 relative">Tindakan Cepat</h4>
                         <div class="grid grid-cols-1 gap-3 relative">
-                            <button @click="window.print()" class="w-full p-4 bg-white/10 hover:bg-white text-white hover:text-gray-900 rounded-2xl text-sm font-black transition-all flex items-center justify-between">
+                            <a href="{{ route('assets.printDetail', $asset->id) }}" target="_blank" class="w-full p-4 bg-white/10 hover:bg-white text-white hover:text-gray-900 rounded-2xl text-sm font-black transition-all flex items-center justify-between">
                                 Cetak Detail Aset
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                            </button>
+                            </a>
                             @if($asset->disposal_date)
                                 <a href="{{ route('disposals.downloadBaph', $asset->id) }}" target="_blank" class="w-full p-4 bg-white/10 hover:bg-purple-600 rounded-2xl text-sm font-black transition-all flex items-center justify-between">
                                     Unduh Dokumen BAPh
@@ -407,6 +407,10 @@
                             </select>
                         </div>
                         <div>
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Tanggal Serah Terima</label>
+                            <input type="date" name="assigned_date" value="{{ date('Y-m-d') }}" required class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none font-bold">
+                        </div>
+                        <div>
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Kondisi Barang</label>
                             <input type="text" name="condition_on_assign" value="Baik" class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none">
                         </div>
@@ -428,6 +432,10 @@
                     @csrf
                     <h2 class="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-tight mb-8">Pengembalian Aset</h2>
                     <div class="space-y-6">
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Tanggal Pengembalian</label>
+                            <input type="date" name="returned_date" value="{{ date('Y-m-d') }}" required class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none font-bold">
+                        </div>
                         <div>
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Kondisi Saat Kembali</label>
                             <select name="condition_on_return" required class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none">
@@ -456,16 +464,30 @@
                     <h2 class="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-tight mb-8">Catat Pekerjaan</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="md:col-span-2">
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Jenis Pekerjaan</label>
+                            <select name="type" required class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none font-bold text-sm">
+                                <option value="Perbaikan">Perbaikan</option>
+                                <option value="Perawatan Rutin">Perawatan Rutin</option>
+                                <option value="Penggantian Suku Cadang">Penggantian Suku Cadang</option>
+                                <option value="Kalibrasi">Kalibrasi</option>
+                                <option value="Lainnya">Lainnya</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Deskripsi Pekerjaan</label>
                             <input type="text" name="description" required class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none">
                         </div>
                         <div>
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Biaya (Rp)</label>
-                            <input type="number" name="cost" required class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none">
+                            <input type="number" name="cost" value="0" class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none">
                         </div>
                         <div>
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Tanggal</label>
                             <input type="date" name="maintenance_date" value="{{ date('Y-m-d') }}" required class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none font-bold">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Teknisi / Pelaksana</label>
+                            <input type="text" name="technician" placeholder="Staf Internal" class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none">
                         </div>
                     </div>
                     <div class="flex justify-end mt-10 gap-4">
@@ -492,6 +514,10 @@
                                 <option value="Rusak Ringan">Rusak Ringan</option>
                                 <option value="Rusak Berat">Rusak Berat</option>
                             </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Tanggal Inspeksi</label>
+                            <input type="date" name="inspection_date" value="{{ date('Y-m-d') }}" required class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none font-bold">
                         </div>
                         <div>
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Catatan Inspeksi</label>

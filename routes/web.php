@@ -134,6 +134,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('assets', AssetController::class);
     // Route untuk menangani halaman cetak label
     Route::get('/assets-print-labels', [AssetController::class, 'printLabels'])->name('assets.printLabels');
+    // Route untuk mencetak profil detail aset (PDF)
+    Route::get('/assets/{asset}/print-detail', [AssetController::class, 'printDetail'])->name('assets.printDetail');
     // Route baru untuk Batch Entry
     Route::get('/assets/batch/create', [AssetController::class, 'batchCreate'])->name('assets.batchCreate');
     Route::post('/assets/batch/store', [AssetController::class, 'batchStore'])->name('assets.batchStore');

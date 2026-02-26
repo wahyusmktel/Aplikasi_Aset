@@ -379,6 +379,41 @@ class AssetController extends Controller
     }
 
     /**
+     * Mengunduh PDF profil detail aset.
+     */
+    public function printDetail(Asset $asset)
+    {
+        $asset->load(
+            'institution', 'category', 'building', 'room',
+            'faculty', 'department', 'personInCharge', 'assetFunction', 'fundingSource'
+        );
+
+        $assignments  = $asset->assignments()->with('employee')->latest()->take(5)->get();
+        $maintenances = $asset->maintenances()->latest()->take(5)->get();
+        $inspections  = $asset->inspections()->latest()->take(5)->get();
+
+        // QR Code mengarah ke halaman publik aset
+        $verificationUrl = route('public.assets.show', $asset->asset_code_ypt);
+        $options = new \chillerlan\QRCode\QROptions([
+            'outputType'  => \chillerlan\QRCode\QRCode::OUTPUT_IMAGE_PNG,
+            'imageBase64' => true,
+            'scale'       => 5,
+        ]);
+        $qrCode = (new \chillerlan\QRCode\QRCode($options))->render($verificationUrl);
+
+        $headmaster = \App\Models\Employee::where('position', 'Kepala Sekolah')->first();
+        $kaur       = \App\Models\Employee::where('position', 'Kaur Sarpras')->first();
+
+        $pdf = Pdf::loadView('assets.detail-pdf', compact(
+            'asset', 'assignments', 'maintenances', 'inspections',
+            'qrCode', 'headmaster', 'kaur'
+        ))->setPaper('a4', 'portrait');
+
+        $safeCode = str_replace(['.', '/'], '-', $asset->asset_code_ypt);
+        return $pdf->download("profil-aset-{$safeCode}.pdf");
+    }
+
+    /**
      * Menyiapkan data dan menampilkan halaman untuk mencetak label aset.
      */
     public function printLabels(Request $request)

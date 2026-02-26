@@ -113,10 +113,58 @@
                 <span class="font-black text-2xl tracking-tighter text-white">Stella<span class="text-red-600">Log's</span></span>
             </a>
 
-            <div class="hidden md:flex items-center gap-10">
-                <a href="#features" class="text-sm font-bold text-gray-400 hover:text-white transition-colors">Fitur</a>
-                <a href="#about" class="text-sm font-bold text-gray-400 hover:text-white transition-colors">Tentang</a>
-                <a href="#stats" class="text-sm font-bold text-gray-400 hover:text-white transition-colors">Statistik</a>
+            <div class="hidden md:flex items-center gap-8">
+                {{-- Dropdown Fitur --}}
+                <div class="relative group" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+                    <a href="#features" class="flex items-center gap-1.5 text-sm font-bold text-gray-400 hover:text-white transition-colors py-2">
+                        Fitur
+                        <svg class="w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180 text-white' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                    </a>
+                    
+                    <div x-show="open" 
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 translate-y-2"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 translate-y-2"
+                         class="absolute left-1/2 -translate-x-1/2 pt-4 w-72"
+                         x-cloak>
+                        <div class="glass rounded-2xl p-2 shadow-2xl border border-white/10 relative">
+                            <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-4 h-4 bg-gray-950 border-t border-l border-white/10 rotate-45 pointer-events-none"></div>
+                            <a href="#features" class="flex items-start gap-4 p-3 rounded-xl hover:bg-white/5 transition-all group/item mb-1 relative z-10">
+                                <div class="w-10 h-10 rounded-lg bg-red-600/10 flex items-center justify-center border border-red-500/20 shrink-0 group-hover/item:bg-red-600/20 transition-all">
+                                    <svg class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-bold text-white mb-0.5 group-hover/item:text-red-400 transition-colors">Inventaris Cerdas</div>
+                                    <div class="text-[11px] text-gray-400 leading-relaxed tracking-wide">Pencatatan & label otomatis</div>
+                                </div>
+                            </a>
+                            <a href="#features" class="flex items-start gap-4 p-3 rounded-xl hover:bg-white/5 transition-all group/item mb-1 relative z-10">
+                                <div class="w-10 h-10 rounded-lg bg-red-600/10 flex items-center justify-center border border-red-500/20 shrink-0 group-hover/item:bg-red-600/20 transition-all">
+                                    <svg class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-bold text-white mb-0.5 group-hover/item:text-red-400 transition-colors">Laporan Real-time</div>
+                                    <div class="text-[11px] text-gray-400 leading-relaxed tracking-wide">Visualisasi kondisi aset saat ini</div>
+                                </div>
+                            </a>
+                            <a href="#features" class="flex items-start gap-4 p-3 rounded-xl hover:bg-white/5 transition-all group/item relative z-10">
+                                <div class="w-10 h-10 rounded-lg bg-red-600/10 flex items-center justify-center border border-red-500/20 shrink-0 group-hover/item:bg-red-600/20 transition-all">
+                                    <svg class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-bold text-white mb-0.5 group-hover/item:text-red-400 transition-colors">Tracking BAST</div>
+                                    <div class="text-[11px] text-gray-400 leading-relaxed tracking-wide">Digitalisasi log Berita Acara</div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="#about" class="text-sm font-bold text-gray-400 hover:text-white transition-colors py-2">Tentang</a>
+                <a href="#stats" class="text-sm font-bold text-gray-400 hover:text-white transition-colors py-2">Statistik</a>
             </div>
 
             <div class="flex items-center gap-4">
@@ -179,10 +227,10 @@
                     </div>
                     
                     <div class="mt-16 flex items-center justify-center lg:justify-start gap-8 opacity-40">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Logo_Telkom_University.svg/1200px-Logo_Telkom_University.svg.png" 
-                             class="h-8 md:h-12 object-contain filter grayscale invert" alt="Partner">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/23/Logo_YPT.png" 
-                             class="h-8 md:h-12 object-contain filter grayscale invert px-4" alt="Partner">
+                        <img src="{{ asset('logo.png') }}" 
+                             class="h-8 md:h-12 object-contain brightness-0 invert" alt="Partner">
+                        <img src="{{ asset('ypt logo-putih.png') }}" 
+                             class="h-8 md:h-12 object-contain brightness-0 invert px-4" alt="Partner">
                     </div>
                 </div>
 
