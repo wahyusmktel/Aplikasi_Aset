@@ -61,23 +61,26 @@ class AssetIndexApiController extends Controller
             ->orderBy('purchase_year', 'desc')
             ->pluck('purchase_year');
 
+        // Transform data
+        $assets->getCollection()->transform(fn($asset) => [
+            'id'             => $asset->id,
+            'name'           => $asset->name,
+            'asset_code_ypt' => $asset->asset_code_ypt,
+            'purchase_year'  => $asset->purchase_year,
+            'current_status' => $asset->current_status,
+            'status'         => $asset->status,
+            'category'       => optional($asset->category)->name,
+            'institution'    => optional($asset->institution)->name,
+            'building'       => optional($asset->building)->name,
+            'room'           => optional($asset->room)->name,
+            'person_in_charge' => optional($asset->personInCharge)->name,
+        ]);
+
         return response()->json([
             'stats'      => $stats,
             'categories' => $categories,
             'years'      => $years,
-            'assets'     => $assets->through(fn($asset) => [
-                'id'             => $asset->id,
-                'name'           => $asset->name,
-                'asset_code_ypt' => $asset->asset_code_ypt,
-                'purchase_year'  => $asset->purchase_year,
-                'current_status' => $asset->current_status,
-                'status'         => $asset->status,
-                'category'       => optional($asset->category)->name,
-                'institution'    => optional($asset->institution)->name,
-                'building'       => optional($asset->building)->name,
-                'room'           => optional($asset->room)->name,
-                'person_in_charge' => optional($asset->personInCharge)->name,
-            ]),
+            'data'       => $assets, // length aware paginator instance will be converted to standard structure with 'data'
         ]);
     }
 
