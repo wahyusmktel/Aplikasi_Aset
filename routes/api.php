@@ -4,16 +4,34 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PublicAssetApiController;
+use App\Http\Controllers\Api\AssetIndexApiController;
 use App\Http\Controllers\Api\VehicleApiController;
 use App\Http\Controllers\Api\AssetAssignmentApiController;
 use App\Http\Controllers\Api\BookAssetController;
 use App\Http\Controllers\Api\MasterDataController;
+use App\Http\Controllers\Api\BorrowRequestApiController;
 
 // Route untuk Login (Public)
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/public/assets/{asset_code_ypt}', [PublicAssetApiController::class, 'show'])
     ->name('api.public.assets.show');
+
+// ============================================================
+// API Publik: Integrasi dengan Aplikasi-Izin (server-to-server)
+// Endpoint ini TIDAK memerlukan auth Sanctum
+// ============================================================
+Route::get('/assets', [AssetIndexApiController::class, 'index'])->name('api.assets.public.index');
+Route::get('/assets/{id}', [AssetIndexApiController::class, 'show'])->name('api.assets.public.show');
+
+// ============================================================
+// API Publik: Permintaan Peminjaman Aset (dari Aplikasi-Izin)
+// ============================================================
+Route::prefix('borrow-requests')->name('api.borrow-requests.')->group(function () {
+    Route::get('/', [BorrowRequestApiController::class, 'index'])->name('index');
+    Route::post('/', [BorrowRequestApiController::class, 'store'])->name('store');
+    Route::get('/{id}', [BorrowRequestApiController::class, 'show'])->name('show');
+});
 
 // Route yang butuh Autentikasi (pakai middleware sanctum)
 Route::middleware('auth:sanctum')->group(function () {

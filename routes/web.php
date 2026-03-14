@@ -39,6 +39,7 @@ use App\Http\Controllers\RabController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LabController;
 use App\Http\Controllers\AssetReportController;
+use App\Http\Controllers\BorrowRequestController;
 
 // === Rute untuk Google SSO ===
 Route::get('/auth/google/redirect', [SocialLoginController::class, 'redirectToGoogle'])
@@ -283,6 +284,15 @@ Route::middleware('auth')->group(function () {
     Route::post('rab/{rab}/realization-pdf', [RabController::class, 'realizationPdf'])->name('rab.realizationPdf');
     Route::get('get-mta-details', [RabController::class, 'getMtaDetails'])->name('rab.getMtaDetails');
     Route::resource('rab', RabController::class);
+    // ============================================================
+    // Peminjaman Aset via Aplikasi-Izin (Admin Management)
+    // ============================================================
+    Route::prefix('borrow-requests')->name('borrow-requests.')->group(function () {
+        Route::get('/', [BorrowRequestController::class, 'index'])->name('index');
+        Route::post('/{borrowRequest}/approve', [BorrowRequestController::class, 'approve'])->name('approve');
+        Route::post('/{borrowRequest}/reject', [BorrowRequestController::class, 'reject'])->name('reject');
+        Route::post('/{borrowRequest}/returned', [BorrowRequestController::class, 'markReturned'])->name('returned');
+    });
 });
 
 

@@ -28,6 +28,19 @@
         {{ __('Lapor Kerusakan') }}
     </x-sidebar-link>
 
+    <!-- Peminjaman Aset (dari Aplikasi-Izin) -->
+    @php $pendingBorrows = \App\Models\AssetBorrowRequest::pending()->count(); @endphp
+    <x-sidebar-link :href="route('borrow-requests.index')" :active="request()->routeIs('borrow-requests.*')" icon="inbox">
+        <span class="flex items-center justify-between w-full">
+            {{ __('Peminjaman Aset') }}
+            @if($pendingBorrows > 0)
+            <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-[9px] font-black shadow">
+                {{ $pendingBorrows > 99 ? '99+' : $pendingBorrows }}
+            </span>
+            @endif
+        </span>
+    </x-sidebar-link>
+
     <!-- Ringkasan Aset -->
     <x-sidebar-link :href="route('assets.summary')" :active="request()->routeIs('assets.summary')" icon="chart-bar">
         {{ __('Ringkasan Aset') }}
