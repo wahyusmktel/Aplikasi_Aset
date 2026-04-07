@@ -70,9 +70,21 @@
                         </div>
 
                         {{-- Rincian Kegiatan --}}
-                        <div class="md:col-span-2 pb-4 border-b border-gray-50 dark:border-gray-900 flex items-center gap-3 mt-4">
-                            <div class="w-8 h-8 bg-red-600 text-white rounded-xl flex items-center justify-center font-black text-xs">03</div>
-                            <h3 class="text-sm font-black text-gray-800 dark:text-white uppercase tracking-[0.2em]">Rincian Kegiatan (Uraian)</h3>
+                        <div class="md:col-span-2 pb-4 border-b border-gray-50 dark:border-gray-900 flex flex-col md:flex-row md:items-center justify-between gap-4 mt-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 bg-red-600 text-white rounded-xl flex items-center justify-center font-black text-xs">03</div>
+                                <h3 class="text-sm font-black text-gray-800 dark:text-white uppercase tracking-[0.2em]">Rincian Kegiatan (Uraian)</h3>
+                            </div>
+
+                            <div class="flex items-center gap-3" x-show="availableBulan.length > 0" style="display: none;">
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Filter Bulan Anggaran:</label>
+                                <select x-model="filterBulan" class="px-4 py-2 text-sm rounded-xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 font-bold shadow-sm focus:border-red-500">
+                                    <option value="">Semua Bulan</option>
+                                    <template x-for="b in availableBulan" :key="b">
+                                        <option :value="b" x-text="b"></option>
+                                    </template>
+                                </select>
+                            </div>
                         </div>
 
                         <div class="md:col-span-2">
@@ -92,7 +104,7 @@
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-gray-50 dark:divide-gray-900">
-                                            <template x-for="item in items" :key="item.id">
+                                            <template x-for="item in filteredItems" :key="item.id">
                                                 <tr class="hover:bg-gray-50/30 dark:hover:bg-gray-900/30" :class="{'bg-red-50/50 dark:bg-red-900/10': item.customAmount > (item.tarif * item.quantity)}">
                                                     <td class="p-4 text-center">
                                                         <input type="checkbox" name="selected_rkas[]" :value="item.id" x-model="selectedItems" @change="calculateTotal()"
@@ -234,12 +246,25 @@
                     items: [],
                     selectedItems: [],
                     totalAmount: 0,
+                    filterBulan: '',
+
+                    get availableBulan() {
+                        if (!this.items || this.items.length === 0) return [];
+                        const bulans = this.items.map(i => i.bulan).filter(b => b !== null && b !== '');
+                        return [...new Set(bulans)].sort();
+                    },
+
+                    get filteredItems() {
+                        if (!this.filterBulan) return this.items;
+                        return this.items.filter(i => i.bulan === this.filterBulan);
+                    },
 
                     fetchMtaDetails() {
                         if (!this.selectedMta) {
                             this.namaAkun = '';
                             this.drk = '';
                             this.items = [];
+                            this.filterBulan = '';
                             return;
                         }
 
@@ -257,6 +282,7 @@
                                     customAmount: item.quantity * item.tarif
                                 }));
                                 this.selectedItems = [];
+                                this.filterBulan = '';
                                 this.calculateTotal();
                             });
                     },

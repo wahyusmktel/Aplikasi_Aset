@@ -15,17 +15,29 @@ class RkasController extends Controller
     public function index(Request $request)
     {
         $academicYearId = $request->query('academic_year_id');
+        $bulanFilter = $request->query('bulan');
         $academicYears = AcademicYear::orderBy('year', 'desc')->get();
         
+        $bulans = Rkas::select('bulan')
+            ->whereNotNull('bulan')
+            ->where('bulan', '!=', '')
+            ->distinct()
+            ->orderBy('bulan')
+            ->pluck('bulan');
+            
         $query = Rkas::with('academicYear');
         
         if ($academicYearId) {
             $query->where('academic_year_id', $academicYearId);
         }
+        
+        if ($bulanFilter) {
+            $query->where('bulan', $bulanFilter);
+        }
 
         $rkas = $query->paginate(20)->withQueryString();
         
-        return view('pages.rkas.index', compact('rkas', 'academicYears', 'academicYearId'));
+        return view('pages.rkas.index', compact('rkas', 'academicYears', 'academicYearId', 'bulans', 'bulanFilter'));
     }
 
     public function create(Request $request)

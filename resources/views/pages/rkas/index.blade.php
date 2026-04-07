@@ -57,6 +57,18 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="flex-1">
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Bulan Anggaran</label>
+                        <select name="bulan" onchange="this.form.submit()"
+                            class="w-full px-6 py-4 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-red-500 focus:ring-red-500 transition-all shadow-sm font-bold">
+                            <option value="">Semua Bulan</option>
+                            @foreach($bulans as $bulan)
+                                <option value="{{ $bulan }}" {{ (isset($bulanFilter) && $bulanFilter == $bulan) ? 'selected' : '' }}>
+                                    {{ $bulan }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div>
                         <button type="submit" class="px-8 py-4 bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 font-black rounded-2xl hover:bg-gray-200 transition-all">
                             Filter
