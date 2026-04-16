@@ -18,6 +18,7 @@ use App\Imports\AssetsBatchImport;
 use Maatwebsite\Excel\Validators\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ActiveAssetsExport;
+use App\Exports\AssetImportTemplateExport;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use App\Models\Employee;
@@ -559,6 +560,16 @@ class AssetController extends Controller
         }
 
         return redirect()->route('assets.index');
+    }
+
+    /**
+     * Mengunduh template Excel untuk impor massal aset.
+     * Template berisi 3 baris data sampel yang menggunakan data master
+     * yang sudah terdaftar di sistem.
+     */
+    public function downloadImportTemplate()
+    {
+        return Excel::download(new AssetImportTemplateExport, 'template-impor-aset.xlsx');
     }
 
     /**

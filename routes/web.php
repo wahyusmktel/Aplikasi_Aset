@@ -142,6 +142,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/assets/batch/store', [AssetController::class, 'batchStore'])->name('assets.batchStore');
     // Route baru untuk Impor Batch Aset
     Route::post('/assets/import-batch', [AssetController::class, 'importBatch'])->name('assets.importBatch');
+    Route::get('/assets/import-template', [AssetController::class, 'downloadImportTemplate'])->name('assets.importTemplate');
     // Book Asset Management Routes
     Route::get('/books', [BookAssetController::class, 'index'])->name('books.index');
     Route::get('/books/export-excel', [BookAssetController::class, 'exportExcel'])->name('books.exportExcel');

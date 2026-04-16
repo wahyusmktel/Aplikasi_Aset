@@ -391,15 +391,73 @@
                         </div>
 
                         <div class="space-y-6">
-                            <div class="p-8 border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-3xl flex flex-col items-center group hover:border-red-500/50 transition-all cursor-pointer relative overflow-hidden">
-                                <svg class="w-12 h-12 text-gray-300 mb-4 group-hover:scale-110 group-hover:text-red-600 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                                <p class="text-xs font-black text-gray-400 uppercase tracking-widest text-center">Klik untuk memilih file excel</p>
-                                <input type="file" name="file" required class="absolute inset-0 opacity-0 cursor-pointer">
+                            {{-- Step 1: Download Template --}}
+                            <div class="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 p-5 rounded-3xl border border-emerald-200/50 dark:border-emerald-800/30">
+                                <div class="flex items-start gap-4">
+                                    <div class="w-10 h-10 bg-emerald-600/10 rounded-xl flex items-center justify-center shrink-0 border border-emerald-500/20">
+                                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-xs font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-widest mb-1">Langkah 1</p>
+                                        <p class="text-[11px] text-emerald-700 dark:text-emerald-300 leading-relaxed mb-3">Download template Excel yang sudah berisi <span class="font-black">3 data sampel</span>. Isi data Anda sesuai format lalu hapus baris sampel.</p>
+                                        <a href="{{ route('assets.importTemplate') }}" 
+                                            class="inline-flex items-center px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-emerald-500/20 transition-all transform hover:-translate-y-0.5 gap-2">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                            Download Template Excel
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Step 2: Upload File --}}
+                            <div>
+                                <p class="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3 px-1">Langkah 2 — Upload File</p>
+                                <div class="p-8 border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-3xl flex flex-col items-center group hover:border-red-500/50 transition-all cursor-pointer relative overflow-hidden">
+                                    <svg class="w-12 h-12 text-gray-300 mb-4 group-hover:scale-110 group-hover:text-red-600 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                                    <p class="text-xs font-black text-gray-400 uppercase tracking-widest text-center">Klik untuk memilih file excel</p>
+                                    <input type="file" name="file" required class="absolute inset-0 opacity-0 cursor-pointer">
+                                </div>
+                            </div>
+
+                            {{-- Kolom yang diperlukan --}}
+                            <div x-data="{ showColumns: false }">
+                                <button type="button" @click="showColumns = !showColumns" class="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-red-600 transition-colors px-1 mb-2">
+                                    <svg class="w-3.5 h-3.5 transition-transform" :class="showColumns ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
+                                    Lihat Kolom yang Diperlukan
+                                </button>
+                                <div x-show="showColumns" x-collapse>
+                                    <div class="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 max-h-40 overflow-y-auto custom-scrollbar">
+                                        <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+                                            @php
+                                                $columns = [
+                                                    'nama_barang' => 'Nama Barang',
+                                                    'quantity' => 'Jumlah',
+                                                    'tahun_pembelian' => 'Tahun (4 digit)',
+                                                    'nama_lembaga' => 'Nama Lembaga',
+                                                    'nama_kategori' => 'Kategori',
+                                                    'nama_gedung' => 'Gedung',
+                                                    'nama_ruangan' => 'Ruangan',
+                                                    'nama_fakultas' => 'Fakultas',
+                                                    'nama_prodi_unit' => 'Prodi/Unit',
+                                                    'nama_penanggung_jawab' => 'PIC',
+                                                    'nama_fungsi_barang' => 'Fungsi Barang',
+                                                    'nama_jenis_pendanaan' => 'Jenis Pendanaan',
+                                                ];
+                                            @endphp
+                                            @foreach($columns as $key => $label)
+                                                <div class="flex items-center gap-1.5 py-0.5">
+                                                    <span class="w-1.5 h-1.5 bg-red-500 rounded-full shrink-0"></span>
+                                                    <span class="text-[9px] font-bold text-gray-500 truncate" title="{{ $key }}">{{ $label }}</span>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             
-                            <div class="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
-                                <p class="text-[10px] text-gray-500 italic leading-relaxed">
-                                    <span class="font-black text-red-600">Catatan:</span> Pastikan data master (gedung, ruangan, dll) sudah terdaftar di sistem agar impor berjalan lancar.
+                            <div class="bg-amber-50 dark:bg-amber-950/20 p-4 rounded-2xl border border-amber-200/50 dark:border-amber-800/30">
+                                <p class="text-[10px] text-amber-700 dark:text-amber-400 italic leading-relaxed">
+                                    <span class="font-black text-red-600 not-italic">⚠ Catatan:</span> Pastikan data master (gedung, ruangan, dll) sudah terdaftar di sistem agar impor berjalan lancar. Nama di Excel <span class="font-black not-italic">harus sama persis</span> dengan yang terdaftar di sistem.
                                 </p>
                             </div>
                         </div>
