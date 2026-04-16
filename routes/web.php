@@ -131,6 +131,8 @@ Route::middleware('auth')->group(function () {
     // Route baru untuk Ekspor Excel & PDF Aset Aktif
     Route::get('/assets/export-active-excel', [AssetController::class, 'exportActiveExcel'])->name('assets.exportActiveExcel');
     Route::get('/assets/download-active-pdf', [AssetController::class, 'downloadActivePDF'])->name('assets.downloadActivePDF');
+    // Route untuk Download Template Impor Aset (harus sebelum resource agar tidak tertangkap {asset})
+    Route::get('/assets/import-template', [AssetController::class, 'downloadImportTemplate'])->name('assets.importTemplate');
     // Route untuk CRUD Aset
     Route::resource('assets', AssetController::class);
     // Route untuk menangani halaman cetak label
@@ -142,7 +144,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/assets/batch/store', [AssetController::class, 'batchStore'])->name('assets.batchStore');
     // Route baru untuk Impor Batch Aset
     Route::post('/assets/import-batch', [AssetController::class, 'importBatch'])->name('assets.importBatch');
-    Route::get('/assets/import-template', [AssetController::class, 'downloadImportTemplate'])->name('assets.importTemplate');
     // Book Asset Management Routes
     Route::get('/books', [BookAssetController::class, 'index'])->name('books.index');
     Route::get('/books/export-excel', [BookAssetController::class, 'exportExcel'])->name('books.exportExcel');
