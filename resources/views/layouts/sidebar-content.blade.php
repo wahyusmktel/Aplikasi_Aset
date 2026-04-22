@@ -4,6 +4,17 @@
         {{ __('Dashboard') }}
     </x-sidebar-link>
 
+    @if(!Auth::user()->isAdmin())
+    <div class="my-4 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider" x-show="sidebarOpen">
+        {{ __('Menu') }}
+    </div>
+
+    <!-- Peminjaman Barang (User) -->
+    <x-sidebar-link :href="route('user.peminjaman.index')" :active="request()->routeIs('user.peminjaman.*')" icon="inbox">
+        {{ __('Peminjaman Barang') }}
+    </x-sidebar-link>
+    @endif
+
     @if(Auth::user()->isAdmin())
     <div class="my-4 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider" x-show="sidebarOpen">
         {{ __('Aset & Inventaris') }}

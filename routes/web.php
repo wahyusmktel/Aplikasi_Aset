@@ -40,6 +40,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LabController;
 use App\Http\Controllers\AssetReportController;
 use App\Http\Controllers\BorrowRequestController;
+use App\Http\Controllers\UserBorrowController;
 
 // === Rute untuk Google SSO ===
 Route::get('/auth/google/redirect', [SocialLoginController::class, 'redirectToGoogle'])
@@ -286,6 +287,14 @@ Route::middleware('auth')->group(function () {
     Route::post('rab/{rab}/realization-pdf', [RabController::class, 'realizationPdf'])->name('rab.realizationPdf');
     Route::get('get-mta-details', [RabController::class, 'getMtaDetails'])->name('rab.getMtaDetails');
     Route::resource('rab', RabController::class);
+    // ============================================================
+    // Peminjaman Barang (User)
+    // ============================================================
+    Route::prefix('peminjaman')->name('user.peminjaman.')->group(function () {
+        Route::get('/', [UserBorrowController::class, 'index'])->name('index');
+        Route::post('/', [UserBorrowController::class, 'store'])->name('store');
+    });
+
     // ============================================================
     // Peminjaman Aset via Aplikasi-Izin (Admin Management)
     // ============================================================
