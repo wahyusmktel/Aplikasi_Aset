@@ -4,6 +4,7 @@
         {{ __('Dashboard') }}
     </x-sidebar-link>
 
+    @if(Auth::user()->isAdmin())
     <div class="my-4 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider" x-show="sidebarOpen">
         {{ __('Aset & Inventaris') }}
     </div>
@@ -64,9 +65,7 @@
         <x-sidebar-dropdown-link :href="route('books.index')" :active="request()->routeIs('books.index')">{{ __('Aset Buku') }}</x-sidebar-dropdown-link>
         <x-sidebar-dropdown-link :href="route('asset-mapping.index')" :active="request()->routeIs('asset-mapping.index')">{{ __('Mapping Aset (AI)') }}</x-sidebar-dropdown-link>
         <x-sidebar-dropdown-link :href="route('asset-reports.index')" :active="request()->routeIs('asset-reports.index')">{{ __('Laporan Saya') }}</x-sidebar-dropdown-link>
-        @if(Auth::user()->isAdmin())
-            <x-sidebar-dropdown-link :href="route('admin.asset-reports.index')" :active="request()->routeIs('admin.asset-reports.index')">{{ __('Kelola Laporan Kerusakan') }}</x-sidebar-dropdown-link>
-        @endif
+        <x-sidebar-dropdown-link :href="route('admin.asset-reports.index')" :active="request()->routeIs('admin.asset-reports.index')">{{ __('Kelola Laporan Kerusakan') }}</x-sidebar-dropdown-link>
         <x-sidebar-dropdown-link :href="route('labs.history')" :active="request()->routeIs('labs.history')">{{ __('Riwayat Penggunaan Lab') }}</x-sidebar-dropdown-link>
     </x-sidebar-dropdown>
 
@@ -114,7 +113,7 @@
         <x-sidebar-dropdown-link :href="route('asset-functions.index')" :active="request()->routeIs('asset-functions.index')">{{ __('Fungsi Barang') }}</x-sidebar-dropdown-link>
         <x-sidebar-dropdown-link :href="route('funding-sources.index')" :active="request()->routeIs('funding-sources.index')">{{ __('Jenis Pendanaan') }}</x-sidebar-dropdown-link>
     </x-sidebar-dropdown>
-    @if(Auth::user()->isAdmin())
+
     <div class="my-4 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider" x-show="sidebarOpen">
         {{ __('Sistem') }}
     </div>
