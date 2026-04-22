@@ -104,7 +104,9 @@
                 <div class="bg-white dark:bg-gray-900 overflow-hidden shadow-sm rounded-2xl border border-gray-100 dark:border-gray-800 animate-fadeIn" style="animation-delay: 700ms">
                     <div class="p-6 border-b border-gray-50 dark:border-gray-800 flex items-center justify-between">
                         <h3 class="text-lg font-bold text-gray-800 dark:text-white">{{ __('Aset Terbaru') }}</h3>
+                        @if(Auth::user()->isAdmin())
                         <a href="{{ route('assets.index') }}" class="text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors">Lihat Semua &rarr;</a>
+                        @endif
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left">
@@ -175,6 +177,7 @@
                     </div>
                 </div>
 
+                @if(Auth::user()->isAdmin())
                 <!-- Quick Actions -->
                 <div class="bg-gradient-to-br from-gray-900 to-black rounded-2xl p-6 text-white shadow-xl relative overflow-hidden group">
                     <div class="relative z-10">
@@ -192,6 +195,7 @@
                     </div>
                     <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-primary-600/20 rounded-full blur-3xl group-hover:bg-primary-600/30 transition-colors"></div>
                 </div>
+                @endif
             </div>
         </div>
     </div>
