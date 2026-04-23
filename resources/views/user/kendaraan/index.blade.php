@@ -91,7 +91,7 @@
                         </div>
 
                         @if($vehicle->current_status == 'Tersedia')
-                        <button data-asset-id="{{ $vehicle->id }}" @click="checkoutModalOpen = true; selectedVehicle = { id: {{ $vehicle->id }}, name: '{{ addslashes($vehicle->name) }}', odometer: {{ $vehicle->vehicleLogs()->latest()->first()?->end_odometer ?? 0 }} }" 
+                        <button data-asset-id="{{ $vehicle->id }}" @click="checkoutModalOpen = true; selectedVehicle = { id: {{ $vehicle->id }}, name: `{{ addslashes(str_replace('`', '', $vehicle->name)) }}`, odometer: {{ $vehicle->vehicleLogs()->latest()->first()?->end_odometer ?? 0 }} }" 
                             class="w-full py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-black rounded-xl shadow-lg shadow-red-500/30 transition-all flex items-center justify-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                             Mulai Perjalanan
@@ -165,16 +165,29 @@
                                 <td class="px-6 py-4">
                                     @if($log->return_time)
                                         <span class="inline-flex px-3 py-1 text-[10px] font-black rounded-lg bg-emerald-100 text-emerald-700 uppercase tracking-widest">Selesai</span>
-                                    @else
-                                        <span class="inline-flex px-3 py-1 text-[10px] font-black rounded-lg bg-amber-100 text-amber-700 uppercase tracking-widest flex items-center gap-2">
+                                    @elseif($log->status === 'pengajuan')
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-black rounded-lg bg-yellow-100 text-yellow-700 uppercase tracking-widest">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-ping"></span>
+                                            Menunggu Waka/Kaur
+                                        </span>
+                                    @elseif($log->status === 'menunggu_kepsek')
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-black rounded-lg bg-blue-100 text-blue-700 uppercase tracking-widest">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-ping"></span>
+                                            Menunggu Kepsek
+                                        </span>
+                                    @elseif($log->status === 'disetujui')
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-black rounded-lg bg-amber-100 text-amber-700 uppercase tracking-widest">
                                             <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
                                             Sedang Jalan
                                         </span>
+                                    @else
+                                        <span class="inline-flex px-3 py-1 text-[10px] font-black rounded-lg bg-gray-100 text-gray-500 uppercase tracking-widest">{{ $log->status }}</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex items-center justify-end gap-2">
-                                        @if($log->checkout_doc_number)
+                                        {{-- BAST Keluar hanya bisa di-download jika sudah disetujui semua --}}
+                                        @if($log->checkout_doc_number && $log->status === 'disetujui')
                                         <a href="{{ route('user.kendaraan.downloadBast', [$log->id, 'checkout']) }}" title="Download BAST Keluar"
                                             class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl transition-all">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
@@ -182,10 +195,14 @@
                                         @endif
                                         
                                         @if(!$log->return_time)
-                                        <button @click="returnModalOpen = true; selectedLog = { id: {{ $log->id }}, vehicle: '{{ addslashes($log->asset->name ?? '') }}', destination: '{{ addslashes($log->destination) }}', odometer: {{ $log->start_odometer }} }"
-                                            class="px-4 py-2 bg-gray-900 dark:bg-gray-100 hover:bg-gray-800 dark:hover:bg-white text-white dark:text-gray-900 text-xs font-black rounded-xl shadow-md transition-all">
-                                            Kembalikan
-                                        </button>
+                                            @if($log->status === 'disetujui')
+                                            <button @click="returnModalOpen = true; selectedLog = { id: {{ $log->id }}, vehicle: `{{ addslashes(str_replace('`', '', $log->asset->name ?? '')) }}`, destination: `{{ addslashes(str_replace('`', '', $log->destination)) }}`, odometer: {{ $log->start_odometer }} }"
+                                                class="px-4 py-2 bg-gray-900 dark:bg-gray-100 hover:bg-gray-800 dark:hover:bg-white text-white dark:text-gray-900 text-xs font-black rounded-xl shadow-md transition-all">
+                                                Kembalikan
+                                            </button>
+                                            @else
+                                            <span class="text-[10px] text-gray-400 font-bold uppercase italic border border-gray-200 px-2 py-1 rounded-lg">Menunggu Approval</span>
+                                            @endif
                                         @else
                                             @if($log->checkin_doc_number)
                                             <a href="{{ route('user.kendaraan.downloadBast', [$log->id, 'checkin']) }}" title="Download BAST Kembali"

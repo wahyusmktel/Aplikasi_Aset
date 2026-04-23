@@ -87,6 +87,7 @@
     <div class="content">
         <div class="info">
             Pada hari ini,
+            @php \Carbon\Carbon::setLocale('id'); @endphp
             {{ ($isCheckin ? $log->return_time : $log->departure_time)->isoFormat('dddd, D MMMM YYYY') }}, telah
             dilakukan {{ $isCheckin ? 'pengembalian' : 'penggunaan' }} kendaraan dinas operasional SMK Telkom Lampung
             dengan rincian sebagai berikut:
@@ -98,7 +99,11 @@
             </tr>
             <tr>
                 <td width="50%">
-                    <strong>{{ $isCheckin ? 'Yang Mengembalikan (Pengguna)' : 'Yang Menyerahkan (Petugas)' }}:</strong><br>{{ $isCheckin ? $log->borrower_name : ($asset->personInCharge->name ?? 'Petugas Aset') }}
+                    @if($isCheckin)
+                        <strong>Yang Mengembalikan (Pengguna):</strong><br>{{ $log->borrower_name }}
+                    @else
+                        <strong>Yang Menyerahkan ({{ $approverTitle }}):</strong><br>{{ $approver->name ?? 'Petugas Aset' }}
+                    @endif
                 </td>
                 <td><strong>{{ $isCheckin ? 'Yang Menerima (Petugas)' : 'Yang Menerima (Pengguna)' }}:</strong><br>{{ $isCheckin ? ($asset->personInCharge->name ?? 'Petugas Aset') : $log->borrower_name }}
                 </td>
@@ -119,7 +124,7 @@
             </tr>
             <tr>
                 <td><strong>Nomor Polisi</strong></td>
-                <td>{{-- Tambahkan field nomor polisi jika ada --}}</td>
+                <td>{{ $asset->spesifikasi['nomor_polisi'] ?? '-' }}</td>
             </tr>
         </table>
 
