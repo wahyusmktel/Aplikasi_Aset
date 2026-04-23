@@ -99,12 +99,43 @@
                                     <dd class="w-2/3">{{ $vehicleLog->purpose }}</dd>
                                 </div>
                                 <div class="flex">
-                                    <dt class="w-1/3 font-semibold text-gray-500">KM {{ $isReturn ? 'Akhir' : 'Awal' }}
-                                    </dt>
-                                    <dd class="w-2/3">
-                                        {{ number_format($isReturn ? $vehicleLog->end_odometer : $vehicleLog->start_odometer) }}
-                                        KM</dd>
+                                    <dt class="w-1/3 font-semibold text-gray-500">Pengemudi</dt>
+                                    <dd class="w-2/3">{{ $vehicleLog->driver_type == 'school_driver' ? 'Driver Sekolah (' . ($vehicleLog->driverEmployee->name ?? '-') . ')' : 'Menyetir Sendiri' }}</dd>
                                 </div>
+                                <div class="flex">
+                                    <dt class="w-1/3 font-semibold text-gray-500">Waktu {{ $isReturn ? 'Kembali' : 'Berangkat' }}</dt>
+                                    <dd class="w-2/3">{{ ($isReturn ? $vehicleLog->return_time : $vehicleLog->departure_time)->isoFormat('D MMMM YYYY, HH:mm') }}</dd>
+                                </div>
+                                <div class="flex">
+                                    <dt class="w-1/3 font-semibold text-gray-500">KM {{ $isReturn ? 'Akhir' : 'Awal' }}</dt>
+                                    <dd class="w-2/3">{{ number_format($isReturn ? $vehicleLog->end_odometer : $vehicleLog->start_odometer) }} KM</dd>
+                                </div>
+                                @if ($isReturn && $vehicleLog->end_odometer)
+                                    <div class="flex">
+                                        <dt class="w-1/3 font-semibold text-gray-500">Jarak Tempuh</dt>
+                                        <dd class="w-2/3">{{ number_format($vehicleLog->end_odometer - $vehicleLog->start_odometer) }} KM</dd>
+                                    </div>
+                                @endif
+                                <div class="flex">
+                                    <dt class="w-1/3 font-semibold text-gray-500">BBM {{ $isReturn ? 'Akhir' : 'Awal' }}</dt>
+                                    <dd class="w-2/3">{{ $isReturn ? $vehicleLog->fuel_level_end : $vehicleLog->fuel_level_start }}</dd>
+                                </div>
+                                <div class="flex">
+                                    <dt class="w-1/3 font-semibold text-gray-500">Kondisi {{ $isReturn ? 'Akhir' : 'Awal' }}</dt>
+                                    <dd class="w-2/3">{{ $isReturn ? $vehicleLog->condition_on_checkin : $vehicleLog->condition_on_checkout }}</dd>
+                                </div>
+                                @if (!$isReturn && $vehicleLog->start_latitude)
+                                    <div class="flex">
+                                        <dt class="w-1/3 font-semibold text-gray-500">Koordinat Awal</dt>
+                                        <dd class="w-2/3">Lat: {{ $vehicleLog->start_latitude }}, Lng: {{ $vehicleLog->start_longitude }}</dd>
+                                    </div>
+                                @endif
+                                @if ($isReturn && $vehicleLog->notes)
+                                    <div class="flex">
+                                        <dt class="w-1/3 font-semibold text-gray-500">Catatan</dt>
+                                        <dd class="w-2/3">{{ $vehicleLog->notes }}</dd>
+                                    </div>
+                                @endif
 
                                 {{-- DETAIL KHUSUS: INSPEKSI --}}
                             @elseif(isset($inspection))
