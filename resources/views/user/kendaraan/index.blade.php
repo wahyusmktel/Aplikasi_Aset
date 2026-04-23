@@ -344,15 +344,19 @@
                                 
                                 <div id="map" class="w-full h-56 rounded-xl border border-gray-200 dark:border-gray-700 shadow-inner z-0 relative overflow-hidden mb-3"></div>
 
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div class="relative">
+                                <div class="flex flex-col sm:flex-row gap-3">
+                                    <div class="flex-1 relative">
                                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-[10px] font-black text-gray-400 uppercase">Lat:</span>
                                         <input type="text" name="start_latitude" id="start_latitude" readonly required class="w-full pl-10 pr-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 text-xs font-mono font-semibold text-gray-600 dark:text-gray-300 focus:ring-0 cursor-not-allowed">
                                     </div>
-                                    <div class="relative">
+                                    <div class="flex-1 relative">
                                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-[10px] font-black text-gray-400 uppercase">Lng:</span>
                                         <input type="text" name="start_longitude" id="start_longitude" readonly required class="w-full pl-10 pr-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 text-xs font-mono font-semibold text-gray-600 dark:text-gray-300 focus:ring-0 cursor-not-allowed">
                                     </div>
+                                    <button type="button" onclick="detectLocation()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/20">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        <span class="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">Deteksi</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -466,11 +470,11 @@
         window.marker = null;
 
         function initMap() {
-            // Default ke Jakarta jika tidak ada lokasi
-            const defaultLoc = { lat: -6.2088, lng: 106.8456 };
+            // Default ke Lokasi Parkir SMK Telkom Lampung
+            const defaultLoc = { lat: -5.373895667303415, lng: 105.08067643001931 };
             
             window.map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 15,
+                zoom: 18,
                 center: defaultLoc,
                 mapTypeControl: false,
                 streetViewControl: false,
@@ -492,8 +496,9 @@
                 document.getElementById('start_latitude').value = evt.latLng.lat();
                 document.getElementById('start_longitude').value = evt.latLng.lng();
             });
+        } // Closes initMap
 
-            // Coba ambil lokasi saat ini
+        function detectLocation(centerMap = true) {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
@@ -501,18 +506,21 @@
                             lat: position.coords.latitude,
                             lng: position.coords.longitude,
                         };
-                        window.map.setCenter(pos);
+                        if (centerMap) window.map.setCenter(pos);
                         window.marker.setPosition(pos);
                         
                         document.getElementById('start_latitude').value = pos.lat;
                         document.getElementById('start_longitude').value = pos.lng;
                     },
-                    () => {
-                        console.log("Error: The Geolocation service failed.");
+                    (error) => {
+                        console.warn("Geolocation failed or denied:", error);
+                        if (centerMap) alert("Gagal mendeteksi lokasi. Pastikan izin lokasi aktif.");
                     }
                 );
+            } else {
+                alert("Browser Anda tidak mendukung deteksi lokasi.");
             }
-        } // Closes initMap
+        }
 
         window.mapsReady = function() {
             // Callback kosong, inisialisasi dipanggil saat modal terbuka
