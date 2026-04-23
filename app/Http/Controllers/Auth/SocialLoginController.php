@@ -17,14 +17,11 @@ class SocialLoginController extends Controller
      */
     public function redirectToGoogle()
     {
-        // Ganti 'smktelkom-lpg.sch.id' dengan domain Google Workspace-mu
-        $parameters = [
-            'prompt' => 'select_account',
-            'hd' => 'smktelkom-lpg.sch.id'
-        ];
-
         return Socialite::driver('google')
-            ->with($parameters)
+            ->with([
+                'prompt' => 'select_account',
+                'hd' => 'smktelkom-lpg.sch.id'
+            ])
             ->redirect();
     }
 
