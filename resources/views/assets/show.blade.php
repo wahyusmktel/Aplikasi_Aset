@@ -343,8 +343,15 @@
                                                 <p class="text-xs text-gray-500 font-bold mt-1">Ke: {{ $asset->currentVehicleLog->destination }}</p>
                                             </div>
                                         </div>
-                                        <button @click="showVehicleReturnModal = true" class="px-8 py-4 bg-gray-800 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl hover:-translate-y-1">
-                                            Selesai Perjalanan
+                                        <button @click="showVehicleReturnModal = true" class="px-8 py-4 {{ auth()->user()->isAdmin() ? 'bg-red-900 text-white' : 'bg-gray-800 text-white' }} font-black text-xs uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl hover:-translate-y-1">
+                                            @if(auth()->user()->isAdmin())
+                                                <span class="flex items-center gap-2">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                                    Paksa Selesai
+                                                </span>
+                                            @else
+                                                Selesai Perjalanan
+                                            @endif
                                         </button>
                                     </div>
                                 @endif
@@ -640,16 +647,50 @@
                 <div class="relative bg-white dark:bg-gray-950 rounded-[40px] shadow-2xl w-full max-w-md overflow-hidden animate-slideUp border border-gray-100 dark:border-gray-800">
                     <form action="{{ route('vehicleLogs.checkin', $asset->currentVehicleLog->id ?? 0) }}" method="POST" class="p-10">
                         @csrf
-                        <h2 class="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-tight mb-8">Selesai Perjalanan</h2>
-                        <div class="space-y-6">
+                        <div class="flex items-center justify-between mb-8">
                             <div>
-                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">KM Akhir</label>
-                                <input type="number" name="end_odometer" required class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none">
+                                <h2 class="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Selesai Perjalanan</h2>
+                                @if(auth()->user()->isAdmin())
+                                    <p class="text-[10px] font-bold text-red-500 uppercase mt-1 tracking-widest">Mode: Paksa Selesai (Admin)</p>
+                                @endif
+                            </div>
+                            <div class="w-12 h-12 bg-amber-50 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center text-amber-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             </div>
                         </div>
+
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Waktu Kembali</label>
+                                <input type="datetime-local" name="return_time" required value="{{ now()->format('Y-m-d\TH:i') }}" class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none font-bold">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">KM Akhir</label>
+                                    <input type="number" name="end_odometer" required value="{{ $asset->currentVehicleLog->start_odometer ?? 0 }}" class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none font-black text-lg text-red-600">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Kondisi Kendaraan</label>
+                                    <select name="condition_on_checkin" required class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none font-bold">
+                                        <option value="Baik">Baik / Aman</option>
+                                        <option value="Ada Lecet">Ada Lecet</option>
+                                        <option value="Rusak">Rusak / Bermasalah</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Catatan Tambahan</label>
+                                <textarea name="notes" rows="3" placeholder="{{ auth()->user()->isAdmin() ? 'Selesai paksa oleh admin...' : 'Tambahkan catatan jika ada...' }}" class="w-full px-5 py-4 rounded-[20px] bg-gray-50 dark:bg-gray-900 border-none"></textarea>
+                            </div>
+                        </div>
+
                         <div class="flex justify-end mt-10 gap-4">
                             <button type="button" @click="showVehicleReturnModal = false" class="px-6 py-3 font-bold text-gray-400">Batal</button>
-                            <button type="submit" class="px-8 py-4 bg-red-600 text-white font-black rounded-2xl shadow-xl shadow-red-500/20">Data Masuk</button>
+                            <button type="submit" class="px-8 py-4 bg-red-600 text-white font-black rounded-2xl shadow-xl shadow-red-500/20 transition-all hover:-translate-y-1">
+                                {{ auth()->user()->isAdmin() ? 'Konfirmasi Paksa Selesai' : 'Simpan Data Kembali' }}
+                            </button>
                         </div>
                     </form>
                 </div>
