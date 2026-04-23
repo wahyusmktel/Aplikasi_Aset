@@ -179,9 +179,18 @@
     <div class="signatures">
         <table>
             <tr>
-                <td>Mengetahui,<br>Kepala Sekolah<br><br><br><br><br><br><strong>{{ $headmaster->name ?? '(Nama Kepala Sekolah)' }}</strong></td>
-                <td>Petugas Aset,<br><br><br><br><br><br><strong>{{ $asset->personInCharge->name ?? '(Nama Petugas)' }}</strong></td>
-                <td>Pengguna,<br><br><br><br><br><br><strong>{{ $log->borrower_name }}</strong></td>
+                <td>Mengetahui,<br>Kepala Sekolah<br><br><br><br><br><br>
+                    <strong>{{ $headmaster->name ?? '(Nama Kepala Sekolah)' }}</strong><br>
+                    NIP. {{ $headmaster->nip ?? '-' }}
+                </td>
+                <td>Menyetujui,<br>{{ $approverTitle }}<br><br><br><br><br><br>
+                    <strong>{{ $approver->name ?? '(Nama ' . $approverTitle . ')' }}</strong><br>
+                    NIP. {{ $approver->nip ?? '-' }}
+                </td>
+                <td>Pengguna,<br><br><br><br><br><br><br>
+                    <strong>{{ $log->borrower_name }}</strong><br>
+                    NIP. {{ $log->borrower_nip ?? '-' }}
+                </td>
             </tr>
         </table>
     </div>

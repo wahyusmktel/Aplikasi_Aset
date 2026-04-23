@@ -32,6 +32,7 @@ class EmployeeController extends Controller
             'position' => 'required|string|max:255',
             'is_sarpra_it_lab' => 'boolean',
             'is_headmaster' => 'boolean',
+            'is_kaur_it' => 'boolean',
         ]);
         Employee::create($request->all());
         alert()->success('Berhasil!', 'Data pegawai berhasil ditambahkan.');
@@ -46,6 +47,7 @@ class EmployeeController extends Controller
             'position' => 'required|string|max:255',
             'is_sarpra_it_lab' => 'boolean',
             'is_headmaster' => 'boolean',
+            'is_kaur_it' => 'boolean',
         ]);
         $employee->update($request->all());
         alert()->success('Berhasil!', 'Data pegawai berhasil diperbarui.');

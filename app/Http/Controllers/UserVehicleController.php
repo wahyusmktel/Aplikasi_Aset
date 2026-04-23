@@ -167,10 +167,18 @@ class UserVehicleController extends Controller
 
         $asset      = $log->asset()->with('personInCharge')->first();
         $employee   = $log->employee;
-        $headmaster = Employee::where('position', 'Kepala Sekolah')->first();
+        $headmaster = Employee::where('is_headmaster', true)->first() ?? Employee::where('position', 'Kepala Sekolah')->first();
+        
+        $approver = Employee::where('is_sarpra_it_lab', true)->first();
+        $approverTitle = 'Waka Bidang IT, Lab dan Sarana Prasarana';
+        
+        if (!$approver) {
+            $approver = Employee::where('is_kaur_it', true)->first();
+            $approverTitle = 'Kaur IT';
+        }
 
         $pdf = Pdf::loadView('vehicle-logs.bast-pdf', compact(
-            'log', 'asset', 'employee', 'headmaster', 'title', 'isCheckin', 'qrCode'
+            'log', 'asset', 'employee', 'headmaster', 'approver', 'approverTitle', 'title', 'isCheckin', 'qrCode'
         ));
 
         return $pdf->download(str_replace('/', '-', $docNumber) . '.pdf');

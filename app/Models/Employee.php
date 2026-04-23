@@ -15,7 +15,8 @@ class Employee extends Model
         'nip',
         'position',
         'is_sarpra_it_lab',
-        'is_headmaster'
+        'is_headmaster',
+        'is_kaur_it',
     ];
 
     public function assignments()
