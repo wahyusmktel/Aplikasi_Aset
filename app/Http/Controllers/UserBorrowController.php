@@ -20,12 +20,14 @@ class UserBorrowController extends Controller
         $tab = $request->input('tab', 'katalog');
 
         // Kategori untuk filter
-        $categories = Category::orderBy('name')->get();
+        $categories = Category::where('name', '!=', 'KENDARAAN BERMOTOR DINAS / KBM DINAS')
+            ->orderBy('name')->get();
 
-        // Query aset tersedia untuk dipinjam
+        // Query aset tersedia untuk dipinjam (KECUALI kendaraan dinas)
         $assetsQuery = Asset::with(['category', 'room', 'building'])
             ->where('current_status', 'Tersedia')
-            ->where('status', 'aktif');
+            ->where('status', 'aktif')
+            ->whereHas('category', fn($q) => $q->where('name', '!=', 'KENDARAAN BERMOTOR DINAS / KBM DINAS'));
 
         // Filter pencarian
         if ($request->filled('search')) {

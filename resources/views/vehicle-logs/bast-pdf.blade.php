@@ -98,9 +98,9 @@
             </tr>
             <tr>
                 <td width="50%">
-                    <strong>{{ $isCheckin ? 'Yang Mengembalikan (Pengguna)' : 'Yang Menyerahkan (Petugas)' }}:</strong><br>{{ $employee->name }}
+                    <strong>{{ $isCheckin ? 'Yang Mengembalikan (Pengguna)' : 'Yang Menyerahkan (Petugas)' }}:</strong><br>{{ $isCheckin ? $log->borrower_name : ($asset->personInCharge->name ?? 'Petugas Aset') }}
                 </td>
-                <td><strong>{{ $isCheckin ? 'Yang Menerima (Petugas)' : 'Yang Menerima (Pengguna)' }}:</strong><br>{{ $asset->personInCharge->name ?? 'Petugas Aset' }}
+                <td><strong>{{ $isCheckin ? 'Yang Menerima (Petugas)' : 'Yang Menerima (Pengguna)' }}:</strong><br>{{ $isCheckin ? ($asset->personInCharge->name ?? 'Petugas Aset') : $log->borrower_name }}
                 </td>
             </tr>
         </table>
@@ -136,6 +136,10 @@
                 <td>{{ $log->purpose }}</td>
             </tr>
             <tr>
+                <td><strong>Status Pengemudi</strong></td>
+                <td>{{ $log->driver_type == 'school_driver' ? 'Driver Sekolah (' . ($log->driverEmployee->name ?? '-') . ')' : 'Menyetir Sendiri' }}</td>
+            </tr>
+            <tr>
                 <td><strong>Waktu {{ $isCheckin ? 'Kembali' : 'Berangkat' }}</strong></td>
                 <td>{{ ($isCheckin ? $log->return_time : $log->departure_time)->isoFormat('D MMM YYYY, HH:mm') }}</td>
             </tr>
@@ -150,12 +154,22 @@
                 </tr>
             @endif
             <tr>
-                <td><strong>Kondisi {{ $isCheckin ? 'Akhir' : 'Awal' }}</strong></td>
+                <td><strong>Kondisi BBM {{ $isCheckin ? 'Akhir' : 'Awal' }}</strong></td>
+                <td>{{ $isCheckin ? $log->fuel_level_end : $log->fuel_level_start }}</td>
+            </tr>
+            <tr>
+                <td><strong>Kondisi Fisik {{ $isCheckin ? 'Akhir' : 'Awal' }}</strong></td>
                 <td>{{ $isCheckin ? $log->condition_on_checkin : $log->condition_on_checkout }}</td>
             </tr>
+            @if (!$isCheckin && $log->start_latitude)
+                <tr>
+                    <td><strong>Koordinat Awal</strong></td>
+                    <td>Lat: {{ $log->start_latitude }}, Lng: {{ $log->start_longitude }}</td>
+                </tr>
+            @endif
             @if ($isCheckin && $log->notes)
                 <tr>
-                    <td><strong>Catatan Pengembalian</strong></td>
+                    <td><strong>Catatan Tambahan</strong></td>
                     <td>{{ $log->notes }}</td>
                 </tr>
             @endif
@@ -165,13 +179,9 @@
     <div class="signatures">
         <table>
             <tr>
-                <td>Mengetahui,<br>Kepala
-                    Sekolah<br><br><br><br><br><br><strong>{{ $headmaster->name ?? '(Nama Kepala Sekolah)' }}</strong>
-                </td>
-                <td>Petugas
-                    Aset,<br><br><br><br><br><br><strong>{{ $asset->personInCharge->name ?? '(Nama Petugas)' }}</strong>
-                </td>
-                <td>Pengguna,<br><br><br><br><br><br><strong>{{ $employee->name }}</strong></td>
+                <td>Mengetahui,<br>Kepala Sekolah<br><br><br><br><br><br><strong>{{ $headmaster->name ?? '(Nama Kepala Sekolah)' }}</strong></td>
+                <td>Petugas Aset,<br><br><br><br><br><br><strong>{{ $asset->personInCharge->name ?? '(Nama Petugas)' }}</strong></td>
+                <td>Pengguna,<br><br><br><br><br><br><strong>{{ $log->borrower_name }}</strong></td>
             </tr>
         </table>
     </div>

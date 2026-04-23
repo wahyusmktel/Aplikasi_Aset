@@ -6,7 +6,7 @@
         </div>
     </x-slot>
 
-    <div x-data="{ borrowModalOpen: false, selectedAsset: null, tab: '{{ $tab }}' }">
+    <div x-data="{ borrowModalOpen: false, scanModalOpen: false, selectedAsset: null, tab: '{{ $tab }}' }">
 
         {{-- Flash --}}
         @if(session('success'))
@@ -72,8 +72,11 @@
                     <input type="hidden" name="tab" value="katalog">
                     <div class="relative flex-1">
                         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau kode aset..."
-                            class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all">
+                        <input type="text" name="search" id="searchInput" value="{{ request('search') }}" placeholder="Cari nama atau kode aset..."
+                            class="w-full pl-10 pr-12 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all">
+                        <button type="button" @click="scanModalOpen = true; initScanner()" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-lg transition-colors" title="Scan QR Code">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                        </button>
                     </div>
                     <select name="category" class="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm py-2.5 px-4 focus:border-primary-400 focus:ring-2 focus:ring-primary-100">
                         <option value="">Semua Kategori</option>
@@ -87,46 +90,90 @@
 
             {{-- Asset Grid --}}
             <div class="p-5">
-                @if($assets->count() > 0)
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    @foreach($assets as $asset)
-                    <div class="group bg-gray-50 dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 hover:shadow-lg hover:border-primary-200 dark:hover:border-primary-700 transition-all duration-300">
-                        <div class="flex items-start justify-between mb-3">
-                            <div class="w-12 h-12 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 font-black text-lg group-hover:scale-110 transition-transform">
-                                {{ substr($asset->name, 0, 1) }}
+                @if(!request('category') && !request('search'))
+                    <div class="mb-6">
+                        <h3 class="text-lg font-black text-gray-800 dark:text-white mb-1">Kategori Aset</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Pilih kategori untuk melihat daftar aset yang tersedia.</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        @foreach($categories as $cat)
+                        <a href="{{ route('user.peminjaman.index', ['tab' => 'katalog', 'category' => $cat->id]) }}" 
+                           class="flex items-center p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 hover:shadow-md hover:border-primary-300 dark:hover:border-primary-700 transition-all group">
+                            <div class="w-12 h-12 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 font-black text-xl mr-4 group-hover:scale-110 transition-transform">
+                                {{ substr($cat->name, 0, 1) }}
                             </div>
-                            <span class="inline-flex px-2 py-1 text-[9px] font-black rounded-lg bg-emerald-100 text-emerald-700 uppercase tracking-widest">Tersedia</span>
-                        </div>
-                        <h4 class="text-sm font-bold text-gray-800 dark:text-white mb-1 line-clamp-2">{{ $asset->name }}</h4>
-                        <p class="text-[10px] font-bold text-primary-600 mb-2">{{ $asset->asset_code_ypt }}</p>
-                        <div class="space-y-1 mb-4">
-                            <p class="text-xs text-gray-400 flex items-center gap-1.5">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
-                                {{ $asset->category->name ?? '-' }}
-                            </p>
-                            <p class="text-xs text-gray-400 flex items-center gap-1.5">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                {{ $asset->room->name ?? '-' }}
-                            </p>
-                        </div>
-                        <button type="button"
-                            @click="borrowModalOpen = true; selectedAsset = { id: {{ $asset->id }}, name: '{{ addslashes($asset->name) }}', code: '{{ $asset->asset_code_ypt }}', category: '{{ addslashes($asset->category->name ?? '-') }}', location: '{{ addslashes($asset->room->name ?? '-') }}' }"
-                            class="w-full py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-primary-500/20 flex items-center justify-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                            Ajukan Peminjaman
-                        </button>
+                            <div>
+                                <h4 class="text-sm font-bold text-gray-800 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{{ $cat->name }}</h4>
+                                <p class="text-[10px] font-bold text-primary-600 mt-0.5">Lihat Aset &rarr;</p>
+                            </div>
+                        </a>
+                        @endforeach
                     </div>
-                    @endforeach
-                </div>
-                <div class="mt-6">{{ $assets->links() }}</div>
                 @else
-                <div class="py-16 text-center">
-                    <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    <div class="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
+                        <div>
+                            @if(request('search'))
+                                <h3 class="text-sm font-bold text-gray-800 dark:text-white">Hasil Pencarian: "<span class="text-primary-600">{{ request('search') }}</span>"</h3>
+                            @elseif(request('category'))
+                                <h3 class="text-sm font-bold text-gray-800 dark:text-white">Kategori: <span class="text-primary-600">{{ $categories->firstWhere('id', request('category'))?->name ?? 'Semua' }}</span></h3>
+                            @endif
+                        </div>
+                        <a href="{{ route('user.peminjaman.index', ['tab' => 'katalog']) }}" class="inline-flex items-center justify-center px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all shadow-sm">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                            Kembali ke Kategori
+                        </a>
                     </div>
-                    <p class="text-sm font-bold text-gray-500">Tidak ada aset tersedia</p>
-                    <p class="text-xs text-gray-400 mt-1">Coba ubah filter pencarian Anda</p>
-                </div>
+
+                    @if($assets->count() > 0)
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        @foreach($assets as $asset)
+                        <div class="group bg-gray-50 dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 hover:shadow-lg hover:border-primary-200 dark:hover:border-primary-700 transition-all duration-300">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="w-12 h-12 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 font-black text-lg group-hover:scale-110 transition-transform">
+                                    {{ substr($asset->name, 0, 1) }}
+                                </div>
+                                <span class="inline-flex px-2 py-1 text-[9px] font-black rounded-lg bg-emerald-100 text-emerald-700 uppercase tracking-widest">Tersedia</span>
+                            </div>
+                            <h4 class="text-sm font-bold text-gray-800 dark:text-white mb-1 line-clamp-2">{{ $asset->name }}</h4>
+                            <p class="text-[10px] font-bold text-primary-600 mb-2">{{ $asset->asset_code_ypt }}</p>
+                            <div class="space-y-1 mb-4">
+                                <p class="text-xs text-gray-400 flex items-center gap-1.5">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                                    {{ $asset->category->name ?? '-' }}
+                                </p>
+                                <p class="text-xs text-gray-400 flex items-center gap-1.5">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    {{ $asset->room->name ?? '-' }}
+                                </p>
+                            </div>
+                            @if($asset->category && $asset->category->name == 'KENDARAAN BERMOTOR DINAS / KBM DINAS')
+                            <button type="button"
+                                @click="vehicleModalOpen = true; selectedVehicle = { id: {{ $asset->id }}, name: '{{ addslashes($asset->name) }}', code: '{{ $asset->asset_code_ypt }}', odometer: {{ $asset->vehicleLogs()->latest()->first()?->end_odometer ?? 0 }} }"
+                                class="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-red-500/20 flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                Catat Perjalanan
+                            </button>
+                            @else
+                            <button type="button"
+                                @click="borrowModalOpen = true; selectedAsset = { id: {{ $asset->id }}, name: '{{ addslashes($asset->name) }}', code: '{{ $asset->asset_code_ypt }}', category: '{{ addslashes($asset->category->name ?? '-') }}', location: '{{ addslashes($asset->room->name ?? '-') }}' }"
+                                class="w-full py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-primary-500/20 flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                Ajukan Peminjaman
+                            </button>
+                            @endif
+                        </div>
+                        @endforeach
+                    </div>
+                    <div class="mt-6">{{ $assets->links() }}</div>
+                    @else
+                    <div class="py-16 text-center">
+                        <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        </div>
+                        <p class="text-sm font-bold text-gray-500">Tidak ada aset tersedia</p>
+                        <p class="text-xs text-gray-400 mt-1">Coba ubah filter pencarian Anda</p>
+                    </div>
+                    @endif
                 @endif
             </div>
         </div>
@@ -275,5 +322,83 @@
             </div>
         </div>
 
+        {{-- Modal: Scan QR --}}
+        <div x-show="scanModalOpen" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm"
+            x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+            <div class="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-lg p-6" @click.outside="if(scanModalOpen) { scanModalOpen = false; closeScanner(); }">
+                <div class="flex items-center justify-between mb-5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-primary-50 dark:bg-primary-900/30 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-black text-gray-800 dark:text-white">Scan Label Aset</h3>
+                            <p class="text-xs text-gray-400">Arahkan kamera ke QR Code aset</p>
+                        </div>
+                    </div>
+                    <button type="button" @click="scanModalOpen = false; closeScanner()" class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <div id="reader" class="rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 mb-4"></div>
+                
+                <div id="scanResult" class="hidden w-full p-4 bg-emerald-50 text-emerald-600 rounded-2xl text-center font-bold text-sm animate-pulse">
+                    QR Code Terbaca! Mencari aset...
+                </div>
+            </div>
+        </div>
+
+
+
+                <div id="reader" class="rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 mb-4"></div>
+                
+                <div id="scanResult" class="hidden w-full p-4 bg-emerald-50 text-emerald-600 rounded-2xl text-center font-bold text-sm animate-pulse">
+                    QR Code Terbaca! Mencari aset...
+                </div>
+            </div>
+        </div>
+
     </div>
+
+    @push('scripts')
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script>
+        let html5QrcodeScanner = null;
+
+        function initScanner() {
+            if (html5QrcodeScanner) return;
+            
+            setTimeout(() => {
+                html5QrcodeScanner = new Html5QrcodeScanner(
+                    "reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
+                html5QrcodeScanner.render(onScanSuccess);
+            }, 300);
+        }
+
+        function closeScanner() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear().then(() => {
+                    html5QrcodeScanner = null;
+                }).catch(err => console.error("Failed to clear scanner", err));
+            }
+            document.getElementById('scanResult').classList.add('hidden');
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            let assetCode = decodedText.includes('/aset/') ? decodedText.split('/aset/').pop() : decodedText;
+            document.getElementById('scanResult').classList.remove('hidden');
+            document.getElementById('searchInput').value = assetCode;
+            
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear().then(() => {
+                    html5QrcodeScanner = null;
+                    document.getElementById('searchInput').closest('form').submit();
+                });
+            } else {
+                document.getElementById('searchInput').closest('form').submit();
+            }
+        }
+    </script>
+    @endpush
 </x-app-layout>

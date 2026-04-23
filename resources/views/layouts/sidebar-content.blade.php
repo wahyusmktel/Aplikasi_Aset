@@ -13,6 +13,11 @@
     <x-sidebar-link :href="route('user.peminjaman.index')" :active="request()->routeIs('user.peminjaman.*')" icon="inbox">
         {{ __('Peminjaman Barang') }}
     </x-sidebar-link>
+
+    <!-- Peminjaman Kendaraan Dinas (User) -->
+    <x-sidebar-link :href="route('user.kendaraan.index')" :active="request()->routeIs('user.kendaraan.*')" icon="truck">
+        {{ __('Peminjaman Kendaraan') }}
+    </x-sidebar-link>
     @endif
 
     @if(Auth::user()->isAdmin())

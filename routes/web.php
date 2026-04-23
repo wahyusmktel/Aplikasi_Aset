@@ -41,6 +41,7 @@ use App\Http\Controllers\LabController;
 use App\Http\Controllers\AssetReportController;
 use App\Http\Controllers\BorrowRequestController;
 use App\Http\Controllers\UserBorrowController;
+use App\Http\Controllers\UserVehicleController;
 
 // === Rute untuk Google SSO ===
 Route::get('/auth/google/redirect', [SocialLoginController::class, 'redirectToGoogle'])
@@ -293,6 +294,18 @@ Route::middleware('auth')->group(function () {
     Route::prefix('peminjaman')->name('user.peminjaman.')->group(function () {
         Route::get('/', [UserBorrowController::class, 'index'])->name('index');
         Route::post('/', [UserBorrowController::class, 'store'])->name('store');
+    });
+
+    // ============================================================
+    // Peminjaman Kendaraan Dinas (User)
+    // ============================================================
+    Route::prefix('peminjaman-kendaraan')->name('user.kendaraan.')->group(function () {
+        Route::get('/', [UserVehicleController::class, 'index'])->name('index');
+        Route::post('/', [UserVehicleController::class, 'store'])->name('store');
+        Route::post('/{log}/checkin', [UserVehicleController::class, 'checkin'])->name('checkin');
+        Route::get('/{log}/download/{type}', [UserVehicleController::class, 'downloadBast'])
+            ->whereIn('type', ['checkout', 'checkin'])
+            ->name('downloadBast');
     });
 
     // ============================================================
