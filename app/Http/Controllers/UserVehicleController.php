@@ -190,8 +190,13 @@ class UserVehicleController extends Controller
             $kepsekQrCode = (new QRCode($options))->render($kepsekQrText);
         }
 
+        // QR tanda tangan pengguna (selalu ada sejak pengajuan)
+        $userQrText = "Dokumen diajukan oleh " . ($log->borrower_name ?? '-') . " (NIP: " . ($log->borrower_nip ?? '-') . ") pada " . $log->created_at->format('d/m/Y H:i:s');
+        $userQrCode = (new QRCode($options))->render($userQrText);
+
         $pdf = Pdf::loadView('vehicle-logs.bast-pdf', compact(
-            'log', 'asset', 'employee', 'headmaster', 'approver', 'approverTitle', 'title', 'isCheckin', 'qrCode', 'wakaQrCode', 'kepsekQrCode'
+            'log', 'asset', 'employee', 'headmaster', 'approver', 'approverTitle', 'title', 'isCheckin', 'qrCode',
+            'wakaQrCode', 'kepsekQrCode', 'userQrCode'
         ));
 
         return $pdf->download(str_replace('/', '-', $docNumber) . '.pdf');

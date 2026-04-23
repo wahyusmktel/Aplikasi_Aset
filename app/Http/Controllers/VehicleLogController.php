@@ -255,6 +255,10 @@ class VehicleLogController extends Controller
             $kepsekQrCode = (new QRCode($options))->render($kepsekQrText);
         }
 
+        // QR tanda tangan pengguna (selalu ada sejak pengajuan)
+        $userQrText = "Dokumen diajukan oleh " . ($log->borrower_name ?? '-') . " (NIP: " . ($log->borrower_nip ?? '-') . ") pada " . $log->created_at->format('d/m/Y H:i:s');
+        $userQrCode = (new QRCode($options))->render($userQrText);
+
         return Pdf::loadView('vehicle-logs.bast-pdf', compact(
             'log',
             'asset',
@@ -266,7 +270,8 @@ class VehicleLogController extends Controller
             'isCheckin',
             'qrCode',
             'wakaQrCode',
-            'kepsekQrCode'
+            'kepsekQrCode',
+            'userQrCode'
         ));
     }
 

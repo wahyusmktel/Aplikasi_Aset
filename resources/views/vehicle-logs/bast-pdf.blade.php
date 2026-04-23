@@ -105,7 +105,12 @@
                         <strong>Yang Menyerahkan ({{ $approverTitle }}):</strong><br>{{ $approver->name ?? 'Petugas Aset' }}
                     @endif
                 </td>
-                <td><strong>{{ $isCheckin ? 'Yang Menerima (Petugas)' : 'Yang Menerima (Pengguna)' }}:</strong><br>{{ $isCheckin ? ($asset->personInCharge->name ?? 'Petugas Aset') : $log->borrower_name }}
+                <td>
+                    @if($isCheckin)
+                        <strong>Yang Menerima ({{ $approverTitle }}):</strong><br>{{ $approver->name ?? 'Petugas Aset' }}
+                    @else
+                        <strong>Yang Menerima (Pengguna):</strong><br>{{ $log->borrower_name }}
+                    @endif
                 </td>
             </tr>
         </table>
@@ -202,7 +207,8 @@
                     <strong>{{ $approver->name ?? '(Nama ' . $approverTitle . ')' }}</strong><br>
                     NIP. {{ $approver->nip ?? '-' }}
                 </td>
-                <td>Pengguna,<br><br><br><br><br><br><br>
+                <td>Pengguna,<br>
+                    <br><img src="{{ $userQrCode }}" width="60px" height="60px"><br>
                     <strong>{{ $log->borrower_name }}</strong><br>
                     NIP. {{ $log->borrower_nip ?? '-' }}
                 </td>
@@ -212,6 +218,7 @@
 
     <div class="qr-code">
         <img src="{{ $qrCode }}" width="80px" height="80px">
+        <p style="font-size:9px; text-align:center; margin-top:2px; color:#555;">Scan untuk verifikasi dokumen</p>
     </div>
 </body>
 
