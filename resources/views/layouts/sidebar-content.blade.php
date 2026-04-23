@@ -5,7 +5,7 @@
     </x-sidebar-link>
 
     @if(!Auth::user()->isAdmin())
-    <div class="my-4 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider" x-show="sidebarOpen">
+    <div class="mt-8 mb-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider" x-show="sidebarOpen">
         {{ __('Menu') }}
     </div>
 
