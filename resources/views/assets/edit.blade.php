@@ -35,6 +35,14 @@
                                     <input type="text" name="name" id="name" value="{{ old('name', $asset->name) }}" required
                                         class="w-full px-5 py-4 rounded-[20px] border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-red-500 focus:ring-red-500 transition-all">
                                 </div>
+
+                                @if($asset->category->name === 'KENDARAAN BERMOTOR DINAS / KBM DINAS')
+                                <div class="md:col-span-2">
+                                    <label for="nomor_polisi" class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Nomor Polisi / Plat Kendaraan</label>
+                                    <input type="text" name="spesifikasi[nomor_polisi]" id="nomor_polisi" value="{{ old('spesifikasi.nomor_polisi', $asset->spesifikasi['nomor_polisi'] ?? '') }}"
+                                        class="w-full px-5 py-4 rounded-[20px] border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-red-500 focus:ring-red-500 transition-all" placeholder="Contoh: BE 1234 XY">
+                                </div>
+                                @endif
                                 
                                 <div>
                                     <label for="institution_id" class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Lembaga</label>

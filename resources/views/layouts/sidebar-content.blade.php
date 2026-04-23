@@ -4,7 +4,24 @@
         {{ __('Dashboard') }}
     </x-sidebar-link>
 
-    @if(!Auth::user()->isAdmin())
+    @php
+        $user = Auth::user();
+        $isApprover = $user->employee?->is_sarpra_it_lab || $user->employee?->is_kaur_it || $user->employee?->is_headmaster;
+        $isAdmin = $user->isAdmin();
+        $isRegularUser = !$isAdmin && !$isApprover;
+    @endphp
+
+    @if($isApprover && !$isAdmin)
+    <div class="mt-8 mb-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider" x-show="sidebarOpen">
+        {{ __('Persetujuan') }}
+    </div>
+
+    <x-sidebar-link :href="route('vehicleLogs.index')" :active="request()->routeIs('vehicleLogs.*')" icon="check-circle">
+        {{ __('Approval Kendaraan') }}
+    </x-sidebar-link>
+    @endif
+
+    @if($isRegularUser)
     <div class="mt-8 mb-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider" x-show="sidebarOpen">
         {{ __('Menu') }}
     </div>
@@ -20,7 +37,7 @@
     </x-sidebar-link>
     @endif
 
-    @if(Auth::user()->isAdmin())
+    @if($isAdmin)
     <div class="my-4 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider" x-show="sidebarOpen">
         {{ __('Aset & Inventaris') }}
     </div>

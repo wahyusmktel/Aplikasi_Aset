@@ -61,6 +61,7 @@
                                     <th class="py-3 px-6">Tujuan</th>
                                     <th class="py-3 px-6">Waktu</th>
                                     <th class="py-3 px-6">KM</th>
+                                    <th class="py-3 px-6">Status</th>
                                     <th class="py-3 px-6">Aksi</th>
                                 </tr>
                             </thead>
@@ -76,7 +77,31 @@
                                         </td>
                                         <td class="py-4 px-6 text-xs">{{ $log->start_odometer }} -
                                             {{ $log->end_odometer ?? '...' }}</td>
-                                        <td class="py-4 px-6 space-y-1">
+                                        <td class="py-4 px-6">
+                                            @if($log->status === 'pengajuan')
+                                                <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">Menunggu Waka/Kaur</span>
+                                            @elseif($log->status === 'menunggu_kepsek')
+                                                <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">Menunggu Kepsek</span>
+                                            @elseif($log->status === 'disetujui')
+                                                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Sedang Jalan</span>
+                                            @else
+                                                <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">{{ ucfirst($log->status) }}</span>
+                                            @endif
+                                        </td>
+                                        <td class="py-4 px-6 space-y-2">
+                                            @if ($log->status === 'pengajuan' && (auth()->user()->employee?->is_sarpra_it_lab || auth()->user()->employee?->is_kaur_it || auth()->user()->role === 'admin'))
+                                                <form action="{{ route('vehicleLogs.approveWaka', $log->id) }}" method="POST" class="inline">
+                                                    @csrf
+                                                    <button type="submit" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-2 py-1 rounded">Setujui Waka</button>
+                                                </form>
+                                            @endif
+                                            @if ($log->status === 'menunggu_kepsek' && (auth()->user()->employee?->is_headmaster || auth()->user()->role === 'admin'))
+                                                <form action="{{ route('vehicleLogs.approveKepsek', $log->id) }}" method="POST" class="inline">
+                                                    @csrf
+                                                    <button type="submit" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-2 py-1 rounded">Setujui Kepsek</button>
+                                                </form>
+                                            @endif
+
                                             @if ($log->checkout_doc_number)
                                                 <a href="{{ route('vehicleLogs.downloadBast', ['log' => $log->id, 'type' => 'checkout']) }}"
                                                     target="_blank"

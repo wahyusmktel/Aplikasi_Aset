@@ -29,6 +29,15 @@
                     }, 300);
                 }
             });
+
+            @if(request()->has('asset_id'))
+                setTimeout(() => {
+                    const btn = document.querySelector(`button[data-asset-id="{{ request('asset_id') }}"]`);
+                    if(btn) {
+                        btn.click();
+                    }
+                }, 500);
+            @endif
         }
     }">
 
@@ -82,7 +91,7 @@
                         </div>
 
                         @if($vehicle->current_status == 'Tersedia')
-                        <button @click="checkoutModalOpen = true; selectedVehicle = { id: {{ $vehicle->id }}, name: '{{ addslashes($vehicle->name) }}', odometer: {{ $vehicle->vehicleLogs()->latest()->first()?->end_odometer ?? 0 }} }" 
+                        <button data-asset-id="{{ $vehicle->id }}" @click="checkoutModalOpen = true; selectedVehicle = { id: {{ $vehicle->id }}, name: '{{ addslashes($vehicle->name) }}', odometer: {{ $vehicle->vehicleLogs()->latest()->first()?->end_odometer ?? 0 }} }" 
                             class="w-full py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-black rounded-xl shadow-lg shadow-red-500/30 transition-all flex items-center justify-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                             Mulai Perjalanan

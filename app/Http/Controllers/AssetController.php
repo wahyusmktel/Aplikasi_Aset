@@ -221,6 +221,8 @@ class AssetController extends Controller
             'purchase_cost' => 'required|numeric|min:0',
             'useful_life' => 'required|integer|min:1',
             'salvage_value' => 'required|numeric|min:0|lte:purchase_cost', // Nilai sisa <= Harga beli
+            'spesifikasi' => 'nullable|array',
+            'spesifikasi.nomor_polisi' => 'nullable|string|max:50',
         ]);
 
         $latestAsset = Asset::orderBy('id', 'desc')->first();
@@ -317,6 +319,8 @@ class AssetController extends Controller
             'purchase_cost' => 'required|numeric|min:0',
             'useful_life' => 'required|integer|min:1',
             'salvage_value' => 'required|numeric|min:0|lte:purchase_cost',
+            'spesifikasi' => 'nullable|array',
+            'spesifikasi.nomor_polisi' => 'nullable|string|max:50',
         ]);
 
         $asset->update($request->except('sequence_number'));

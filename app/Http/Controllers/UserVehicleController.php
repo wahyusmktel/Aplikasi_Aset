@@ -88,12 +88,13 @@ class UserVehicleController extends Controller
             'fuel_level_start'      => $request->fuel_level_start,
             'condition_on_checkout' => $request->condition_on_checkout,
             'checkout_doc_number'   => $docNumber,
+            'status'                => 'pengajuan',
         ]);
 
-        $asset->update(['current_status' => 'Digunakan']);
+        $asset->update(['current_status' => 'Pengajuan']);
 
         return redirect()->route('user.kendaraan.index')
-            ->with('success', "Peminjaman kendaraan \"{$asset->name}\" berhasil dicatat. No. Dokumen: {$docNumber}");
+            ->with('success', "Pengajuan peminjaman kendaraan \"{$asset->name}\" berhasil dikirim dan menunggu persetujuan. No. Dokumen: {$docNumber}");
     }
 
     /**
@@ -177,8 +178,20 @@ class UserVehicleController extends Controller
             $approverTitle = 'Kaur IT';
         }
 
+        $wakaQrCode = null;
+        if ($log->waka_approved_at) {
+            $wakaQrText = "Telah Disetujui secara digital oleh {$approverTitle} (" . ($approver->name ?? '-') . ") pada " . $log->waka_approved_at->format('d/m/Y H:i:s');
+            $wakaQrCode = (new QRCode($options))->render($wakaQrText);
+        }
+
+        $kepsekQrCode = null;
+        if ($log->kepsek_approved_at) {
+            $kepsekQrText = "Telah Disetujui secara digital oleh Kepala Sekolah (" . ($headmaster->name ?? '-') . ") pada " . $log->kepsek_approved_at->format('d/m/Y H:i:s');
+            $kepsekQrCode = (new QRCode($options))->render($kepsekQrText);
+        }
+
         $pdf = Pdf::loadView('vehicle-logs.bast-pdf', compact(
-            'log', 'asset', 'employee', 'headmaster', 'approver', 'approverTitle', 'title', 'isCheckin', 'qrCode'
+            'log', 'asset', 'employee', 'headmaster', 'approver', 'approverTitle', 'title', 'isCheckin', 'qrCode', 'wakaQrCode', 'kepsekQrCode'
         ));
 
         return $pdf->download(str_replace('/', '-', $docNumber) . '.pdf');

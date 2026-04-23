@@ -188,6 +188,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/vehicle-logs/{log}/download-bast/{type}', [VehicleLogController::class, 'downloadBast'])
         ->whereIn('type', ['checkout', 'checkin'])
         ->name('vehicleLogs.downloadBast');
+    Route::post('/vehicle-logs/{log}/approve-waka', [VehicleLogController::class, 'approveWaka'])->name('vehicleLogs.approveWaka');
+    Route::post('/vehicle-logs/{log}/approve-kepsek', [VehicleLogController::class, 'approveKepsek'])->name('vehicleLogs.approveKepsek');
     Route::get('/vehicle-logs/export-excel', [VehicleLogController::class, 'exportExcel'])->name('vehicleLogs.exportExcel');
     Route::get('/vehicle-logs/download-pdf', [VehicleLogController::class, 'downloadPDF'])->name('vehicleLogs.downloadPDF');
     // Route untuk Disposal Aset

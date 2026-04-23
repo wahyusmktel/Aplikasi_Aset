@@ -22,6 +22,7 @@ class Asset extends Model
      */
     protected $fillable = [
         'name',
+        'spesifikasi',
         'purchase_year',
         'purchase_cost', // Baru
         'useful_life',   // Baru
@@ -50,6 +51,7 @@ class Asset extends Model
         'disposal_date' => 'date',
         'purchase_cost' => 'decimal:2', // Baru
         'salvage_value' => 'decimal:2', // Baru
+        'spesifikasi'   => 'array',
     ];
 
     // Method Accessor untuk menghitung Nilai Buku (Book Value)

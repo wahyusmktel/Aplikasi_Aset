@@ -234,17 +234,72 @@ class VehicleLogController extends Controller
 
         $asset = $log->asset()->with('personInCharge')->first();
         $employee = $log->employee;
-        $headmaster = Employee::where('position', 'Kepala Sekolah')->first();
+        $headmaster = Employee::where('is_headmaster', true)->first() ?? Employee::where('position', 'Kepala Sekolah')->first();
+        
+        $approver = Employee::where('is_sarpra_it_lab', true)->first();
+        $approverTitle = 'Waka Bidang IT, Lab dan Sarana Prasarana';
+        if (!$approver) {
+            $approver = Employee::where('is_kaur_it', true)->first();
+            $approverTitle = 'Kaur IT';
+        }
+
+        $wakaQrCode = null;
+        if ($log->waka_approved_at) {
+            $wakaQrText = "Telah Disetujui secara digital oleh {$approverTitle} (" . ($approver->name ?? '-') . ") pada " . $log->waka_approved_at->format('d/m/Y H:i:s');
+            $wakaQrCode = (new QRCode($options))->render($wakaQrText);
+        }
+
+        $kepsekQrCode = null;
+        if ($log->kepsek_approved_at) {
+            $kepsekQrText = "Telah Disetujui secara digital oleh Kepala Sekolah (" . ($headmaster->name ?? '-') . ") pada " . $log->kepsek_approved_at->format('d/m/Y H:i:s');
+            $kepsekQrCode = (new QRCode($options))->render($kepsekQrText);
+        }
 
         return Pdf::loadView('vehicle-logs.bast-pdf', compact(
             'log',
             'asset',
             'employee',
             'headmaster',
+            'approver',
+            'approverTitle',
             'title',
             'isCheckin',
-            'qrCode'
+            'qrCode',
+            'wakaQrCode',
+            'kepsekQrCode'
         ));
+    }
+
+    /**
+     * Persetujuan oleh Waka / Kaur IT
+     */
+    public function approveWaka(Request $request, VehicleLog $log)
+    {
+        $log->update([
+            'status' => 'menunggu_kepsek',
+            'waka_approved_at' => now(),
+        ]);
+
+        $log->asset()->update(['current_status' => 'Menunggu Kepsek']);
+
+        alert()->success('Disetujui!', 'Peminjaman disetujui oleh Waka Sarpra/Kaur IT.');
+        return back();
+    }
+
+    /**
+     * Persetujuan oleh Kepala Sekolah
+     */
+    public function approveKepsek(Request $request, VehicleLog $log)
+    {
+        $log->update([
+            'status' => 'disetujui',
+            'kepsek_approved_at' => now(),
+        ]);
+
+        $log->asset()->update(['current_status' => 'Digunakan']);
+
+        alert()->success('Disetujui!', 'Peminjaman disetujui Kepala Sekolah. Kendaraan berstatus Sedang Jalan.');
+        return back();
     }
 
     /**

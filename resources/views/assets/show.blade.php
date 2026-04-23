@@ -97,6 +97,7 @@
                         <button @click="activeTab = 'maintenance'" :class="activeTab === 'maintenance' ? 'bg-white dark:bg-gray-800 text-red-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'" class="flex-1 py-4 text-xs font-black uppercase tracking-widest rounded-[22px] transition-all">Maintenance</button>
                         @if($asset->category->name == 'KENDARAAN BERMOTOR DINAS / KBM DINAS')
                             <button @click="activeTab = 'vehicle'" :class="activeTab === 'vehicle' ? 'bg-white dark:bg-gray-800 text-red-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'" class="flex-1 py-4 text-xs font-black uppercase tracking-widest rounded-[22px] transition-all">Log KBM</button>
+                            <button @click="activeTab = 'kartu_kbm'" :class="activeTab === 'kartu_kbm' ? 'bg-white dark:bg-gray-800 text-red-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'" class="flex-1 py-4 text-xs font-black uppercase tracking-widest rounded-[22px] transition-all">Kartu Aset</button>
                         @endif
                     </div>
 
@@ -383,6 +384,69 @@
                                 </div>
                             </div>
                         @endif
+
+                        {{-- Kartu Aset KBM Tab --}}
+                        @if($asset->category->name == 'KENDARAAN BERMOTOR DINAS / KBM DINAS')
+                        <div x-show="activeTab === 'kartu_kbm'" style="display: none;" class="p-10">
+                            <div class="flex flex-col items-center">
+                                <div class="w-full max-w-sm">
+                                    <div id="kartu-aset-kbm" class="bg-gradient-to-br from-red-600 to-red-800 rounded-3xl p-6 text-white shadow-2xl relative overflow-hidden">
+                                        <!-- Decorative elements -->
+                                        <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-10 -mt-10"></div>
+                                        <div class="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-5 rounded-full -ml-8 -mb-8"></div>
+                                        
+                                        <div class="relative z-10 text-center mb-6 border-b border-white/20 pb-4">
+                                            <div class="flex justify-center items-center gap-3 mb-2">
+                                                <svg class="w-8 h-8 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                                                <h3 class="text-xl font-black uppercase tracking-widest">KBM DINAS</h3>
+                                            </div>
+                                            <p class="text-[10px] font-bold text-white/70 uppercase tracking-widest">SMK Telkom Lampung</p>
+                                        </div>
+
+                                        <div class="relative z-10 bg-white rounded-2xl p-4 flex flex-col items-center shadow-inner mb-6">
+                                            @php
+                                                // Generate QR Code for Vehicle Checkout Route
+                                                $checkoutUrl = route('user.kendaraan.index', ['asset_id' => $asset->id]);
+                                                $options = new \chillerlan\QRCode\QROptions(['outputType' => \chillerlan\QRCode\QRCode::OUTPUT_IMAGE_PNG, 'imageBase64' => true, 'scale' => 6]);
+                                                $qrCodeData = (new \chillerlan\QRCode\QRCode($options))->render($checkoutUrl);
+                                            @endphp
+                                            <img src="{{ $qrCodeData }}" alt="QR Code Peminjaman" class="w-48 h-48 rounded-lg mb-2">
+                                            <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest text-center mt-2 mb-3">Scan untuk Peminjaman</p>
+                                            
+                                            <div class="w-full bg-gray-50 rounded-xl p-2 text-center border border-gray-100">
+                                                <p class="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Kode Aset</p>
+                                                <p class="text-xs font-bold text-gray-800 break-all">{{ $asset->asset_code_ypt }}</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="relative z-10 space-y-2">
+                                            <div>
+                                                <p class="text-[9px] text-white/60 font-black uppercase tracking-widest mb-0.5">Nama Kendaraan</p>
+                                                <p class="text-base font-bold text-white leading-tight truncate">{{ $asset->name }}</p>
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-2">
+                                                <div>
+                                                    <p class="text-[9px] text-white/60 font-black uppercase tracking-widest mb-0.5">Lembaga</p>
+                                                    <p class="text-xs font-bold text-white truncate">{{ $asset->institution->name ?? '-' }}</p>
+                                                </div>
+                                                <div>
+                                                    <p class="text-[9px] text-white/60 font-black uppercase tracking-widest mb-0.5">Nopol/Plat</p>
+                                                    <p class="text-xs font-bold text-white truncate">{{ $asset->spesifikasi['nomor_polisi'] ?? '-' }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-8 flex justify-center">
+                                        <button onclick="printKartuAset()" class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/30">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                                            Cetak Kartu Aset
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -605,6 +669,39 @@
                 showVehicleReturnModal: false,
             }));
         });
+
+        function printKartuAset() {
+            const printContent = document.getElementById('kartu-aset-kbm').outerHTML;
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Cetak Kartu Aset KBM - {{ $asset->name }}</title>
+                    <script src="https://cdn.tailwindcss.com"><\/script>
+                    <style>
+                        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #fff; }
+                        @media print {
+                            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                            @page { size: portrait; margin: 0; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div style="width: 350px;">
+                        ${printContent}
+                    </div>
+                    <script>
+                        setTimeout(function() {
+                            window.print();
+                            window.close();
+                        }, 500);
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
     </script>
 
     <style>

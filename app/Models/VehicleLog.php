@@ -34,12 +34,17 @@ class VehicleLog extends Model
         'return_photos',
         'checkout_doc_number',
         'checkin_doc_number',
+        'status',
+        'waka_approved_at',
+        'kepsek_approved_at',
     ];
 
     protected $casts = [
         'departure_time'         => 'datetime',
         'estimated_return_time'  => 'datetime',
         'return_time'            => 'datetime',
+        'waka_approved_at'       => 'datetime',
+        'kepsek_approved_at'     => 'datetime',
         'return_photos'          => 'array',
     ];
 

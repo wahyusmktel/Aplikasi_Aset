@@ -179,11 +179,21 @@
     <div class="signatures">
         <table>
             <tr>
-                <td>Mengetahui,<br>Kepala Sekolah<br><br><br><br><br><br>
+                <td>Mengetahui,<br>Kepala Sekolah<br>
+                    @if(isset($kepsekQrCode))
+                        <br><img src="{{ $kepsekQrCode }}" width="60px" height="60px"><br>
+                    @else
+                        <br><br><br><br><br><br>
+                    @endif
                     <strong>{{ $headmaster->name ?? '(Nama Kepala Sekolah)' }}</strong><br>
                     NIP. {{ $headmaster->nip ?? '-' }}
                 </td>
-                <td>Menyetujui,<br>{{ $approverTitle }}<br><br><br><br><br><br>
+                <td>Menyetujui,<br>{{ $approverTitle }}<br>
+                    @if(isset($wakaQrCode))
+                        <br><img src="{{ $wakaQrCode }}" width="60px" height="60px"><br>
+                    @else
+                        <br><br><br><br><br><br>
+                    @endif
                     <strong>{{ $approver->name ?? '(Nama ' . $approverTitle . ')' }}</strong><br>
                     NIP. {{ $approver->nip ?? '-' }}
                 </td>
