@@ -1,186 +1,185 @@
-<x-guest-layout>
-    <div class="py-12 bg-gray-100 dark:bg-gray-900 min-h-screen">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-lg sm:rounded-lg">
-                <div class="p-8 text-gray-900 dark:text-gray-100 text-center">
-                    {{-- Icon Centang --}}
-                    <div class="flex justify-center mb-4">
-                        <svg class="w-16 h-16 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Verifikasi Dokumen - {{ config('app.name', 'Aplikasi Aset') }}</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900&display=swap" rel="stylesheet" />
+    <!-- Scripts -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+<body class="font-sans antialiased bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <div class="min-h-screen relative flex flex-col justify-center py-8 sm:py-12">
+        <!-- Background Decorations -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-emerald-500/20 blur-3xl"></div>
+            <div class="absolute top-40 -left-40 w-96 h-96 rounded-full bg-blue-500/20 blur-3xl"></div>
+        </div>
+
+        <div class="relative max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl overflow-hidden shadow-2xl sm:rounded-3xl border border-white/20 dark:border-gray-700/50 transition-all duration-300 hover:shadow-emerald-500/10">
+                
+                <!-- Header Status -->
+                <div class="bg-emerald-500/10 dark:bg-emerald-500/20 px-8 py-10 text-center border-b border-emerald-100 dark:border-emerald-800/50">
+                    <div class="inline-flex justify-center items-center w-24 h-24 rounded-full bg-emerald-100 dark:bg-emerald-900/50 mb-6 shadow-inner relative">
+                        <div class="absolute inset-0 rounded-full border-4 border-emerald-500 animate-pulse opacity-50"></div>
+                        <svg class="w-12 h-12 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                         </svg>
                     </div>
-                    <h2 class="text-2xl font-bold">Dokumen Terverifikasi</h2>
-                    <p class="text-gray-500 mt-1">Dokumen ini sah dan tercatat dalam sistem.</p>
+                    <h2 class="text-3xl font-black text-gray-900 dark:text-white tracking-tight mb-2">Dokumen Valid & Resmi</h2>
+                    <p class="text-emerald-700 dark:text-emerald-300 font-medium">Dokumen ini telah terverifikasi secara digital oleh sistem.</p>
+                </div>
 
-                    <div class="mt-6 text-left border-t pt-6 dark:border-gray-700">
-                        <h3 class="font-bold text-lg mb-2">{{ $documentType }}</h3>
-                        <dl class="space-y-2 text-sm">
+                <!-- Content Body -->
+                <div class="p-8 sm:p-10">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+                        <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 border-l-4 border-primary-500 pl-4">{{ $documentType }}</h3>
+                        <span class="px-4 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-bold rounded-full uppercase tracking-widest whitespace-nowrap">Detail Dokumen</span>
+                    </div>
 
-                            {{-- Nomor Surat --}}
-                            <div class="flex">
-                                <dt class="w-1/3 font-semibold text-gray-500">Nomor Surat</dt>
-                                <dd class="w-2/3 font-mono break-all">{{ $docNumber }}</dd>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                        {{-- Data Items as Cards --}}
+                        <div class="bg-white dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:shadow-md">
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Nomor Surat</p>
+                            <p class="text-sm font-mono font-semibold text-gray-800 dark:text-gray-200 break-all">{{ $docNumber }}</p>
+                        </div>
+                        
+                        <div class="bg-white dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:shadow-md">
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">
+                                @if (isset($labLog)) Ruangan @else Nama Aset @endif
+                            </p>
+                            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $assetName }}</p>
+                        </div>
+
+                        <div class="bg-white dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:shadow-md">
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">
+                                @if (isset($inspection)) Pemeriksa
+                                @elseif(isset($vehicleLog)) Pengguna
+                                @elseif(isset($labLog)) Guru / PJ
+                                @elseif(isset($assignment)) Pegawai
+                                @elseif(isset($asset)) Penanggung Jawab
+                                @else Pihak Terlibat @endif
+                            </p>
+                            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $employeeName }}</p>
+                        </div>
+
+                        <div class="bg-white dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:shadow-md">
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Tanggal Transaksi</p>
+                            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ \Carbon\Carbon::parse($transactionDate)->isoFormat('D MMMM YYYY') }}</p>
+                        </div>
+
+                        {{-- DETAIL KHUSUS: LAB --}}
+                        @if (isset($labLog))
+                            <div class="bg-white dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:shadow-md">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Kelas</p>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $labLog->class_group }}</p>
+                            </div>
+                            <div class="bg-white dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:shadow-md">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Kegiatan</p>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $labLog->activity_description }}</p>
+                            </div>
+                            <div class="bg-white dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:shadow-md">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Waktu {{ $isReturn ? 'Selesai' : 'Masuk' }}</p>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $isReturn ? $labLog->check_out_time->format('H:i') : $labLog->check_in_time->format('H:i') }} WIB</p>
+                            </div>
+                            <div class="bg-white dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:shadow-md">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Kondisi {{ $isReturn ? 'Akhir' : 'Awal' }}</p>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $isReturn ? $labLog->condition_after : $labLog->condition_before }}</p>
                             </div>
 
-                            {{-- Nama Aset / Ruangan --}}
-                            <div class="flex">
-                                <dt class="w-1/3 font-semibold text-gray-500">
-                                    @if (isset($labLog))
-                                        Ruangan
-                                    @else
-                                        Nama Aset
-                                    @endif
-                                </dt>
-                                <dd class="w-2/3">{{ $assetName }}</dd>
+                        {{-- DETAIL KHUSUS: KENDARAAN --}}
+                        @elseif(isset($vehicleLog))
+                            <div class="bg-white dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:shadow-md md:col-span-2">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Tujuan Perjalanan</p>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $vehicleLog->destination }}</p>
                             </div>
-
-                            {{-- Pihak Terlibat --}}
-                            <div class="flex">
-                                <dt class="w-1/3 font-semibold text-gray-500">
-                                    @if (isset($inspection))
-                                        Pemeriksa
-                                    @elseif(isset($vehicleLog))
-                                        Pengguna
-                                    @elseif(isset($labLog))
-                                        Guru / PJ
-                                    @elseif(isset($assignment))
-                                        Pegawai
-                                    @elseif(isset($asset))
-                                        Penanggung Jawab
-                                    @else
-                                        Pihak Terlibat
-                                    @endif
-                                </dt>
-                                <dd class="w-2/3">{{ $employeeName }}</dd>
+                            <div class="bg-white dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:shadow-md md:col-span-2">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Keperluan / Agenda</p>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $vehicleLog->purpose }}</p>
                             </div>
-
-                            {{-- Tanggal --}}
-                            <div class="flex">
-                                <dt class="w-1/3 font-semibold text-gray-500">Tanggal</dt>
-                                <dd class="w-2/3">
-                                    {{ \Carbon\Carbon::parse($transactionDate)->isoFormat('D MMMM YYYY') }}</dd>
+                            <div class="bg-white dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:shadow-md">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Pengemudi</p>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $vehicleLog->driver_type == 'school_driver' ? 'Driver Sekolah (' . ($vehicleLog->driverEmployee->name ?? '-') . ')' : 'Menyetir Sendiri' }}</p>
                             </div>
-
-                            {{-- DETAIL KHUSUS: LAB --}}
-                            @if (isset($labLog))
-                                <div class="flex">
-                                    <dt class="w-1/3 font-semibold text-gray-500">Kelas</dt>
-                                    <dd class="w-2/3">{{ $labLog->class_group }}</dd>
-                                </div>
-                                <div class="flex">
-                                    <dt class="w-1/3 font-semibold text-gray-500">Kegiatan</dt>
-                                    <dd class="w-2/3">{{ $labLog->activity_description }}</dd>
-                                </div>
-                                <div class="flex">
-                                    <dt class="w-1/3 font-semibold text-gray-500">Waktu
-                                        {{ $isReturn ? 'Selesai' : 'Masuk' }}</dt>
-                                    <dd class="w-2/3">
-                                        {{ $isReturn ? $labLog->check_out_time->format('H:i') : $labLog->check_in_time->format('H:i') }}
-                                        WIB
-                                    </dd>
-                                </div>
-                                <div class="flex">
-                                    <dt class="w-1/3 font-semibold text-gray-500">Kondisi
-                                        {{ $isReturn ? 'Akhir' : 'Awal' }}</dt>
-                                    <dd class="w-2/3">
-                                        {{ $isReturn ? $labLog->condition_after : $labLog->condition_before }}</dd>
-                                </div>
-
-                                {{-- DETAIL KHUSUS: KENDARAAN --}}
-                            @elseif(isset($vehicleLog))
-                                <div class="flex">
-                                    <dt class="w-1/3 font-semibold text-gray-500">Tujuan</dt>
-                                    <dd class="w-2/3">{{ $vehicleLog->destination }}</dd>
-                                </div>
-                                <div class="flex">
-                                    <dt class="w-1/3 font-semibold text-gray-500">Keperluan</dt>
-                                    <dd class="w-2/3">{{ $vehicleLog->purpose }}</dd>
-                                </div>
-                                <div class="flex">
-                                    <dt class="w-1/3 font-semibold text-gray-500">Pengemudi</dt>
-                                    <dd class="w-2/3">{{ $vehicleLog->driver_type == 'school_driver' ? 'Driver Sekolah (' . ($vehicleLog->driverEmployee->name ?? '-') . ')' : 'Menyetir Sendiri' }}</dd>
-                                </div>
-                                <div class="flex">
-                                    <dt class="w-1/3 font-semibold text-gray-500">Waktu {{ $isReturn ? 'Kembali' : 'Berangkat' }}</dt>
-                                    <dd class="w-2/3">{{ ($isReturn ? $vehicleLog->return_time : $vehicleLog->departure_time)->isoFormat('D MMMM YYYY, HH:mm') }}</dd>
-                                </div>
-                                <div class="flex">
-                                    <dt class="w-1/3 font-semibold text-gray-500">KM {{ $isReturn ? 'Akhir' : 'Awal' }}</dt>
-                                    <dd class="w-2/3">{{ number_format($isReturn ? $vehicleLog->end_odometer : $vehicleLog->start_odometer) }} KM</dd>
-                                </div>
-                                @if ($isReturn && $vehicleLog->end_odometer)
-                                    <div class="flex">
-                                        <dt class="w-1/3 font-semibold text-gray-500">Jarak Tempuh</dt>
-                                        <dd class="w-2/3">{{ number_format($vehicleLog->end_odometer - $vehicleLog->start_odometer) }} KM</dd>
-                                    </div>
-                                @endif
-                                <div class="flex">
-                                    <dt class="w-1/3 font-semibold text-gray-500">BBM {{ $isReturn ? 'Akhir' : 'Awal' }}</dt>
-                                    <dd class="w-2/3">{{ $isReturn ? $vehicleLog->fuel_level_end : $vehicleLog->fuel_level_start }}</dd>
-                                </div>
-                                <div class="flex">
-                                    <dt class="w-1/3 font-semibold text-gray-500">Kondisi {{ $isReturn ? 'Akhir' : 'Awal' }}</dt>
-                                    <dd class="w-2/3">{{ $isReturn ? $vehicleLog->condition_on_checkin : $vehicleLog->condition_on_checkout }}</dd>
-                                </div>
-                                @if (!$isReturn && $vehicleLog->start_latitude)
-                                    <div class="flex">
-                                        <dt class="w-1/3 font-semibold text-gray-500">Koordinat Awal</dt>
-                                        <dd class="w-2/3">Lat: {{ $vehicleLog->start_latitude }}, Lng: {{ $vehicleLog->start_longitude }}</dd>
-                                    </div>
-                                @endif
-                                @if ($isReturn && $vehicleLog->notes)
-                                    <div class="flex">
-                                        <dt class="w-1/3 font-semibold text-gray-500">Catatan</dt>
-                                        <dd class="w-2/3">{{ $vehicleLog->notes }}</dd>
-                                    </div>
-                                @endif
-
-                                {{-- DETAIL KHUSUS: INSPEKSI --}}
-                            @elseif(isset($inspection))
-                                <div class="flex">
-                                    <dt class="w-1/3 font-semibold text-gray-500">Kondisi Tercatat</dt>
-                                    <dd class="w-2/3">{{ $inspection->condition }}</dd>
-                                </div>
-
-                                {{-- DETAIL KHUSUS: PEMINJAMAN ASET BIASA --}}
-                            @elseif(isset($assignment))
-                                <div class="flex">
-                                    <dt class="w-1/3 font-semibold text-gray-500">Kondisi
-                                        {{ $isReturn ? 'Kembali' : 'Pinjam' }}</dt>
-                                    <dd class="w-2/3">
-                                        {{ $isReturn ? $assignment->condition_on_return : $assignment->condition_on_assign }}
-                                    </dd>
-                                </div>
-
-                                {{-- DETAIL KHUSUS: DISPOSAL --}}
-                            @elseif(isset($asset))
-                                <div class="flex">
-                                    <dt class="w-1/3 font-semibold text-gray-500">Metode Disposal</dt>
-                                    <dd class="w-2/3">{{ $asset->disposal_method }}</dd>
-                                </div>
-                                <div class="flex">
-                                    <dt class="w-1/3 font-semibold text-gray-500">Alasan Disposal</dt>
-                                    <dd class="w-2/3">{{ $asset->disposal_reason }}</dd>
-                                </div>
-                                @if ($asset->disposal_method == 'Dijual')
-                                    <div class="flex">
-                                        <dt class="w-1/3 font-semibold text-gray-500">Nilai Jual</dt>
-                                        <dd class="w-2/3">Rp
-                                            {{ number_format($asset->disposal_value ?? 0, 0, ',', '.') }}</dd>
-                                    </div>
-                                @endif
-                                {{-- === AKHIR TAMBAHAN === --}}
+                            <div class="bg-white dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:shadow-md">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Waktu {{ $isReturn ? 'Kembali' : 'Berangkat' }}</p>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ ($isReturn ? $vehicleLog->return_time : $vehicleLog->departure_time)->isoFormat('D MMMM YYYY, HH:mm') }}</p>
+                            </div>
+                            <div class="bg-white dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:shadow-md">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Kilometer {{ $isReturn ? 'Akhir' : 'Awal' }}</p>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ number_format($isReturn ? $vehicleLog->end_odometer : $vehicleLog->start_odometer) }} KM</p>
+                            </div>
+                            @if ($isReturn && $vehicleLog->end_odometer)
+                            <div class="bg-white dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:shadow-md">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Jarak Tempuh</p>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ number_format($vehicleLog->end_odometer - $vehicleLog->start_odometer) }} KM</p>
+                            </div>
+                            @endif
+                            <div class="bg-white dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:shadow-md">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">BBM {{ $isReturn ? 'Akhir' : 'Awal' }}</p>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $isReturn ? $vehicleLog->fuel_level_end : $vehicleLog->fuel_level_start }}</p>
+                            </div>
+                            <div class="bg-white dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:shadow-md">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Kondisi Fisik {{ $isReturn ? 'Akhir' : 'Awal' }}</p>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $isReturn ? $vehicleLog->condition_on_checkin : $vehicleLog->condition_on_checkout }}</p>
+                            </div>
+                            @if (!$isReturn && $vehicleLog->start_latitude)
+                            <div class="bg-white dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:shadow-md md:col-span-2">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Koordinat Awal Peminjaman</p>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 font-mono">Lat: {{ $vehicleLog->start_latitude }}, Lng: {{ $vehicleLog->start_longitude }}</p>
+                            </div>
+                            @endif
+                            @if ($isReturn && $vehicleLog->notes)
+                            <div class="bg-white dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:shadow-md md:col-span-2">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Catatan Tambahan</p>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $vehicleLog->notes }}</p>
+                            </div>
                             @endif
 
-                        </dl>
+                        {{-- DETAIL KHUSUS: INSPEKSI --}}
+                        @elseif(isset($inspection))
+                            <div class="bg-white dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:shadow-md md:col-span-2">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Kondisi Tercatat</p>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $inspection->condition }}</p>
+                            </div>
+
+                        {{-- DETAIL KHUSUS: PEMINJAMAN ASET BIASA --}}
+                        @elseif(isset($assignment))
+                            <div class="bg-white dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:shadow-md">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Kondisi {{ $isReturn ? 'Kembali' : 'Pinjam' }}</p>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $isReturn ? $assignment->condition_on_return : $assignment->condition_on_assign }}</p>
+                            </div>
+
+                        {{-- DETAIL KHUSUS: DISPOSAL --}}
+                        @elseif(isset($asset))
+                            <div class="bg-white dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:shadow-md">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Metode Disposal</p>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $asset->disposal_method }}</p>
+                            </div>
+                            <div class="bg-white dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:shadow-md">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Alasan Disposal</p>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $asset->disposal_reason }}</p>
+                            </div>
+                            @if ($asset->disposal_method == 'Dijual')
+                                <div class="bg-white dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:shadow-md">
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Nilai Jual</p>
+                                    <p class="text-sm font-semibold text-green-600 dark:text-green-400">Rp {{ number_format($asset->disposal_value ?? 0, 0, ',', '.') }}</p>
+                                </div>
+                            @endif
+                        @endif
                     </div>
                 </div>
             </div>
-            <div class="text-center mt-6 text-sm text-gray-500">
-                Powered by {{ config('app.name', 'Laravel') }}
+
+            <!-- Custom Credit Footer -->
+            <div class="text-center mt-8 pb-8 text-sm text-gray-500 font-medium">
+                Dibuat dengan hati <span class="text-rose-500 mx-1">❤</span> untuk pendidikan indonesia oleh <span class="font-bold text-gray-700 dark:text-gray-300">IT Tim Development SMK Telkom Lampung</span>
             </div>
         </div>
     </div>
-</x-guest-layout>
+</body>
+</html>
