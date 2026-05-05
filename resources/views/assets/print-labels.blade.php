@@ -177,6 +177,48 @@
             border-top: 1px dashed #e2e8f0;
         }
 
+        /* --- TEMPLATE: MIKRO --- */
+        .template-mikro {
+            width: 40mm !important;
+            height: 20mm !important;
+            padding: 1.5mm !important;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            background: #fff;
+            border-radius: 4px;
+        }
+        .template-mikro .mikro-header {
+            font-size: 5pt;
+            font-weight: 800;
+            text-transform: uppercase;
+            text-align: center;
+            line-height: 1;
+        }
+        .template-mikro .mikro-barcode-zone {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+        .template-mikro .mikro-barcode-zone svg {
+            width: auto;
+            max-width: 100%;
+            height: 8mm;
+        }
+        .template-mikro .mikro-name {
+            font-size: 4.5pt;
+            font-weight: 600;
+            text-align: center;
+            line-height: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
+
         /* Common Elements */
         .label-header {
             display: flex;
@@ -414,6 +456,10 @@
                                class="flex-1 text-center py-2.5 rounded-xl text-xs font-black transition-all {{ $template == 'minimal' ? 'bg-white text-blue-600 shadow-md' : 'text-slate-500 hover:text-slate-700' }}">
                                 MINIMAL
                             </a>
+                            <a href="{{ request()->fullUrlWithQuery(['template' => 'mikro']) }}" 
+                               class="flex-1 text-center py-2.5 rounded-xl text-xs font-black transition-all {{ $template == 'mikro' ? 'bg-white text-blue-600 shadow-md' : 'text-slate-500 hover:text-slate-700' }}">
+                                MIKRO
+                            </a>
                         </div>
                     </div>
 
@@ -458,57 +504,65 @@
         <div class="sheet">
             @foreach ($chunk as $asset)
                 <div class="label-container template-{{ $template }}">
-                    @if($logo)
-                        <div class="watermark-bg">
-                            <img src="{{ asset('storage/' . $logo) }}" alt="Watermark">
+                    @if($template == 'mikro')
+                        <div class="mikro-header">Property Of SMK Telkom Lampung</div>
+                        <div class="mikro-barcode-zone">
+                            {!! $generator->getBarcode($asset->asset_code_ypt, $generator::TYPE_CODE_128, 1, 25) !!}
+                        </div>
+                        <div class="mikro-name">{{ $asset->name }}</div>
+                    @else
+                        @if($logo)
+                            <div class="watermark-bg">
+                                <img src="{{ asset('storage/' . $logo) }}" alt="Watermark">
+                            </div>
+                        @endif
+                        <div class="label-header">
+                            <div class="flex items-center gap-3">
+                                <!-- @if($logo)
+                                    <img src="{{ asset('storage/' . $logo) }}" class="h-8 md:h-10 w-auto object-contain">
+                                @endif -->
+                                <div class="inst-info">
+                                    <p class="inst-label">Property Of</p>
+                                    <p class="inst-name">{{ $asset->institution->name }}</p>
+                                </div>
+                            </div>
+                            <div class="hologram-badge">Security Sealed</div>
+                        </div>
+
+                        <div class="label-body">
+                            <div class="code-zone">
+                                @if ($codeType == 'qr')
+                                    @php
+                                        $publicDomain = 'https://sarpra.smktelkom-lpg.id';
+                                        $relativePath = route('public.assets.show', $asset->asset_code_ypt, false);
+                                        $fullPublicUrl = $publicDomain . $relativePath;
+                                    @endphp
+                                    {!! QrCode::size($style == 'a4' ? 70 : 55)->generate($fullPublicUrl) !!}
+                                @else
+                                    <div class="barcode-wrapper">
+                                        {!! $generator->getBarcode($asset->asset_code_ypt, $generator::TYPE_CODE_128, $style == 'a4' ? 1.5 : 1, $style == 'a4' ? 50 : 30) !!}
+                                    </div>
+                                @endif
+                            </div>
+                            
+                            <div class="asset-details">
+                                <h2 class="asset-name">{{ Str::limit($asset->name, 40) }}</h2>
+                                <div class="detail-row">
+                                    <span class="detail-label">Tahun Reg.</span>
+                                    <span class="detail-val">{{ $asset->purchase_year }}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Sumber Dana</span>
+                                    <span class="detail-val">{{ Str::limit($asset->fundingSource->name ?? '-', 25) }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="label-footer">
+                            <div class="asset-code-text">{{ $asset->asset_code_ypt }}</div>
+                            <div class="warning-text">Do Not Remove This Label</div>
                         </div>
                     @endif
-                    <div class="label-header">
-                        <div class="flex items-center gap-3">
-                            <!-- @if($logo)
-                                <img src="{{ asset('storage/' . $logo) }}" class="h-8 md:h-10 w-auto object-contain">
-                            @endif -->
-                            <div class="inst-info">
-                                <p class="inst-label">Property Of</p>
-                                <p class="inst-name">{{ $asset->institution->name }}</p>
-                            </div>
-                        </div>
-                        <div class="hologram-badge">Security Sealed</div>
-                    </div>
-
-                    <div class="label-body">
-                        <div class="code-zone">
-                            @if ($codeType == 'qr')
-                                @php
-                                    $publicDomain = 'https://sarpra.smktelkom-lpg.id';
-                                    $relativePath = route('public.assets.show', $asset->asset_code_ypt, false);
-                                    $fullPublicUrl = $publicDomain . $relativePath;
-                                @endphp
-                                {!! QrCode::size($style == 'a4' ? 70 : 55)->generate($fullPublicUrl) !!}
-                            @else
-                                <div class="barcode-wrapper">
-                                    {!! $generator->getBarcode($asset->asset_code_ypt, $generator::TYPE_CODE_128, $style == 'a4' ? 1.5 : 1, $style == 'a4' ? 50 : 30) !!}
-                                </div>
-                            @endif
-                        </div>
-                        
-                        <div class="asset-details">
-                            <h2 class="asset-name">{{ Str::limit($asset->name, 40) }}</h2>
-                            <div class="detail-row">
-                                <span class="detail-label">Tahun Reg.</span>
-                                <span class="detail-val">{{ $asset->purchase_year }}</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-label">Sumber Dana</span>
-                                <span class="detail-val">{{ Str::limit($asset->fundingSource->name ?? '-', 25) }}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="label-footer">
-                        <div class="asset-code-text">{{ $asset->asset_code_ypt }}</div>
-                        <div class="warning-text">Do Not Remove This Label</div>
-                    </div>
                 </div>
             @endforeach
         </div>
