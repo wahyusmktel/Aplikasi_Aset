@@ -66,22 +66,46 @@
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             border: 1px solid #e5e7eb;
             box-sizing: border-box;
-            @if($style == 'a4')
-                width: 210mm;
-                height: 297mm;
-                padding: 10mm 10mm;
-                grid-template-columns: repeat(2, 95mm);
-                grid-auto-rows: 55mm;
-                column-gap: 0mm;
-                row-gap: 1mm;
+            @if($template == 'mikro')
+                @if($style == 'a4')
+                    width: 210mm;
+                    height: 297mm;
+                    padding: 10mm;
+                    grid-template-columns: repeat(4, 40mm);
+                    grid-auto-rows: 20mm;
+                    column-gap: 5mm;
+                    row-gap: 2mm;
+                    justify-content: center;
+                    align-content: start;
+                @else
+                    width: 190mm;
+                    height: 134mm;
+                    padding: 4mm 2mm;
+                    grid-template-columns: repeat(4, 40mm);
+                    grid-auto-rows: 20mm;
+                    column-gap: 4mm;
+                    row-gap: 2mm;
+                    justify-content: center;
+                    align-content: start;
+                @endif
             @else
-                width: 190mm;
-                height: 134mm;
-                padding: 4mm 2mm;
-                grid-template-columns: repeat(3, 60mm);
-                grid-auto-rows: 30mm;
-                column-gap: 3mm;
-                row-gap: 2mm;
+                @if($style == 'a4')
+                    width: 210mm;
+                    height: 297mm;
+                    padding: 10mm 10mm;
+                    grid-template-columns: repeat(2, 95mm);
+                    grid-auto-rows: 55mm;
+                    column-gap: 0mm;
+                    row-gap: 1mm;
+                @else
+                    width: 190mm;
+                    height: 134mm;
+                    padding: 4mm 2mm;
+                    grid-template-columns: repeat(3, 60mm);
+                    grid-auto-rows: 30mm;
+                    column-gap: 3mm;
+                    row-gap: 2mm;
+                @endif
             @endif
         }
 
@@ -181,7 +205,7 @@
         .template-mikro {
             width: 40mm !important;
             height: 20mm !important;
-            padding: 1.5mm !important;
+            padding: 1mm !important;
             border: 1px solid #e2e8f0;
             display: flex;
             flex-direction: column;
@@ -197,6 +221,13 @@
             text-align: center;
             line-height: 1;
         }
+        .template-mikro .mikro-asset-code {
+            font-size: 4.5pt;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            text-align: center;
+            line-height: 1;
+        }
         .template-mikro .mikro-barcode-zone {
             display: flex;
             justify-content: center;
@@ -206,7 +237,7 @@
         .template-mikro .mikro-barcode-zone svg {
             width: auto;
             max-width: 100%;
-            height: 8mm;
+            height: 10mm;
         }
         .template-mikro .mikro-name {
             font-size: 4.5pt;
@@ -495,7 +526,11 @@
     </div>
 
     @php
-        $perPage = ($style == 'a4') ? 10 : 12;
+        if ($template == 'mikro') {
+            $perPage = ($style == 'a4') ? 52 : 24;
+        } else {
+            $perPage = ($style == 'a4') ? 10 : 12;
+        }
         $generator = new Picqer\Barcode\BarcodeGeneratorSVG();
         $logo = \App\Models\Setting::where('key', 'app_logo')->first()?->value;
     @endphp
@@ -506,8 +541,14 @@
                 <div class="label-container template-{{ $template }}">
                     @if($template == 'mikro')
                         <div class="mikro-header">Property Of SMK Telkom Lampung</div>
+                        <div class="mikro-asset-code">{{ $asset->asset_code_ypt }}</div>
                         <div class="mikro-barcode-zone">
-                            {!! $generator->getBarcode($asset->asset_code_ypt, $generator::TYPE_CODE_128, 1, 25) !!}
+                            @php
+                                $publicDomain = 'https://sarpra.smktelkom-lpg.id';
+                                $relativePath = route('public.assets.show', $asset->asset_code_ypt, false);
+                                $fullPublicUrl = $publicDomain . $relativePath;
+                            @endphp
+                            {!! QrCode::size(35)->margin(0)->generate($fullPublicUrl) !!}
                         </div>
                         <div class="mikro-name">{{ $asset->name }}</div>
                     @else
