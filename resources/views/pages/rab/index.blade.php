@@ -106,7 +106,7 @@
 
         {{-- Modal Realisasi --}}
         <div x-show="showRealizationModal" 
-            class="fixed inset-0 z-[60] overflow-y-auto" 
+            class="fixed inset-0 z-[999] overflow-y-auto" 
             x-transition:enter="transition ease-out duration-300"
             x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100"
@@ -114,10 +114,11 @@
             x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0"
             style="display: none;">
-            <div class="flex items-center justify-center min-h-screen p-4">
-                <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" @click="showRealizationModal = false"></div>
+            <div class="flex items-center justify-center min-h-screen p-4" :class="{'p-0': isMaximized}">
+                <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity"></div>
                 
-                <div class="relative bg-white dark:bg-gray-950 rounded-[40px] shadow-2xl w-full max-w-5xl overflow-hidden transform transition-all border border-gray-100 dark:border-gray-800 animate-fadeIn"
+                <div class="relative bg-white dark:bg-gray-950 shadow-2xl w-full overflow-hidden transform transition-all border border-gray-100 dark:border-gray-800 animate-fadeIn"
+                    :class="isMaximized ? 'max-w-full h-screen rounded-none flex flex-col' : 'max-w-5xl rounded-[40px]'"
                     x-transition:enter="transition ease-out duration-300"
                     x-transition:enter-start="opacity-0 translate-y-8 scale-95"
                     x-transition:enter-end="opacity-100 translate-y-0 scale-100">
@@ -127,12 +128,18 @@
                             <h3 class="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight" x-text="'Penyelesaian Realisasi: ' + selectedRab.name"></h3>
                             <p class="text-sm text-gray-400 mt-1 uppercase tracking-widest font-black">Sesuaikan komponen realisasi sebelum mencetak PDF</p>
                         </div>
-                        <button @click="showRealizationModal = false" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-full text-gray-400 transition-colors">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button type="button" @click="isMaximized = !isMaximized" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-full text-gray-400 transition-colors" title="Perbesar/Perkecil">
+                                <svg x-show="!isMaximized" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+                                <svg x-show="isMaximized" style="display: none;" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 14h6m0 0v6m0-6l-7 7m17-11h-6m0 0V4m0 6l7-7M4 10h6m0 0V4m0 6l-7-7m17 11h-6m0 0v6m0-6l7 7" /></svg>
+                            </button>
+                            <button type="button" @click="showRealizationModal = false" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-full text-gray-400 transition-colors" title="Tutup">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
                     </div>
 
-                    <form :action="`/rab/${selectedRab.id}/realization-pdf`" method="POST" class="p-8 overflow-y-auto max-h-[70vh]">
+                    <form :action="`/rab/${selectedRab.id}/realization-pdf`" method="POST" class="p-8 overflow-y-auto" :class="isMaximized ? 'flex-1 max-h-none' : 'max-h-[70vh]'">
                         @csrf
                         <div class="overflow-x-auto rounded-3xl border border-gray-100 dark:border-gray-800">
                             <table class="w-full text-left">
@@ -219,6 +226,7 @@
             function rabPage() {
                 return {
                     showRealizationModal: false,
+                    isMaximized: false,
                     selectedRab: {
                         id: null,
                         name: '',
@@ -228,6 +236,7 @@
 
                     openRealizationModal(id, name, totalAmount, details, existingRealization = null) {
                         this.selectedRab = { id, name, total_amount: totalAmount };
+                        this.isMaximized = false;
                         
                         if (existingRealization && existingRealization.length > 0) {
                             this.realizationItems = existingRealization.map(item => ({
