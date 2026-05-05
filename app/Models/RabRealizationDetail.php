@@ -13,6 +13,8 @@ class RabRealizationDetail extends Model
         'rab_realization_id',
         'tgl',
         'uraian',
+        'qty',
+        'spesifikasi',
         'penerimaan',
         'pengeluaran',
         'keterangan',

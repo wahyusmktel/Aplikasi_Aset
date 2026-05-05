@@ -103,12 +103,14 @@
             <thead>
                 <tr>
                     <th width="20">NO</th>
-                    <th width="60">TGL</th>
+                    <th width="50">TGL</th>
                     <th>URAIAN</th>
-                    <th width="80">PENERIMAAN</th>
-                    <th width="80">PENGELUARAN</th>
-                    <th width="80">SALDO</th>
-                    <th width="100">KETERANGAN</th>
+                    <th width="40">QTY</th>
+                    <th width="80">SPESIFIKASI</th>
+                    <th width="70">PENERIMAAN</th>
+                    <th width="70">PENGELUARAN</th>
+                    <th width="70">SALDO</th>
+                    <th width="80">KETERANGAN</th>
                 </tr>
             </thead>
             <tbody>
@@ -127,6 +129,8 @@
                         <td class="text-center">{{ $index + 1 }}</td>
                         <td class="text-center">{{ $item['tgl'] }}</td>
                         <td>{{ $item['uraian'] }}</td>
+                        <td class="text-center">{{ $item['qty'] ?? '' }}</td>
+                        <td>{{ $item['spesifikasi'] ?? '' }}</td>
                         <td class="text-right">
                             {{ $item['penerimaan'] > 0 ? 'Rp' . number_format($item['penerimaan'], 0, ',', '.') : '' }}
                         </td>
@@ -140,7 +144,7 @@
             </tbody>
             <tfoot>
                 <tr class="footer-summary">
-                    <td colspan="3" class="text-center">JUMLAH</td>
+                    <td colspan="5" class="text-center">JUMLAH</td>
                     <td class="text-right">Rp {{ number_format($totalPenerimaan, 0, ',', '.') }}</td>
                     <td class="text-right">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</td>
                     <td class="text-right">Rp {{ number_format($balance, 0, ',', '.') }}</td>

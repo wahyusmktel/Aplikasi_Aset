@@ -283,6 +283,8 @@ class RabController extends Controller
                     $detailData = [
                         'tgl' => $request->tgl[$index] ?? '-',
                         'uraian' => $uraian,
+                        'qty' => $request->qty[$index] ?? null,
+                        'spesifikasi' => $request->spesifikasi[$index] ?? null,
                         'penerimaan' => $penerimaan,
                         'pengeluaran' => $pengeluaran,
                         'keterangan' => $request->keterangan[$index] ?? '-'

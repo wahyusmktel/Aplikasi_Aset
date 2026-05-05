@@ -65,7 +65,7 @@
                                                 class="p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-red-600 rounded-xl transition-all shadow-sm" title="Cetak PDF">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h1.5m1.5 0H12m-3 4h1.5m1.5 0H12m-3 4h1.5m1.5 0H12" /></svg>
                                             </a>
-                                            <button @click="openRealizationModal({{ $rab->id }}, '{{ $rab->name }}', {{ $rab->total_amount }}, {{ $rab->details->map(fn($d) => ['uraian' => $d->alias_name, 'penerimaan' => 0, 'pengeluaran' => $d->amount, 'keterangan' => 'Transaksi tgl ' . $d->created_at->format('d/m/Y')]) }}, {{ $rab->realization ? $rab->realization->details->map(fn($d) => ['tgl' => $d->tgl, 'uraian' => $d->uraian, 'penerimaan' => $d->penerimaan, 'pengeluaran' => $d->pengeluaran, 'keterangan' => $d->keterangan]) : 'null' }})"
+                                            <button @click="openRealizationModal({{ $rab->id }}, '{{ $rab->name }}', {{ $rab->total_amount }}, {{ $rab->details->map(fn($d) => ['uraian' => $d->alias_name, 'penerimaan' => 0, 'pengeluaran' => $d->amount, 'keterangan' => 'Transaksi tgl ' . $d->created_at->format('d/m/Y')]) }}, {{ $rab->realization ? $rab->realization->details->map(fn($d) => ['tgl' => $d->tgl, 'uraian' => $d->uraian, 'qty' => $d->qty ?? '', 'spesifikasi' => $d->spesifikasi ?? '', 'penerimaan' => $d->penerimaan, 'pengeluaran' => $d->pengeluaran, 'keterangan' => $d->keterangan]) : 'null' }})"
                                                 class="p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-green-600 rounded-xl transition-all shadow-sm" title="Realisasi Anggaran">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                             </button>
@@ -141,6 +141,8 @@
                                         <th class="p-4 text-[10px] font-black text-gray-400 tracking-widest text-center w-12">No</th>
                                         <th class="p-4 text-[10px] font-black text-gray-400 tracking-widest w-32">TGL</th>
                                         <th class="p-4 text-[10px] font-black text-gray-400 tracking-widest">Uraian Kegiatan</th>
+                                        <th class="p-4 text-[10px] font-black text-gray-400 tracking-widest w-20">Kuantitas</th>
+                                        <th class="p-4 text-[10px] font-black text-gray-400 tracking-widest w-40">Spesifikasi</th>
                                         <th class="p-4 text-[10px] font-black text-gray-400 tracking-widest w-32">Penerimaan</th>
                                         <th class="p-4 text-[10px] font-black text-gray-400 tracking-widest w-32">Pengeluaran</th>
                                         <th class="p-4 text-[10px] font-black text-gray-400 tracking-widest w-40">Keterangan</th>
@@ -158,6 +160,14 @@
                                             <td class="p-4">
                                                 <input type="text" name="uraian[]" x-model="item.uraian" 
                                                     class="w-full px-3 py-2 text-xs rounded-xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 font-bold focus:border-red-500">
+                                            </td>
+                                            <td class="p-4">
+                                                <input type="number" name="qty[]" x-model="item.qty" 
+                                                    class="w-full px-3 py-2 text-xs rounded-xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 font-bold focus:border-red-500 text-center" placeholder="Opsional">
+                                            </td>
+                                            <td class="p-4">
+                                                <input type="text" name="spesifikasi[]" x-model="item.spesifikasi" 
+                                                    class="w-full px-3 py-2 text-xs rounded-xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 font-bold focus:border-red-500" placeholder="Opsional">
                                             </td>
                                             <td class="p-4">
                                                 <input type="number" name="penerimaan[]" x-model="item.penerimaan" 
@@ -223,6 +233,8 @@
                             this.realizationItems = existingRealization.map(item => ({
                                 tgl: item.tgl,
                                 uraian: item.uraian,
+                                qty: item.qty || '',
+                                spesifikasi: item.spesifikasi || '',
                                 penerimaan: item.penerimaan,
                                 pengeluaran: item.pengeluaran,
                                 keterangan: item.keterangan || ''
@@ -233,6 +245,8 @@
                                 {
                                     tgl: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-'),
                                     uraian: 'Realisasi Dana',
+                                    qty: '',
+                                    spesifikasi: '',
                                     penerimaan: totalAmount,
                                     pengeluaran: 0,
                                     keterangan: ''
@@ -244,6 +258,8 @@
                                 this.realizationItems.push({
                                     tgl: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-'),
                                     uraian: detail.uraian,
+                                    qty: '',
+                                    spesifikasi: '',
                                     penerimaan: 0,
                                     pengeluaran: detail.pengeluaran,
                                     keterangan: detail.keterangan
@@ -258,6 +274,8 @@
                         this.realizationItems.push({
                             tgl: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-'),
                             uraian: '',
+                            qty: '',
+                            spesifikasi: '',
                             penerimaan: 0,
                             pengeluaran: 0,
                             keterangan: ''
