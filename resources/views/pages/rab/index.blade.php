@@ -105,8 +105,9 @@
         </div>
 
         {{-- Modal Realisasi --}}
-        <div x-show="showRealizationModal" 
-            class="fixed inset-0 z-[999] overflow-y-auto" 
+        <template x-teleport="body">
+            <div x-show="showRealizationModal" 
+                class="fixed inset-0 z-[9999] overflow-y-auto" 
             x-transition:enter="transition ease-out duration-300"
             x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100"
@@ -219,6 +220,7 @@
                 </div>
             </div>
         </div>
+        </template>
     </div>
 
     @push('scripts')
