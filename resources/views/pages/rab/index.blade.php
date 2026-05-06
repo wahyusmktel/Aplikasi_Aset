@@ -19,7 +19,7 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8 pb-24">
-            
+
             {{-- Table Wrapper --}}
             <div class="bg-white dark:bg-gray-950 rounded-[40px] border border-gray-100 dark:border-gray-800 shadow-2xl overflow-hidden animate-fadeIn">
                 <div class="overflow-x-auto">
@@ -69,6 +69,10 @@
                                                 class="p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-green-600 rounded-xl transition-all shadow-sm" title="Realisasi Anggaran">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                             </button>
+                                            <button @click="openConversionModal({{ $rab->id }}, '{{ addslashes($rab->name) }}', {{ $rab->details->map(fn($d) => ['id' => $d->id, 'uraian' => $d->alias_name, 'quantity' => (int)$d->quantity, 'unit' => $d->unit, 'price' => $d->price]) }})"
+                                                class="p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-purple-600 rounded-xl transition-all shadow-sm" title="Konversi ke Daftar Aset">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8m0 0V9m0-2L14 5m4 4l-2 2M6 17H2m0 0v2m0-2l2-2m-2 2l2 2m16-6h-4m0 0v2m0-2l2-2m-2 2l2 2" /></svg>
+                                            </button>
                                             <a href="{{ route('rab.edit', $rab->id) }}"
                                                 class="p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-blue-600 rounded-xl transition-all shadow-sm" title="Edit RAB">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
@@ -106,8 +110,8 @@
 
         {{-- Modal Realisasi --}}
         <template x-teleport="body">
-            <div x-show="showRealizationModal" 
-                class="fixed inset-0 z-[9999] overflow-y-auto" 
+            <div x-show="showRealizationModal"
+                class="fixed inset-0 z-[9999] overflow-y-auto"
             x-transition:enter="transition ease-out duration-300"
             x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100"
@@ -117,13 +121,13 @@
             style="display: none;">
             <div class="flex items-center justify-center min-h-screen p-4" :class="{'p-0': isMaximized}">
                 <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity"></div>
-                
+
                 <div class="relative bg-white dark:bg-gray-950 shadow-2xl w-full overflow-hidden transform transition-all border border-gray-100 dark:border-gray-800 animate-fadeIn"
                     :class="isMaximized ? 'max-w-full h-screen rounded-none flex flex-col' : 'max-w-5xl rounded-[40px]'"
                     x-transition:enter="transition ease-out duration-300"
                     x-transition:enter-start="opacity-0 translate-y-8 scale-95"
                     x-transition:enter-end="opacity-100 translate-y-0 scale-100">
-                    
+
                     <div class="p-8 border-b border-gray-50 dark:border-gray-900 flex justify-between items-center bg-gray-50/30 dark:bg-gray-900/20">
                         <div>
                             <h3 class="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight" x-text="'Penyelesaian Realisasi: ' + selectedRab.name"></h3>
@@ -151,8 +155,8 @@
                                         <th class="p-4 text-[10px] font-black text-gray-400 tracking-widest">Uraian Kegiatan</th>
                                         <th class="p-4 text-[10px] font-black text-gray-400 tracking-widest w-20">Kuantitas</th>
                                         <th class="p-4 text-[10px] font-black text-gray-400 tracking-widest w-40">Spesifikasi</th>
-                                        <th class="p-4 text-[10px] font-black text-gray-400 tracking-widest w-32">Penerimaan</th>
-                                        <th class="p-4 text-[10px] font-black text-gray-400 tracking-widest w-32">Pengeluaran</th>
+                                        <th class="p-4 text-[10px] font-black text-gray-400 tracking-widest w-36">Penerimaan</th>
+                                        <th class="p-4 text-[10px] font-black text-gray-400 tracking-widest w-36">Pengeluaran</th>
                                         <th class="p-4 text-[10px] font-black text-gray-400 tracking-widest w-40">Keterangan</th>
                                         <th class="p-4 text-[10px] font-black text-gray-400 tracking-widest text-center w-16"></th>
                                     </tr>
@@ -162,31 +166,36 @@
                                         <tr class="hover:bg-gray-50/30 dark:hover:bg-gray-900/30">
                                             <td class="p-4 text-center text-xs font-black text-gray-400" x-text="index + 1"></td>
                                             <td class="p-4">
-                                                <input type="text" name="tgl[]" x-model="item.tgl" 
+                                                <input type="text" name="tgl[]" x-model="item.tgl"
                                                     class="w-full px-3 py-2 text-xs rounded-xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 font-bold focus:border-red-500 text-center">
                                             </td>
                                             <td class="p-4">
-                                                <input type="text" name="uraian[]" x-model="item.uraian" 
+                                                <input type="text" name="uraian[]" x-model="item.uraian"
                                                     class="w-full px-3 py-2 text-xs rounded-xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 font-bold focus:border-red-500">
                                             </td>
                                             <td class="p-4">
-                                                <input type="number" name="qty[]" x-model="item.qty" 
+                                                <input type="number" name="qty[]" x-model="item.qty"
+                                                    step="1" min="0"
                                                     class="w-full px-3 py-2 text-xs rounded-xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 font-bold focus:border-red-500 text-center" placeholder="Opsional">
                                             </td>
                                             <td class="p-4">
-                                                <input type="text" name="spesifikasi[]" x-model="item.spesifikasi" 
+                                                <input type="text" name="spesifikasi[]" x-model="item.spesifikasi"
                                                     class="w-full px-3 py-2 text-xs rounded-xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 font-bold focus:border-red-500" placeholder="Opsional">
                                             </td>
                                             <td class="p-4">
-                                                <input type="number" name="penerimaan[]" x-model="item.penerimaan" 
+                                                <input type="text" name="penerimaan[]"
+                                                    :value="formatRupiah(item.penerimaan)"
+                                                    @blur="item.penerimaan = parseRupiah($event.target.value); $event.target.value = formatRupiah(item.penerimaan)"
                                                     class="w-full px-3 py-2 text-xs rounded-xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 font-bold focus:border-red-500 text-right">
                                             </td>
                                             <td class="p-4">
-                                                <input type="number" name="pengeluaran[]" x-model="item.pengeluaran" 
+                                                <input type="text" name="pengeluaran[]"
+                                                    :value="formatRupiah(item.pengeluaran)"
+                                                    @blur="item.pengeluaran = parseRupiah($event.target.value); $event.target.value = formatRupiah(item.pengeluaran)"
                                                     class="w-full px-3 py-2 text-xs rounded-xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 font-bold focus:border-red-500 text-right">
                                             </td>
                                             <td class="p-4">
-                                                <input type="text" name="keterangan[]" x-model="item.keterangan" 
+                                                <input type="text" name="keterangan[]" x-model="item.keterangan"
                                                     class="w-full px-3 py-2 text-xs rounded-xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 font-bold focus:border-red-500">
                                             </td>
                                             <td class="p-4 text-center">
@@ -205,7 +214,7 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" /></svg>
                                 Tambah Baris
                             </button>
-                            
+
                             <div class="flex gap-4">
                                 <button type="button" @click="showRealizationModal = false" class="px-8 py-3 bg-gray-100 dark:bg-gray-800 text-gray-500 font-black rounded-2xl transition-all uppercase tracking-widest text-xs">
                                     Batal
@@ -221,6 +230,243 @@
             </div>
         </div>
         </template>
+
+        {{-- Modal Konversi ke Daftar Aset --}}
+        <template x-teleport="body">
+            <div x-show="showConversionModal"
+                class="fixed inset-0 z-[9999] overflow-y-auto"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                style="display: none;">
+                <div class="flex items-center justify-center min-h-screen p-4">
+                    <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm"></div>
+
+                    <div class="relative bg-white dark:bg-gray-950 rounded-[40px] shadow-2xl w-full max-w-6xl overflow-hidden border border-gray-100 dark:border-gray-800"
+                        x-transition:enter="transition ease-out duration-300"
+                        x-transition:enter-start="opacity-0 translate-y-8 scale-95"
+                        x-transition:enter-end="opacity-100 translate-y-0 scale-100">
+
+                        <form :action="`/rab/${conversionRab.id}/convert-to-assets`" method="POST">
+                            @csrf
+                            <div class="flex flex-col h-[88vh]">
+
+                                {{-- Header --}}
+                                <div class="p-8 border-b border-gray-50 dark:border-gray-900 flex items-center justify-between shrink-0 bg-gray-50/30 dark:bg-gray-900/20">
+                                    <div>
+                                        <h3 class="text-2xl font-black text-gray-800 dark:text-white tracking-tight">Konversi ke Daftar Aset</h3>
+                                        <p class="text-sm text-gray-400 mt-1" x-text="'RAB: ' + conversionRab.name"></p>
+                                    </div>
+                                    <button type="button" @click="showConversionModal = false" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-full text-gray-400 transition-colors">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                                    </button>
+                                </div>
+
+                                <div class="flex flex-1 overflow-hidden">
+                                    {{-- Sidebar: Daftar Item RAB --}}
+                                    <div class="w-72 bg-gray-50/50 dark:bg-gray-900/30 border-r border-gray-50 dark:border-gray-900 overflow-y-auto p-5 space-y-2 shrink-0">
+                                        <div class="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] mb-3 px-1">Pilih Item yang Menjadi Aset</div>
+                                        <template x-for="(item, idx) in conversionItems" :key="item.id">
+                                            <div class="rounded-2xl transition-all border"
+                                                :class="activeConversionItem === item.id
+                                                    ? 'bg-purple-600 border-purple-600 shadow-lg shadow-purple-500/30'
+                                                    : 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 hover:border-purple-200'"
+                                                @click="activeConversionItem = item.id">
+                                                <div class="p-4 cursor-pointer">
+                                                    <div class="flex items-start gap-3">
+                                                        <input type="checkbox"
+                                                            :id="'chk_' + item.id"
+                                                            :name="'items[' + item.id + '][convert]'"
+                                                            value="1"
+                                                            x-model="conversionSelected[item.id]"
+                                                            @click.stop
+                                                            class="mt-0.5 w-4 h-4 rounded text-purple-600 border-gray-300 focus:ring-purple-500 shrink-0">
+                                                        <div class="flex-1 min-w-0">
+                                                            <p class="text-xs font-black truncate"
+                                                                :class="activeConversionItem === item.id ? 'text-white' : 'text-gray-700 dark:text-gray-200'"
+                                                                x-text="item.uraian"></p>
+                                                            <p class="text-[10px] mt-1"
+                                                                :class="activeConversionItem === item.id ? 'text-purple-200' : 'text-gray-400'"
+                                                                x-text="item.quantity + ' ' + item.unit"></p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    {{-- Form Detail Aset --}}
+                                    <div class="flex-1 overflow-y-auto p-8">
+                                        <template x-for="(item, idx) in conversionItems" :key="'form_' + item.id">
+                                            <div x-show="activeConversionItem === item.id"
+                                                x-transition:enter="transition ease-out duration-200"
+                                                x-transition:enter-start="opacity-0 translate-y-3"
+                                                x-transition:enter-end="opacity-100 translate-y-0"
+                                                class="space-y-6">
+
+                                                <div class="flex items-center justify-between pb-6 border-b border-gray-100 dark:border-gray-800">
+                                                    <div>
+                                                        <h4 class="text-xl font-black text-gray-800 dark:text-white" x-text="item.uraian"></h4>
+                                                        <p class="text-xs text-gray-400 mt-1 uppercase tracking-widest font-bold">Detail Penempatan Aset</p>
+                                                    </div>
+                                                    <div x-show="!conversionSelected[item.id]" class="flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-100 dark:border-amber-800">
+                                                        <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                        <span class="text-[10px] font-black text-amber-600 uppercase tracking-widest">Centang untuk dikonversi</span>
+                                                    </div>
+                                                </div>
+
+                                                <div :class="!conversionSelected[item.id] ? 'opacity-40 pointer-events-none' : ''">
+                                                    {{-- Hidden fields --}}
+                                                    <input type="hidden" :name="'items[' + item.id + '][purchase_cost]'" :value="item.price">
+
+                                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                                        <div>
+                                                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Nama Aset</label>
+                                                            <input type="text" :name="'items[' + item.id + '][name]'" :value="item.uraian"
+                                                                class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-purple-500 focus:ring-purple-500 text-sm font-bold">
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Jumlah Aset Dibuat</label>
+                                                            <input type="number" :name="'items[' + item.id + '][quantity]'" :value="item.quantity"
+                                                                min="1" :max="item.quantity" step="1"
+                                                                class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-purple-500 focus:ring-purple-500 text-sm font-bold">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                        <div class="space-y-5">
+                                                            <div>
+                                                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Kategori Aset</label>
+                                                                <select :name="'items[' + item.id + '][category_id]'"
+                                                                    class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-purple-500 focus:ring-purple-500 text-sm">
+                                                                    <option value="">Pilih Kategori</option>
+                                                                    @foreach($categories as $cat)
+                                                                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Institusi / Lembaga</label>
+                                                                <select :name="'items[' + item.id + '][institution_id]'"
+                                                                    class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-purple-500 focus:ring-purple-500 text-sm">
+                                                                    <option value="">Pilih Institusi</option>
+                                                                    @foreach($institutions as $inst)
+                                                                        <option value="{{ $inst->id }}">{{ $inst->name }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Lokasi Gedung</label>
+                                                                <select :name="'items[' + item.id + '][building_id]'"
+                                                                    class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-purple-500 focus:ring-purple-500 text-sm">
+                                                                    <option value="">Pilih Gedung</option>
+                                                                    @foreach($buildings as $b)
+                                                                        <option value="{{ $b->id }}">{{ $b->name }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Ruangan / Lab</label>
+                                                                <select :name="'items[' + item.id + '][room_id]'"
+                                                                    class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-purple-500 focus:ring-purple-500 text-sm">
+                                                                    <option value="">Pilih Ruangan</option>
+                                                                    @foreach($rooms as $r)
+                                                                        <option value="{{ $r->id }}">{{ $r->name }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Fakultas / Direktorat</label>
+                                                                <select :name="'items[' + item.id + '][faculty_id]'"
+                                                                    class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-purple-500 focus:ring-purple-500 text-sm">
+                                                                    <option value="">Pilih Fakultas</option>
+                                                                    @foreach($faculties as $f)
+                                                                        <option value="{{ $f->id }}">{{ $f->name }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="space-y-5">
+                                                            <div>
+                                                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Prodi / Unit Kerja</label>
+                                                                <select :name="'items[' + item.id + '][department_id]'"
+                                                                    class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-purple-500 focus:ring-purple-500 text-sm">
+                                                                    <option value="">Pilih Unit</option>
+                                                                    @foreach($departments as $d)
+                                                                        <option value="{{ $d->id }}">{{ $d->name }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Penanggung Jawab (PIC)</label>
+                                                                <select :name="'items[' + item.id + '][person_in_charge_id]'"
+                                                                    class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-purple-500 focus:ring-purple-500 text-sm">
+                                                                    <option value="">Pilih PIC</option>
+                                                                    @foreach($personsInCharge as $pic)
+                                                                        <option value="{{ $pic->id }}">{{ $pic->name }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Fungsi Barang</label>
+                                                                <select :name="'items[' + item.id + '][asset_function_id]'"
+                                                                    class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-purple-500 focus:ring-purple-500 text-sm">
+                                                                    <option value="">Pilih Fungsi</option>
+                                                                    @foreach($assetFunctions as $af)
+                                                                        <option value="{{ $af->id }}">{{ $af->name }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Sumber Pendanaan</label>
+                                                                <select :name="'items[' + item.id + '][funding_source_id]'"
+                                                                    class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-purple-500 focus:ring-purple-500 text-sm">
+                                                                    <option value="">Pilih Sumber Dana</option>
+                                                                    @foreach($fundingSources as $fs)
+                                                                        <option value="{{ $fs->id }}">{{ $fs->name }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                        <div x-show="conversionItems.length === 0" class="flex flex-col items-center justify-center h-full text-gray-300">
+                                            <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7" /></svg>
+                                            <p class="text-sm font-bold">Tidak ada item pada RAB ini</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Footer --}}
+                                <div class="p-8 border-t border-gray-50 dark:border-gray-900 bg-gray-50/50 dark:bg-gray-950/50 flex items-center justify-between shrink-0">
+                                    <div class="flex items-center text-amber-600">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                        <span class="text-[10px] font-black uppercase tracking-widest">Hanya item yang dicentang yang akan dikonversi menjadi aset</span>
+                                    </div>
+                                    <div class="flex gap-4">
+                                        <button type="button" @click="showConversionModal = false" class="px-8 py-3 bg-gray-100 dark:bg-gray-800 text-gray-500 font-black rounded-2xl transition-all uppercase tracking-widest text-xs">
+                                            Batal
+                                        </button>
+                                        <button type="submit" class="px-10 py-3 bg-purple-600 hover:bg-purple-700 text-white font-black rounded-2xl shadow-xl shadow-purple-500/30 transition-all transform hover:-translate-y-1 uppercase tracking-widest text-xs flex items-center gap-2">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                                            Konversi & Buat Aset
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </template>
     </div>
 
     @push('scripts')
@@ -229,29 +475,39 @@
                 return {
                     showRealizationModal: false,
                     isMaximized: false,
-                    selectedRab: {
-                        id: null,
-                        name: '',
-                        total_amount: 0,
-                    },
+                    selectedRab: { id: null, name: '', total_amount: 0 },
                     realizationItems: [],
+
+                    showConversionModal: false,
+                    conversionRab: { id: null, name: '' },
+                    conversionItems: [],
+                    conversionSelected: {},
+                    activeConversionItem: null,
+
+                    formatRupiah(val) {
+                        const num = parseInt(String(val).replace(/\D/g, ''), 10) || 0;
+                        return num.toLocaleString('id-ID');
+                    },
+
+                    parseRupiah(str) {
+                        return parseInt(String(str).replace(/\./g, '').replace(/,/g, '').replace(/\D/g, ''), 10) || 0;
+                    },
 
                     openRealizationModal(id, name, totalAmount, details, existingRealization = null) {
                         this.selectedRab = { id, name, total_amount: totalAmount };
                         this.isMaximized = false;
-                        
+
                         if (existingRealization && existingRealization.length > 0) {
                             this.realizationItems = existingRealization.map(item => ({
                                 tgl: item.tgl,
                                 uraian: item.uraian,
-                                qty: item.qty || '',
+                                qty: item.qty ? Number(item.qty) : '',
                                 spesifikasi: item.spesifikasi || '',
-                                penerimaan: item.penerimaan,
-                                pengeluaran: item.pengeluaran,
+                                penerimaan: Number(item.penerimaan) || 0,
+                                pengeluaran: Number(item.pengeluaran) || 0,
                                 keterangan: item.keterangan || ''
                             }));
                         } else {
-                            // Default first row: Realisasi Dana
                             this.realizationItems = [
                                 {
                                     tgl: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-'),
@@ -264,7 +520,6 @@
                                 }
                             ];
 
-                            // Add expenditure rows from RAB details
                             details.forEach(detail => {
                                 this.realizationItems.push({
                                     tgl: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-'),
@@ -297,14 +552,18 @@
                         this.realizationItems.splice(index, 1);
                     },
 
-                    formatNumber(num) {
-                        return new Intl.NumberFormat('id-ID').format(num);
-                    }
+                    openConversionModal(id, name, details) {
+                        this.conversionRab = { id, name };
+                        this.conversionItems = details;
+                        this.conversionSelected = {};
+                        details.forEach(d => { this.conversionSelected[d.id] = false; });
+                        this.activeConversionItem = details.length > 0 ? details[0].id : null;
+                        this.showConversionModal = true;
+                    },
                 }
             }
 
             function confirmDeleteRAB(id) {
-                // ... (existing code remains same)
                 Swal.fire({
                     title: '<span class="text-xl font-black uppercase tracking-tight">Hapus Data?</span>',
                     html: '<p class="text-sm text-gray-400">Data RAB akan dihapus secara permanen.</p>',

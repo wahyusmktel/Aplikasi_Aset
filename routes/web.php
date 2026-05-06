@@ -288,6 +288,7 @@ Route::middleware('auth')->group(function () {
     // RAB Management
     Route::get('rab/{rab}/export-pdf', [RabController::class, 'exportPdf'])->name('rab.exportPdf');
     Route::post('rab/{rab}/realization-pdf', [RabController::class, 'realizationPdf'])->name('rab.realizationPdf');
+    Route::post('rab/{rab}/convert-to-assets', [RabController::class, 'convertToAssets'])->name('rab.convertToAssets');
     Route::get('get-mta-details', [RabController::class, 'getMtaDetails'])->name('rab.getMtaDetails');
     Route::resource('rab', RabController::class);
     // ============================================================

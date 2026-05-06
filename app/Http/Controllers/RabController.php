@@ -9,6 +9,16 @@ use App\Models\AcademicYear;
 use App\Models\RabDetail;
 use App\Models\RabRealization;
 use App\Models\RabRealizationDetail;
+use App\Models\Asset;
+use App\Models\Building;
+use App\Models\Room;
+use App\Models\Faculty;
+use App\Models\Department;
+use App\Models\PersonInCharge;
+use App\Models\AssetFunction;
+use App\Models\FundingSource;
+use App\Models\Institution;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use RealRashid\SweetAlert\Facades\Alert;
@@ -18,8 +28,20 @@ class RabController extends Controller
 {
     public function index()
     {
-        $rabs = Rab::with(['academicYear', 'creator', 'realization'])->latest()->paginate(10);
-        return view('pages.rab.index', compact('rabs'));
+        $rabs = Rab::with(['academicYear', 'creator', 'realization', 'details'])->latest()->paginate(10);
+        $buildings = Building::orderBy('name')->get();
+        $rooms = Room::orderBy('name')->get();
+        $faculties = Faculty::orderBy('name')->get();
+        $departments = Department::orderBy('name')->get();
+        $personsInCharge = PersonInCharge::orderBy('name')->get();
+        $assetFunctions = AssetFunction::orderBy('name')->get();
+        $fundingSources = FundingSource::orderBy('name')->get();
+        $institutions = Institution::orderBy('name')->get();
+        $categories = Category::orderBy('name')->get();
+        return view('pages.rab.index', compact(
+            'rabs', 'buildings', 'rooms', 'faculties', 'departments',
+            'personsInCharge', 'assetFunctions', 'fundingSources', 'institutions', 'categories'
+        ));
     }
 
     public function create()
@@ -313,5 +335,106 @@ class RabController extends Controller
 
         $pdf = Pdf::loadView('pages.rab.realization-pdf', compact('rab', 'kopSurat', 'items'))->setPaper('a4', 'portrait');
         return $pdf->download('REALISASI_' . str_replace(' ', '_', $rab->name) . '.pdf');
+    }
+
+    public function convertToAssets(Request $request, Rab $rab)
+    {
+        $request->validate(['items' => 'required|array']);
+
+        $allItems = collect($request->items ?? []);
+        $selectedItems = $allItems->filter(fn($item) => isset($item['convert']) && $item['convert']);
+
+        if ($selectedItems->isEmpty()) {
+            Alert::warning('Peringatan', 'Pilih minimal satu item untuk dikonversi.');
+            return back();
+        }
+
+        $rules = [];
+        foreach ($selectedItems->keys() as $key) {
+            $rules["items.{$key}.name"]                = 'required|string';
+            $rules["items.{$key}.quantity"]            = 'required|integer|min:1';
+            $rules["items.{$key}.category_id"]         = 'required|exists:categories,id';
+            $rules["items.{$key}.institution_id"]      = 'required|exists:institutions,id';
+            $rules["items.{$key}.building_id"]         = 'required|exists:buildings,id';
+            $rules["items.{$key}.room_id"]             = 'required|exists:rooms,id';
+            $rules["items.{$key}.faculty_id"]          = 'required|exists:faculties,id';
+            $rules["items.{$key}.department_id"]       = 'required|exists:departments,id';
+            $rules["items.{$key}.person_in_charge_id"] = 'required|exists:persons_in_charge,id';
+            $rules["items.{$key}.asset_function_id"]   = 'required|exists:asset_functions,id';
+            $rules["items.{$key}.funding_source_id"]   = 'required|exists:funding_sources,id';
+        }
+
+        $request->validate($rules);
+
+        DB::beginTransaction();
+        try {
+            $rab->loadMissing('academicYear');
+            $latestAsset = Asset::orderBy('id', 'desc')->first();
+            $startSequence = $latestAsset ? intval($latestAsset->sequence_number) : 0;
+            $count = 0;
+            $purchaseYear = $rab->academicYear->year ?? date('Y');
+
+            foreach ($selectedItems as $detailId => $itemData) {
+                $qty = intval($itemData['quantity']);
+                for ($i = 0; $i < $qty; $i++) {
+                    $count++;
+                    $formattedSequence = sprintf('%04d', $startSequence + $count);
+
+                    $asset = Asset::create([
+                        'name'                => $itemData['name'],
+                        'category_id'         => $itemData['category_id'],
+                        'institution_id'      => $itemData['institution_id'],
+                        'purchase_year'       => $purchaseYear,
+                        'purchase_cost'       => $itemData['purchase_cost'] ?? 0,
+                        'sequence_number'     => $formattedSequence,
+                        'status'              => 'Aktif',
+                        'building_id'         => $itemData['building_id'],
+                        'room_id'             => $itemData['room_id'],
+                        'faculty_id'          => $itemData['faculty_id'],
+                        'department_id'       => $itemData['department_id'],
+                        'person_in_charge_id' => $itemData['person_in_charge_id'],
+                        'asset_function_id'   => $itemData['asset_function_id'],
+                        'funding_source_id'   => $itemData['funding_source_id'],
+                    ]);
+
+                    $this->generateAssetCode($asset);
+                }
+            }
+
+            DB::commit();
+            Alert::success('Berhasil!', 'Item RAB berhasil dikonversi menjadi data aset.');
+            return redirect()->route('assets.index');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Alert::error('Gagal!', 'Terjadi kesalahan: ' . $e->getMessage());
+            return back();
+        }
+    }
+
+    private function generateAssetCode(Asset $asset): void
+    {
+        $asset->load([
+            'institution', 'category', 'building', 'room',
+            'faculty', 'department', 'personInCharge',
+            'assetFunction', 'fundingSource'
+        ]);
+
+        $year2 = $asset->purchase_year ? substr((string)$asset->purchase_year, -2) : '00';
+
+        $code = implode('.', [
+            $asset->institution->code    ?? 'XX',
+            $year2,
+            $asset->category->code       ?? 'XX',
+            $asset->building->code       ?? 'XX',
+            $asset->room->code           ?? 'XX',
+            $asset->faculty->code        ?? 'XX',
+            $asset->department->code     ?? 'XX',
+            $asset->personInCharge->code ?? 'XX',
+            $asset->assetFunction->code  ?? 'XX',
+            $asset->fundingSource->code  ?? 'XX',
+            $asset->sequence_number,
+        ]);
+
+        $asset->update(['asset_code_ypt' => $code]);
     }
 }
