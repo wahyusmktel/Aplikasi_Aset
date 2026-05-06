@@ -48,6 +48,10 @@
         .signatures {
             margin-top: 50px;
             width: 100%;
+        }
+
+        .signatures table {
+            width: 100%;
             border-collapse: collapse;
             border: 1px dotted #999;
         }
@@ -55,22 +59,20 @@
         .signatures td {
             border: 1px dotted #999;
             text-align: center;
-            width: 30%;
+            width: 33.33%;
             padding: 10px 8px;
             vertical-align: top;
         }
 
-        .qr-cell { border: 1px dotted #999; width: 10%; text-align: center; vertical-align: middle; padding: 8px; }
-        .sign-img-wrap { height: 52px; display: flex; align-items: center; justify-content: center; margin: 4px auto; }
-        .sign-img-wrap img { max-height: 48px; max-width: 110px; object-fit: contain; }
-        .sign-space { height: 52px; }
-        .digital-badge { font-size: 7px; color: #4f46e5; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 4px; padding: 1px 4px; margin-top: 2px; display: inline-block; }
-
-        .qr-code {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-        }
+        .sign-label { font-size: 10px; margin-bottom: 4px; }
+        .sign-img-wrap { height: 48px; display: flex; align-items: center; justify-content: center; margin: 2px auto; }
+        .sign-img-wrap img { max-height: 45px; max-width: 110px; object-fit: contain; }
+        .sign-qr { margin: 3px auto 2px; text-align: center; }
+        .sign-qr img { width: 52px; height: 52px; }
+        .sign-space { height: 70px; }
+        .sign-name { font-weight: bold; text-decoration: underline; font-size: 10px; margin-top: 4px; }
+        .sign-role { font-size: 8px; color: #666; margin-top: 1px; }
+        .sign-footer { margin-top: 10px; font-size: 8px; color: #555; border-top: 1px solid #e0e0e0; padding-top: 6px; }
     </style>
 </head>
 
@@ -138,53 +140,81 @@
         akuntabilitas penggunaan aset sekolah.</p>
 
     @php
-        use App\Models\UserDigitalSignature;
-        $headmasterUser = $headmaster?->user ?? null;
-        $headmasterSig  = $headmasterUser ? UserDigitalSignature::where('user_id', $headmasterUser->id)->first() : null;
-        $kaurUser       = $kaurLab?->user ?? null;
-        $kaurSig        = $kaurUser ? UserDigitalSignature::where('user_id', $kaurUser->id)->first() : null;
-        $teacherUser    = $log->teacher?->user ?? null;
-        $teacherSig     = $teacherUser ? UserDigitalSignature::where('user_id', $teacherUser->id)->first() : null;
+        use App\Models\DigitalDocument;
+
+        $docType     = $isCheckout ? 'BAST_LAB_CHECKOUT' : 'BAST_LAB_CHECKIN';
+        $docTitle    = 'BAST Lab #' . $docNumber;
+        $refId       = (string) $log->id . '_' . ($isCheckout ? 'out' : 'in');
+        $hashBase    = [$docType, $refId, $docNumber];
+
+        $kepsekData  = DigitalDocument::bastSignerData(
+            $headmaster, $docType . '_KEPSEK', $docTitle, $refId,
+            array_merge($hashBase, [$headmaster?->name ?? '', 'KEPSEK'])
+        );
+        $kaurData    = DigitalDocument::bastSignerData(
+            $kaurLab, $docType . '_KAUR', $docTitle, $refId,
+            array_merge($hashBase, [$kaurLab?->name ?? '', 'KAUR'])
+        );
+        $teacherData = DigitalDocument::bastSignerData(
+            $log->teacher, $docType . '_TEACHER', $docTitle, $refId,
+            array_merge($hashBase, [$log->teacher?->name ?? '', 'TEACHER'])
+        );
+
+        $hasAnyDigital = $kepsekData['doc'] || $kaurData['doc'] || $teacherData['doc'];
     @endphp
 
-    <table class="signatures">
-        <tr>
-            <td>
-                Mengetahui,<br>Kepala Sekolah
-                @if($headmasterSig && $headmasterSig->ttd_image_path)
-                    <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $headmasterSig->ttd_image_path) }}"></div>
-                    <div class="digital-badge">&#10003; TTD Digital</div>
-                @else
-                    <div class="sign-space"></div>
-                @endif
-                <strong>{{ $headmaster->name ?? '(................)' }}</strong>
-            </td>
-            <td>
-                Menyetujui,<br>Ka. Lab / Sarpras
-                @if($kaurSig && $kaurSig->ttd_image_path)
-                    <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $kaurSig->ttd_image_path) }}"></div>
-                    <div class="digital-badge">&#10003; TTD Digital</div>
-                @else
-                    <div class="sign-space"></div>
-                @endif
-                <strong>{{ $kaurLab->name ?? '(................)' }}</strong>
-            </td>
-            <td>
-                Yang Menggunakan,<br>Guru Mata Pelajaran
-                @if($teacherSig && $teacherSig->ttd_image_path)
-                    <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $teacherSig->ttd_image_path) }}"></div>
-                    <div class="digital-badge">&#10003; TTD Digital</div>
-                @else
-                    <div class="sign-space"></div>
-                @endif
-                <strong>{{ $log->teacher->name }}</strong>
-            </td>
-            <td class="qr-cell">
-                <img src="{{ $qrCode }}" width="65" height="65">
-                <div style="font-size:7px; color:#666; margin-top:2px;">Scan verifikasi</div>
-            </td>
-        </tr>
-    </table>
+    <div class="signatures">
+        <table>
+            <tr>
+                <td>
+                    <div class="sign-label">Mengetahui,<br>Kepala Sekolah</div>
+                    @if($kepsekData['sig'])
+                        <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $kepsekData['sig']->ttd_image_path) }}"></div>
+                    @else
+                        <div class="sign-space"></div>
+                    @endif
+                    @if($kepsekData['qr'])
+                        <div class="sign-qr"><img src="{{ $kepsekData['qr'] }}"></div>
+                    @endif
+                    <div class="sign-name">{{ $headmaster->name ?? '(................)' }}</div>
+                    <div class="sign-role">Kepala Sekolah</div>
+                </td>
+                <td>
+                    <div class="sign-label">Menyetujui,<br>Ka. Lab / Sarpras</div>
+                    @if($kaurData['sig'])
+                        <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $kaurData['sig']->ttd_image_path) }}"></div>
+                    @else
+                        <div class="sign-space"></div>
+                    @endif
+                    @if($kaurData['qr'])
+                        <div class="sign-qr"><img src="{{ $kaurData['qr'] }}"></div>
+                    @endif
+                    <div class="sign-name">{{ $kaurLab->name ?? '(................)' }}</div>
+                    <div class="sign-role">Ka. Lab / Sarpras</div>
+                </td>
+                <td>
+                    <div class="sign-label">Yang Menggunakan,<br>Guru Mata Pelajaran</div>
+                    @if($teacherData['sig'])
+                        <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $teacherData['sig']->ttd_image_path) }}"></div>
+                    @else
+                        <div class="sign-space"></div>
+                    @endif
+                    @if($teacherData['qr'])
+                        <div class="sign-qr"><img src="{{ $teacherData['qr'] }}"></div>
+                    @endif
+                    <div class="sign-name">{{ $log->teacher->name }}</div>
+                    <div class="sign-role">Guru Mata Pelajaran</div>
+                </td>
+            </tr>
+        </table>
+
+        @if($hasAnyDigital)
+        <div class="sign-footer">
+            <strong>*)</strong> Scan QR Code pada tiap tanda tangan untuk memverifikasi keaslian tanda tangan digital masing-masing penandatangan.
+            Verifikasi dapat dilakukan di: <strong>{{ url('/verify/signature') }}/{token}</strong>
+        </div>
+        @endif
+    </div>
 </body>
 
 </html>

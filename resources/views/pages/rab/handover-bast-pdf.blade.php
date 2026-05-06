@@ -52,12 +52,15 @@
             text-align: center;
             vertical-align: top;
         }
-        .sign-img-wrap { height: 52px; display: flex; align-items: center; justify-content: center; margin: 4px 0; }
-        .sign-img-wrap img { max-height: 48px; max-width: 110px; object-fit: contain; }
-        .sign-space { height: 52px; }
-        .sign-name { font-weight: bold; text-decoration: underline; }
-        .sign-role { font-size: 9px; color: #555; margin-top: 3px; }
-        .digital-badge { font-size: 7px; color: #4f46e5; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 4px; padding: 1px 4px; margin-top: 2px; display: inline-block; }
+        .sign-label { font-size: 10px; margin-bottom: 4px; }
+        .sign-img-wrap { height: 48px; display: flex; align-items: center; justify-content: center; margin: 2px auto; }
+        .sign-img-wrap img { max-height: 45px; max-width: 110px; object-fit: contain; }
+        .sign-qr { margin: 3px auto 2px; text-align: center; }
+        .sign-qr img { width: 52px; height: 52px; }
+        .sign-space { height: 70px; }
+        .sign-name { font-weight: bold; text-decoration: underline; font-size: 10px; margin-top: 4px; }
+        .sign-role { font-size: 8px; color: #666; margin-top: 1px; }
+        .sign-footer { margin-top: 10px; font-size: 8px; color: #555; border-top: 1px solid #e0e0e0; padding-top: 6px; }
     </style>
 </head>
 <body>
@@ -200,38 +203,57 @@
 
     {{-- Tanda Tangan --}}
     @php
-        use App\Models\UserDigitalSignature;
-        $headmasterUser = $headmaster?->user ?? null;
-        $headmasterSig  = $headmasterUser ? UserDigitalSignature::where('user_id', $headmasterUser->id)->first() : null;
+        use App\Models\DigitalDocument;
+
+        $docType    = 'BAST_RAB_HANDOVER';
+        $docTitle   = 'BAST Serah Terima RAB #' . $handover->document_number;
+        $refId      = (string) $handover->id;
+        $hashBase   = [$docType, $refId, $handover->document_number];
+
+        $kepsekData = DigitalDocument::bastSignerData(
+            $headmaster, $docType . '_KEPSEK', $docTitle, $refId,
+            array_merge($hashBase, [$headmaster?->name ?? '', 'KEPSEK'])
+        );
+
+        $hasAnyDigital = $kepsekData['doc'] !== null;
     @endphp
     <div class="sign-container">
         <table class="sign-table">
             <tr>
                 <td>
-                    <div>PIHAK PERTAMA,</div>
+                    <div class="sign-label">PIHAK PERTAMA,</div>
                     <div class="sign-space"></div>
                     <div class="sign-name">{{ $handover->handed_by }}</div>
                     <div class="sign-role">{{ $handover->handed_by_jabatan ?: 'Pengelola Sarana Prasarana' }}</div>
                 </td>
                 <td>
-                    <div>PIHAK KEDUA,</div>
+                    <div class="sign-label">PIHAK KEDUA,</div>
                     <div class="sign-space"></div>
                     <div class="sign-name">{{ $handover->received_by ?: '......................................................' }}</div>
                     <div class="sign-role">{{ $handover->received_by_jabatan ?: ($handover->department->name ?? 'Unit Penerima') }}</div>
                 </td>
                 <td>
-                    <div>MENGETAHUI,</div>
-                    @if($headmasterSig && $headmasterSig->ttd_image_path)
-                        <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $headmasterSig->ttd_image_path) }}"></div>
-                        <div class="digital-badge">&#10003; TTD Digital</div>
+                    <div class="sign-label">MENGETAHUI,</div>
+                    @if($kepsekData['sig'])
+                        <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $kepsekData['sig']->ttd_image_path) }}"></div>
                     @else
                         <div class="sign-space"></div>
+                    @endif
+                    @if($kepsekData['qr'])
+                        <div class="sign-qr"><img src="{{ $kepsekData['qr'] }}"></div>
                     @endif
                     <div class="sign-name">{{ $headmaster ? $headmaster->name : '......................................................' }}</div>
                     <div class="sign-role">Kepala Sekolah</div>
                 </td>
             </tr>
         </table>
+
+        @if($hasAnyDigital)
+        <div class="sign-footer">
+            <strong>*)</strong> Scan QR Code pada tiap tanda tangan untuk memverifikasi keaslian tanda tangan digital masing-masing penandatangan.
+            Verifikasi dapat dilakukan di: <strong>{{ url('/verify/signature') }}/{token}</strong>
+        </div>
+        @endif
     </div>
 
 </div>

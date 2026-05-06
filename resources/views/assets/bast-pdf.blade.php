@@ -66,38 +66,20 @@
         .signatures td {
             border: 1px dotted #999;
             text-align: center;
-            width: 30%;
-            padding: 12px 8px;
+            width: 33.33%;
+            padding: 10px 8px;
             vertical-align: top;
         }
 
-        .qr-cell {
-            border: 1px dotted #999;
-            width: 10%;
-            text-align: center;
-            vertical-align: middle;
-            padding: 8px;
-        }
-
-        .sign-img-wrap {
-            height: 55px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 4px 0;
-        }
-        .sign-img-wrap img { max-height: 50px; max-width: 110px; object-fit: contain; }
-        .sign-space { height: 55px; }
-        .digital-badge {
-            font-size: 7px;
-            color: #4f46e5;
-            background: #eef2ff;
-            border: 1px solid #c7d2fe;
-            border-radius: 4px;
-            padding: 1px 4px;
-            margin-top: 2px;
-            display: inline-block;
-        }
+        .sign-label { font-size: 10px; margin-bottom: 4px; }
+        .sign-img-wrap { height: 48px; display: flex; align-items: center; justify-content: center; margin: 2px auto; }
+        .sign-img-wrap img { max-height: 45px; max-width: 110px; object-fit: contain; }
+        .sign-qr { margin: 3px auto 2px; text-align: center; }
+        .sign-qr img { width: 52px; height: 52px; }
+        .sign-space { height: 70px; }
+        .sign-name { font-weight: bold; text-decoration: underline; font-size: 10px; margin-top: 4px; }
+        .sign-role { font-size: 8px; color: #666; margin-top: 1px; }
+        .sign-footer { margin-top: 10px; font-size: 8px; color: #555; border-top: 1px solid #e0e0e0; padding-top: 6px; }
     </style>
 </head>
 
@@ -154,77 +136,81 @@
     </div>
 
     @php
-        use App\Models\UserDigitalSignature;
         use App\Models\DigitalDocument;
 
-        // Ambil tanda tangan kepala sekolah
-        $headmasterUser = $headmaster?->user ?? null;
-        $headmasterSig  = $headmasterUser
-            ? UserDigitalSignature::where('user_id', $headmasterUser->id)->first()
-            : null;
+        $picEmployee  = \App\Models\Employee::where('name', $asset->personInCharge?->name)->first();
+        $docType      = $isReturn ? 'BAST_ASSET_RETURN' : 'BAST_ASSET_CHECKOUT';
+        $docTitle     = ($isReturn ? 'BAST Return' : 'BAST Checkout') . ' Aset #' . ($assignment->checkout_doc_number ?? $assignment->return_doc_number ?? $assignment->id);
+        $refId        = (string) $assignment->id;
+        $hashBase     = [$docType, $refId, $assignment->checkout_doc_number ?? $assignment->return_doc_number ?? ''];
 
-        // PersonInCharge tidak punya relasi user langsung — cari via nama di tabel employees
-        $picEmployee = \App\Models\Employee::where('name', $asset->personInCharge?->name)->first();
-        $picUser     = $picEmployee?->user ?? null;
-        $picSig      = $picUser
-            ? UserDigitalSignature::where('user_id', $picUser->id)->first()
-            : null;
+        $kepsekData   = DigitalDocument::bastSignerData(
+            $headmaster, $docType . '_KEPSEK', $docTitle, $refId,
+            array_merge($hashBase, [$headmaster?->name ?? '', 'KEPSEK'])
+        );
+        $picData      = DigitalDocument::bastSignerData(
+            $picEmployee, $docType . '_PIC', $docTitle, $refId,
+            array_merge($hashBase, [$picEmployee?->name ?? '', 'PIC'])
+        );
+        $peminjamData = DigitalDocument::bastSignerData(
+            $employee, $docType . '_PEMINJAM', $docTitle, $refId,
+            array_merge($hashBase, [$employee?->name ?? '', 'PEMINJAM'])
+        );
 
-        // Ambil tanda tangan peminjam
-        $employeeUser = $employee?->user ?? null;
-        $employeeSig  = $employeeUser
-            ? UserDigitalSignature::where('user_id', $employeeUser->id)->first()
-            : null;
-
-        $docType     = $isReturn ? 'BAST_ASSET_RETURN' : 'BAST_ASSET_CHECKOUT';
-        $digitalDoc  = DigitalDocument::where('document_type', $docType)
-            ->where('reference_id', $assignment->id)
-            ->where('is_valid', true)
-            ->first();
+        $hasAnyDigital = $kepsekData['doc'] || $picData['doc'] || $peminjamData['doc'];
     @endphp
 
     <div class="signatures">
         <table>
             <tr>
                 <td>
-                    Mengetahui,<br>Kepala Sekolah
-                    @if($headmasterSig && $headmasterSig->ttd_image_path)
-                        <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $headmasterSig->ttd_image_path) }}"></div>
-                        <div class="digital-badge">&#10003; TTD Digital</div>
+                    <div class="sign-label">Mengetahui,<br>Kepala Sekolah</div>
+                    @if($kepsekData['sig'])
+                        <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $kepsekData['sig']->ttd_image_path) }}"></div>
                     @else
                         <div class="sign-space"></div>
                     @endif
-                    <strong>{{ $headmaster->name ?? '(Nama Kepala Sekolah)' }}</strong>
+                    @if($kepsekData['qr'])
+                        <div class="sign-qr"><img src="{{ $kepsekData['qr'] }}"></div>
+                    @endif
+                    <div class="sign-name">{{ $headmaster->name ?? '(Nama Kepala Sekolah)' }}</div>
+                    <div class="sign-role">Kepala Sekolah</div>
                 </td>
                 <td>
-                    Menyetujui,<br>Penanggung Jawab Aset
-                    @if($picSig && $picSig->ttd_image_path)
-                        <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $picSig->ttd_image_path) }}"></div>
-                        <div class="digital-badge">&#10003; TTD Digital</div>
+                    <div class="sign-label">Menyetujui,<br>Penanggung Jawab Aset</div>
+                    @if($picData['sig'])
+                        <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $picData['sig']->ttd_image_path) }}"></div>
                     @else
                         <div class="sign-space"></div>
                     @endif
-                    <strong>{{ $asset->personInCharge->name }}</strong>
+                    @if($picData['qr'])
+                        <div class="sign-qr"><img src="{{ $picData['qr'] }}"></div>
+                    @endif
+                    <div class="sign-name">{{ $asset->personInCharge->name }}</div>
+                    <div class="sign-role">Penanggung Jawab Aset</div>
                 </td>
                 <td>
-                    Yang Menerima,<br>Peminjam
-                    @if($employeeSig && $employeeSig->ttd_image_path)
-                        <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $employeeSig->ttd_image_path) }}"></div>
-                        <div class="digital-badge">&#10003; TTD Digital</div>
+                    <div class="sign-label">Yang Menerima,<br>Peminjam</div>
+                    @if($peminjamData['sig'])
+                        <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $peminjamData['sig']->ttd_image_path) }}"></div>
                     @else
                         <div class="sign-space"></div>
                     @endif
-                    <strong>{{ $employee->name }}</strong>
-                </td>
-                <td class="qr-cell">
-                    <img src="{{ $qrCode }}" width="65" height="65">
-                    <div style="font-size:7px; color:#666; margin-top:2px;">Scan verifikasi</div>
-                    @if($digitalDoc)
-                        <div class="digital-badge" style="font-size:6px; margin-top:3px;">TTD Digital Sah</div>
+                    @if($peminjamData['qr'])
+                        <div class="sign-qr"><img src="{{ $peminjamData['qr'] }}"></div>
                     @endif
+                    <div class="sign-name">{{ $employee->name }}</div>
+                    <div class="sign-role">Peminjam</div>
                 </td>
             </tr>
         </table>
+
+        @if($hasAnyDigital)
+        <div class="sign-footer">
+            <strong>*)</strong> Scan QR Code pada tiap tanda tangan untuk memverifikasi keaslian tanda tangan digital masing-masing penandatangan.
+            Verifikasi dapat dilakukan di: <strong>{{ url('/verify/signature') }}/{token}</strong>
+        </div>
+        @endif
     </div>
 </body>
 

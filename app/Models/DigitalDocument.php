@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -61,7 +63,8 @@ class DigitalDocument extends Model
     }
 
     /**
-     * Buat atau perbarui dokumen yang ditandatangani.
+     * Buat atau perbarui satu record dokumen per penandatangan.
+     * Setiap (document_type, reference_id, signed_by) = satu record unik.
      */
     public static function signOrUpdate(
         User $user,
@@ -87,7 +90,11 @@ class DigitalDocument extends Model
             'revoke_reason'  => null,
         ];
 
-        $existing = self::where('document_type', $type)->where('reference_id', $refId)->first();
+        // Lookup per penandatangan — satu record per (type, ref, user)
+        $existing = self::where('document_type', $type)
+            ->where('reference_id', $refId)
+            ->where('signed_by', $user->id)
+            ->first();
 
         if ($existing) {
             $existing->update($data);
@@ -98,5 +105,51 @@ class DigitalDocument extends Model
             'document_type' => $type,
             'reference_id'  => $refId,
         ]));
+    }
+
+    /**
+     * Auto-sign dokumen BAST untuk satu Employee (jika sudah setup TTD digital),
+     * lalu kembalikan array ['sig', 'doc', 'qr'] untuk dipakai di Blade PDF.
+     *
+     * @param  Employee|null  $employee
+     * @param  string         $docType     cth: 'BAST_PROC_V2S'
+     * @param  string         $docTitle    judul dokumen
+     * @param  string         $refId       nomor dokumen / ID referensi
+     * @param  array          $hashParts   komponen hash
+     * @return array{sig: UserDigitalSignature|null, doc: DigitalDocument|null, qr: string|null}
+     */
+    public static function bastSignerData(
+        ?Employee $employee,
+        string $docType,
+        string $docTitle,
+        string $refId,
+        array $hashParts
+    ): array {
+        if (!$employee) {
+            return ['sig' => null, 'doc' => null, 'qr' => null];
+        }
+
+        $user = $employee->user;
+        if (!$user) {
+            return ['sig' => null, 'doc' => null, 'qr' => null];
+        }
+
+        $sig = UserDigitalSignature::where('user_id', $user->id)->first();
+        if (!$sig || !$sig->isReady()) {
+            return ['sig' => null, 'doc' => null, 'qr' => null];
+        }
+
+        $doc = self::signOrUpdate($user, $docType, $docTitle, $refId, $hashParts);
+
+        $verifyUrl = url('/verify/signature/' . $doc->token);
+        $options   = new QROptions([
+            'outputType'  => QRCode::OUTPUT_IMAGE_PNG,
+            'eccLevel'    => QRCode::ECC_M,
+            'scale'       => 4,
+            'imageBase64' => true,
+        ]);
+        $qr = (new QRCode($options))->render($verifyUrl);
+
+        return ['sig' => $sig, 'doc' => $doc, 'qr' => $qr];
     }
 }

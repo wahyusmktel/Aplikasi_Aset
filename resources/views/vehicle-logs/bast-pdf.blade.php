@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <title>{{ $title }}</title>
     <style>
-        /* CSS sama seperti bast-pdf sebelumnya */
         body {
             font-family: 'Times New Roman', Times, serif;
             font-size: 12px;
@@ -72,31 +71,15 @@
             vertical-align: top;
         }
 
-        .sign-img-wrap {
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 4px auto;
-        }
-        .sign-img-wrap img { max-height: 48px; max-width: 110px; object-fit: contain; }
-        .sign-space { height: 50px; }
-        .digital-badge {
-            font-size: 7px;
-            color: #4f46e5;
-            background: #eef2ff;
-            border: 1px solid #c7d2fe;
-            border-radius: 4px;
-            padding: 1px 4px;
-            margin-top: 2px;
-            display: inline-block;
-        }
-
-        .qr-code {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-        }
+        .sign-label { font-size: 10px; margin-bottom: 4px; }
+        .sign-img-wrap { height: 48px; display: flex; align-items: center; justify-content: center; margin: 2px auto; }
+        .sign-img-wrap img { max-height: 45px; max-width: 110px; object-fit: contain; }
+        .sign-qr { margin: 3px auto 2px; text-align: center; }
+        .sign-qr img { width: 52px; height: 52px; }
+        .sign-space { height: 70px; }
+        .sign-name { font-weight: bold; text-decoration: underline; font-size: 10px; margin-top: 4px; }
+        .sign-role { font-size: 8px; color: #666; margin-top: 1px; }
+        .sign-footer { margin-top: 10px; font-size: 8px; color: #555; border-top: 1px solid #e0e0e0; padding-top: 6px; }
     </style>
 </head>
 
@@ -209,59 +192,79 @@
     </div>
 
     @php
-        use App\Models\UserDigitalSignature;
-        $headmasterUser  = $headmaster?->user ?? null;
-        $headmasterSig   = $headmasterUser ? UserDigitalSignature::where('user_id', $headmasterUser->id)->first() : null;
-        $approverUser    = $approver?->user ?? null;
-        $approverSig     = $approverUser ? UserDigitalSignature::where('user_id', $approverUser->id)->first() : null;
+        use App\Models\DigitalDocument;
+
+        $docType      = $isCheckin ? 'BAST_VEHICLE_CHECKIN' : 'BAST_VEHICLE_CHECKOUT';
+        $docNum       = $isCheckin ? $log->checkin_doc_number : $log->checkout_doc_number;
+        $docTitle     = ($isCheckin ? 'BAST Pengembalian' : 'BAST Penggunaan') . ' Kendaraan #' . ($docNum ?? $log->id);
+        $refId        = (string) $log->id . '_' . ($isCheckin ? 'in' : 'out');
+        $hashBase     = [$docType, $refId, $docNum ?? ''];
+
+        $kepsekData   = DigitalDocument::bastSignerData(
+            $headmaster, $docType . '_KEPSEK', $docTitle, $refId,
+            array_merge($hashBase, [$headmaster?->name ?? '', 'KEPSEK'])
+        );
+        $approverData = DigitalDocument::bastSignerData(
+            $approver, $docType . '_APPROVER', $docTitle, $refId,
+            array_merge($hashBase, [$approver?->name ?? '', 'APPROVER'])
+        );
+
+        $hasAnyDigital = $kepsekData['doc'] || $approverData['doc'];
     @endphp
 
     <div class="signatures">
         <table>
             <tr>
                 <td>
-                    Mengetahui,<br>Kepala Sekolah
-                    @if($headmasterSig && $headmasterSig->ttd_image_path)
-                        <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $headmasterSig->ttd_image_path) }}"></div>
-                        <div class="digital-badge">&#10003; TTD Digital</div>
-                    @elseif(isset($kepsekQrCode))
-                        <br><img src="{{ $kepsekQrCode }}" width="55px" height="55px"><br>
+                    <div class="sign-label">Mengetahui,<br>Kepala Sekolah</div>
+                    @if($kepsekData['sig'])
+                        <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $kepsekData['sig']->ttd_image_path) }}"></div>
                     @else
                         <div class="sign-space"></div>
                     @endif
-                    <strong>{{ $headmaster->name ?? '(Nama Kepala Sekolah)' }}</strong><br>
-                    NIP. {{ $headmaster->nip ?? '-' }}
+                    @if($kepsekData['qr'])
+                        <div class="sign-qr"><img src="{{ $kepsekData['qr'] }}"></div>
+                    @endif
+                    <div class="sign-name">{{ $headmaster->name ?? '(Nama Kepala Sekolah)' }}</div>
+                    <div class="sign-role">Kepala Sekolah</div>
+                    @if($headmaster && $headmaster->nip)
+                        <div class="sign-role">NIP. {{ $headmaster->nip }}</div>
+                    @endif
                 </td>
                 <td>
-                    Menyetujui,<br>{{ $approverTitle }}
-                    @if($approverSig && $approverSig->ttd_image_path)
-                        <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $approverSig->ttd_image_path) }}"></div>
-                        <div class="digital-badge">&#10003; TTD Digital</div>
-                    @elseif(isset($wakaQrCode))
-                        <br><img src="{{ $wakaQrCode }}" width="55px" height="55px"><br>
+                    <div class="sign-label">Menyetujui,<br>{{ $approverTitle }}</div>
+                    @if($approverData['sig'])
+                        <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $approverData['sig']->ttd_image_path) }}"></div>
                     @else
                         <div class="sign-space"></div>
                     @endif
-                    <strong>{{ $approver->name ?? '(Nama ' . $approverTitle . ')' }}</strong><br>
-                    NIP. {{ $approver->nip ?? '-' }}
+                    @if($approverData['qr'])
+                        <div class="sign-qr"><img src="{{ $approverData['qr'] }}"></div>
+                    @endif
+                    <div class="sign-name">{{ $approver->name ?? '(Nama ' . $approverTitle . ')' }}</div>
+                    <div class="sign-role">{{ $approverTitle }}</div>
+                    @if($approver && $approver->nip)
+                        <div class="sign-role">NIP. {{ $approver->nip }}</div>
+                    @endif
                 </td>
                 <td>
-                    Pengguna,
-                    @if(isset($userQrCode))
-                        <br><img src="{{ $userQrCode }}" width="55px" height="55px"><br>
-                    @else
-                        <div class="sign-space"></div>
+                    <div class="sign-label">Pengguna,</div>
+                    <div class="sign-space"></div>
+                    <div class="sign-name">{{ $log->borrower_name }}</div>
+                    <div class="sign-role">Pengguna Kendaraan</div>
+                    @if($log->borrower_nip)
+                        <div class="sign-role">NIP. {{ $log->borrower_nip }}</div>
                     @endif
-                    <strong>{{ $log->borrower_name }}</strong><br>
-                    NIP. {{ $log->borrower_nip ?? '-' }}
                 </td>
             </tr>
         </table>
-    </div>
 
-    <div class="qr-code">
-        <img src="{{ $qrCode }}" width="75px" height="75px">
-        <p style="font-size:9px; text-align:center; margin-top:2px; color:#555;">Scan untuk verifikasi dokumen</p>
+        @if($hasAnyDigital)
+        <div class="sign-footer">
+            <strong>*)</strong> Scan QR Code pada tiap tanda tangan untuk memverifikasi keaslian tanda tangan digital masing-masing penandatangan.
+            Verifikasi dapat dilakukan di: <strong>{{ url('/verify/signature') }}/{token}</strong>
+        </div>
+        @endif
     </div>
 </body>
 
