@@ -65,10 +65,8 @@
         }
 
         .sign-label { font-size: 10px; margin-bottom: 4px; }
-        .sign-img-wrap { height: 48px; display: flex; align-items: center; justify-content: center; margin: 2px auto; }
-        .sign-img-wrap img { max-height: 45px; max-width: 110px; object-fit: contain; }
-        .sign-qr { margin: 3px auto 2px; text-align: center; }
-        .sign-qr img { width: 52px; height: 52px; }
+        .sign-qr { margin: 6px auto 2px; text-align: center; }
+        .sign-qr img { width: 72px; height: 72px; }
         .sign-space { height: 70px; }
         .sign-name { font-weight: bold; text-decoration: underline; font-size: 10px; margin-top: 4px; }
         .sign-role { font-size: 8px; color: #666; margin-top: 1px; }
@@ -168,39 +166,30 @@
             <tr>
                 <td>
                     <div class="sign-label">Mengetahui,<br>Kepala Sekolah</div>
-                    @if($kepsekData['sig'])
-                        <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $kepsekData['sig']->ttd_image_path) }}"></div>
-                    @else
-                        <div class="sign-space"></div>
-                    @endif
                     @if($kepsekData['qr'])
                         <div class="sign-qr"><img src="{{ $kepsekData['qr'] }}"></div>
+                    @else
+                        <div class="sign-space"></div>
                     @endif
                     <div class="sign-name">{{ $headmaster->name ?? '(................)' }}</div>
                     <div class="sign-role">Kepala Sekolah</div>
                 </td>
                 <td>
                     <div class="sign-label">Menyetujui,<br>Ka. Lab / Sarpras</div>
-                    @if($kaurData['sig'])
-                        <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $kaurData['sig']->ttd_image_path) }}"></div>
-                    @else
-                        <div class="sign-space"></div>
-                    @endif
                     @if($kaurData['qr'])
                         <div class="sign-qr"><img src="{{ $kaurData['qr'] }}"></div>
+                    @else
+                        <div class="sign-space"></div>
                     @endif
                     <div class="sign-name">{{ $kaurLab->name ?? '(................)' }}</div>
                     <div class="sign-role">Ka. Lab / Sarpras</div>
                 </td>
                 <td>
                     <div class="sign-label">Yang Menggunakan,<br>Guru Mata Pelajaran</div>
-                    @if($teacherData['sig'])
-                        <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $teacherData['sig']->ttd_image_path) }}"></div>
-                    @else
-                        <div class="sign-space"></div>
-                    @endif
                     @if($teacherData['qr'])
                         <div class="sign-qr"><img src="{{ $teacherData['qr'] }}"></div>
+                    @else
+                        <div class="sign-space"></div>
                     @endif
                     <div class="sign-name">{{ $log->teacher->name }}</div>
                     <div class="sign-role">Guru Mata Pelajaran</div>
