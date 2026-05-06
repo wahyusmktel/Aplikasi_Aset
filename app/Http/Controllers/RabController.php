@@ -40,9 +40,11 @@ class RabController extends Controller
         $fundingSources = FundingSource::orderBy('name')->get();
         $institutions = Institution::orderBy('name')->get();
         $categories = Category::orderBy('name')->get();
+        $employees = Employee::orderBy('name')->get(['id', 'name', 'position']);
         return view('pages.rab.index', compact(
             'rabs', 'buildings', 'rooms', 'faculties', 'departments',
-            'personsInCharge', 'assetFunctions', 'fundingSources', 'institutions', 'categories'
+            'personsInCharge', 'assetFunctions', 'fundingSources', 'institutions', 'categories',
+            'employees'
         ));
     }
 

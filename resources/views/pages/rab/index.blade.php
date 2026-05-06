@@ -538,13 +538,19 @@
                                         </div>
                                         <div>
                                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Nama Penyerah (Pihak Pertama)</label>
-                                            <input type="text" name="handed_by" x-model="handoverHandedBy" required placeholder="Nama pengelola/penyerah barang"
+                                            <select x-model="handoverHandedByEmpId" @change="selectHandedByEmp(handoverHandedByEmpId)" required
                                                 class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-orange-500 focus:ring-orange-500 text-sm font-bold">
+                                                <option value="">— Pilih Pegawai —</option>
+                                                @foreach($employees as $emp)
+                                                    <option value="{{ $emp->id }}" data-position="{{ $emp->position }}">{{ $emp->name }}</option>
+                                                @endforeach
+                                            </select>
+                                            <input type="hidden" name="handed_by" :value="handoverHandedBy">
                                         </div>
                                         <div>
                                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Jabatan Penyerah (Pihak Pertama)</label>
-                                            <input type="text" name="handed_by_jabatan" x-model="handoverHandedByJabatan" placeholder="Misal: Waka Sarana Prasarana"
-                                                class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-orange-500 focus:ring-orange-500 text-sm font-bold">
+                                            <input type="text" name="handed_by_jabatan" x-model="handoverHandedByJabatan" readonly
+                                                class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 dark:text-gray-300 text-sm font-bold cursor-not-allowed text-gray-500">
                                         </div>
                                     </div>
 
@@ -612,19 +618,24 @@
                                                         x-text="departmentMap[deptId] || ('Unit #' + deptId)"></label>
                                                     <div>
                                                         <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Nama Penerima</label>
-                                                        <input type="text"
-                                                            :name="'received_by[' + deptId + ']'"
-                                                            x-model="handoverReceivedBy[deptId]"
-                                                            placeholder="Nama penerima dari unit ini"
+                                                        <select @change="selectReceivedByEmp(deptId, $event.target.value)"
                                                             class="w-full px-3 py-2 rounded-xl border-orange-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 text-sm font-bold focus:border-orange-500 focus:ring-orange-400">
+                                                            <option value="">— Pilih Pegawai —</option>
+                                                            @foreach($employees as $emp)
+                                                                <option value="{{ $emp->id }}" data-position="{{ $emp->position }}">{{ $emp->name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                        <input type="hidden"
+                                                            :name="'received_by[' + deptId + ']'"
+                                                            :value="handoverReceivedBy[deptId]">
                                                     </div>
                                                     <div>
                                                         <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Jabatan</label>
                                                         <input type="text"
                                                             :name="'received_by_jabatan[' + deptId + ']'"
-                                                            x-model="handoverReceivedByJabatan[deptId]"
-                                                            placeholder="Misal: Kepala Lab, Kabag SDM"
-                                                            class="w-full px-3 py-2 rounded-xl border-orange-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 text-sm font-bold focus:border-orange-500 focus:ring-orange-400">
+                                                            :value="handoverReceivedByJabatan[deptId]"
+                                                            readonly
+                                                            class="w-full px-3 py-2 rounded-xl border-orange-100 dark:border-gray-800 bg-orange-50/50 dark:bg-gray-900/50 dark:text-gray-300 text-sm font-bold cursor-not-allowed text-gray-500">
                                                     </div>
                                                 </div>
                                             </template>
@@ -810,19 +821,34 @@
                     handoverRab: { id: null, name: '' },
                     handoverItems: [],
                     handoverDate: new Date().toISOString().split('T')[0],
+                    handoverHandedByEmpId: '',
                     handoverHandedBy: '',
                     handoverHandedByJabatan: '',
                     handoverReceivedBy: {},
                     handoverReceivedByJabatan: {},
                     departmentMap: {},
+                    employees: @json($employees),
 
                     initDeptMap(map) {
                         this.departmentMap = map;
                     },
 
+                    selectHandedByEmp(empId) {
+                        const emp = this.employees.find(e => String(e.id) === String(empId));
+                        this.handoverHandedBy = emp ? emp.name : '';
+                        this.handoverHandedByJabatan = emp ? (emp.position || '') : '';
+                    },
+
+                    selectReceivedByEmp(deptId, empId) {
+                        const emp = this.employees.find(e => String(e.id) === String(empId));
+                        this.handoverReceivedBy = { ...this.handoverReceivedBy, [deptId]: emp ? emp.name : '' };
+                        this.handoverReceivedByJabatan = { ...this.handoverReceivedByJabatan, [deptId]: emp ? (emp.position || '') : '' };
+                    },
+
                     openHandoverModal(id, name, items) {
                         this.handoverRab = { id, name };
                         this.handoverDate = new Date().toISOString().split('T')[0];
+                        this.handoverHandedByEmpId = '';
                         this.handoverHandedBy = '';
                         this.handoverHandedByJabatan = '';
                         this.handoverReceivedBy = {};
