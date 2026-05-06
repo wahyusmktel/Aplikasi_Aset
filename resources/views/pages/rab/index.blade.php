@@ -692,10 +692,17 @@
                                         <p class="text-sm font-black text-gray-800 dark:text-white" x-text="bast.docNum"></p>
                                         <p class="text-[10px] text-gray-400 mt-0.5" x-text="bast.dept + ' · ' + bast.count + ' barang · ' + bast.date"></p>
                                     </div>
-                                    <a :href="`/rab/${bastListRabId}/handover/${bast.id}/pdf`"
-                                        class="p-2.5 bg-orange-100 dark:bg-orange-900/30 text-orange-600 hover:bg-orange-200 rounded-xl transition-all" title="Unduh BAST PDF">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                                    </a>
+                                    <div class="flex items-center gap-2">
+                                        <a :href="`/rab/${bastListRabId}/handover/${bast.id}/pdf`"
+                                            class="p-2.5 bg-orange-100 dark:bg-orange-900/30 text-orange-600 hover:bg-orange-200 dark:hover:bg-orange-900/50 rounded-xl transition-all" title="Unduh BAST PDF">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                        </a>
+                                        <button type="button"
+                                            @click="confirmDeleteBast(bastListRabId, bast.id, bast.docNum)"
+                                            class="p-2.5 bg-red-100 dark:bg-red-900/30 text-red-500 hover:bg-red-200 dark:hover:bg-red-900/50 rounded-xl transition-all" title="Hapus BAST">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                        </button>
+                                    </div>
                                 </div>
                             </template>
                         </div>
@@ -856,6 +863,32 @@
                         this.showBastListModal = true;
                     },
                 }
+            }
+
+            function confirmDeleteBast(rabId, handoverId, docNum) {
+                Swal.fire({
+                    title: '<span class="text-xl font-black uppercase tracking-tight">Hapus BAST?</span>',
+                    html: `<p class="text-sm text-gray-400">BAST <strong>${docNum}</strong> akan dihapus secara permanen.</p>`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Ya, Hapus',
+                    cancelButtonText: 'Batal',
+                    padding: '2rem',
+                    background: document.documentElement.classList.contains('dark') ? '#0a0a0a' : '#fff',
+                    color: document.documentElement.classList.contains('dark') ? '#fff' : '#000',
+                    borderRadius: '2rem'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = document.createElement('form');
+                        form.action = `/rab/${rabId}/handover/${handoverId}`;
+                        form.method = 'POST';
+                        form.innerHTML = `@csrf @method('DELETE')`;
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                });
             }
 
             function confirmDeleteRAB(id) {

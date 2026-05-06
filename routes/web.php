@@ -291,6 +291,7 @@ Route::middleware('auth')->group(function () {
     Route::post('rab/{rab}/convert-to-assets', [RabController::class, 'convertToAssets'])->name('rab.convertToAssets');
     Route::post('rab/{rab}/handover', [RabController::class, 'storeHandover'])->name('rab.storeHandover');
     Route::get('rab/{rab}/handover/{handover}/pdf', [RabController::class, 'downloadHandoverBast'])->name('rab.downloadHandoverBast');
+    Route::delete('rab/{rab}/handover/{handover}', [RabController::class, 'destroyHandover'])->name('rab.destroyHandover');
     Route::get('get-mta-details', [RabController::class, 'getMtaDetails'])->name('rab.getMtaDetails');
     Route::resource('rab', RabController::class);
     // ============================================================

@@ -509,6 +509,17 @@ class RabController extends Controller
         }
     }
 
+    public function destroyHandover(Rab $rab, RabHandover $handover)
+    {
+        if ($handover->rab_id !== $rab->id) {
+            abort(403);
+        }
+        $docNum = $handover->document_number;
+        $handover->delete();
+        Alert::success('Berhasil', "BAST {$docNum} berhasil dihapus.");
+        return redirect()->route('rab.index');
+    }
+
     public function downloadHandoverBast(Rab $rab, RabHandover $handover)
     {
         $handover->load(['rab.academicYear', 'department', 'items']);
