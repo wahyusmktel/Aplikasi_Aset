@@ -530,7 +530,7 @@
 
                                 <div class="overflow-y-auto p-8 space-y-8">
                                     {{-- Info Global --}}
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         <div>
                                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Tanggal Serah Terima</label>
                                             <input type="date" name="handover_date" x-model="handoverDate" required
@@ -539,6 +539,11 @@
                                         <div>
                                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Nama Penyerah (Pihak Pertama)</label>
                                             <input type="text" name="handed_by" x-model="handoverHandedBy" required placeholder="Nama pengelola/penyerah barang"
+                                                class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-orange-500 focus:ring-orange-500 text-sm font-bold">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Jabatan Penyerah (Pihak Pertama)</label>
+                                            <input type="text" name="handed_by_jabatan" x-model="handoverHandedByJabatan" placeholder="Misal: Waka Sarana Prasarana"
                                                 class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-orange-500 focus:ring-orange-500 text-sm font-bold">
                                         </div>
                                     </div>
@@ -602,14 +607,25 @@
                                         <div class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Nama Penerima per Unit (Pihak Kedua)</div>
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <template x-for="deptId in getUniqueDepts()" :key="deptId">
-                                                <div class="p-4 bg-orange-50 dark:bg-orange-900/10 rounded-2xl border border-orange-100 dark:border-orange-800/30">
-                                                    <label class="block text-[10px] font-black text-orange-600 uppercase tracking-widest mb-2"
+                                                <div class="p-4 bg-orange-50 dark:bg-orange-900/10 rounded-2xl border border-orange-100 dark:border-orange-800/30 space-y-3">
+                                                    <label class="block text-[10px] font-black text-orange-600 uppercase tracking-widest"
                                                         x-text="departmentMap[deptId] || ('Unit #' + deptId)"></label>
-                                                    <input type="text"
-                                                        :name="'received_by[' + deptId + ']'"
-                                                        x-model="handoverReceivedBy[deptId]"
-                                                        placeholder="Nama penerima dari unit ini"
-                                                        class="w-full px-3 py-2 rounded-xl border-orange-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 text-sm font-bold focus:border-orange-500 focus:ring-orange-400">
+                                                    <div>
+                                                        <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Nama Penerima</label>
+                                                        <input type="text"
+                                                            :name="'received_by[' + deptId + ']'"
+                                                            x-model="handoverReceivedBy[deptId]"
+                                                            placeholder="Nama penerima dari unit ini"
+                                                            class="w-full px-3 py-2 rounded-xl border-orange-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 text-sm font-bold focus:border-orange-500 focus:ring-orange-400">
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Jabatan</label>
+                                                        <input type="text"
+                                                            :name="'received_by_jabatan[' + deptId + ']'"
+                                                            x-model="handoverReceivedByJabatan[deptId]"
+                                                            placeholder="Misal: Kepala Lab, Kabag SDM"
+                                                            class="w-full px-3 py-2 rounded-xl border-orange-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 text-sm font-bold focus:border-orange-500 focus:ring-orange-400">
+                                                    </div>
                                                 </div>
                                             </template>
                                         </div>
@@ -788,7 +804,9 @@
                     handoverItems: [],
                     handoverDate: new Date().toISOString().split('T')[0],
                     handoverHandedBy: '',
+                    handoverHandedByJabatan: '',
                     handoverReceivedBy: {},
+                    handoverReceivedByJabatan: {},
                     departmentMap: {},
 
                     initDeptMap(map) {
@@ -799,7 +817,9 @@
                         this.handoverRab = { id, name };
                         this.handoverDate = new Date().toISOString().split('T')[0];
                         this.handoverHandedBy = '';
+                        this.handoverHandedByJabatan = '';
                         this.handoverReceivedBy = {};
+                        this.handoverReceivedByJabatan = {};
                         this.handoverItems = items.map(i => ({
                             uraian: i.uraian,
                             qty: i.qty ? Number(i.qty) : null,

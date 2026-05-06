@@ -121,7 +121,7 @@
                 <td></td>
                 <td class="label">Jabatan</td>
                 <td class="sep">:</td>
-                <td>Pengelola Sarana Prasarana</td>
+                <td>{{ $handover->handed_by_jabatan ?: 'Pengelola Sarana Prasarana' }}</td>
             </tr>
             <tr>
                 <td></td>
@@ -133,6 +133,12 @@
                 <td class="label">Nama</td>
                 <td class="sep">:</td>
                 <td><strong>{{ $handover->received_by ?: '.................................................' }}</strong></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="label">Jabatan</td>
+                <td class="sep">:</td>
+                <td>{{ $handover->received_by_jabatan ?: '.................................................' }}</td>
             </tr>
             <tr>
                 <td></td>
@@ -195,12 +201,12 @@
                 <td>
                     <div>PIHAK PERTAMA,</div>
                     <div class="sign-name">{{ $handover->handed_by }}</div>
-                    <div class="sign-role">Pengelola Sarana Prasarana</div>
+                    <div class="sign-role">{{ $handover->handed_by_jabatan ?: 'Pengelola Sarana Prasarana' }}</div>
                 </td>
                 <td>
                     <div>PIHAK KEDUA,</div>
                     <div class="sign-name">{{ $handover->received_by ?: '......................................................' }}</div>
-                    <div class="sign-role">{{ $handover->department->name ?? 'Unit Penerima' }}</div>
+                    <div class="sign-role">{{ $handover->received_by_jabatan ?: ($handover->department->name ?? 'Unit Penerima') }}</div>
                 </td>
                 <td>
                     <div>MENGETAHUI,</div>

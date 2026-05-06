@@ -12,7 +12,9 @@ class RabHandover extends Model
         'document_number',
         'handover_date',
         'handed_by',
+        'handed_by_jabatan',
         'received_by',
+        'received_by_jabatan',
         'notes',
     ];
 

@@ -443,9 +443,10 @@ class RabController extends Controller
     public function storeHandover(Request $request, Rab $rab)
     {
         $request->validate([
-            'handover_date' => 'required|date',
-            'handed_by'     => 'required|string|max:255',
-            'items'         => 'required|array',
+            'handover_date'     => 'required|date',
+            'handed_by'         => 'required|string|max:255',
+            'handed_by_jabatan' => 'nullable|string|max:255',
+            'items'             => 'required|array',
         ]);
 
         $items = collect($request->items)->filter(fn($i) => isset($i['include']) && $i['include']);
@@ -473,12 +474,14 @@ class RabController extends Controller
                 $received = $request->input('received_by.' . $deptId);
 
                 $handover = RabHandover::create([
-                    'rab_id'          => $rab->id,
-                    'department_id'   => $deptId,
-                    'document_number' => $docNum,
-                    'handover_date'   => $request->handover_date,
-                    'handed_by'       => $request->handed_by,
-                    'received_by'     => $received,
+                    'rab_id'              => $rab->id,
+                    'department_id'       => $deptId,
+                    'document_number'     => $docNum,
+                    'handover_date'       => $request->handover_date,
+                    'handed_by'           => $request->handed_by,
+                    'handed_by_jabatan'   => $request->handed_by_jabatan,
+                    'received_by'         => $received,
+                    'received_by_jabatan' => $request->input('received_by_jabatan.' . $deptId),
                 ]);
 
                 foreach ($deptItems as $item) {
