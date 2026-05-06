@@ -19,6 +19,8 @@ use App\Models\AssetFunction;
 use App\Models\FundingSource;
 use App\Models\Institution;
 use App\Models\Category;
+use App\Models\RabHandover;
+use App\Models\RabHandoverItem;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use RealRashid\SweetAlert\Facades\Alert;
@@ -28,7 +30,7 @@ class RabController extends Controller
 {
     public function index()
     {
-        $rabs = Rab::with(['academicYear', 'creator', 'realization', 'details'])->latest()->paginate(10);
+        $rabs = Rab::with(['academicYear', 'creator', 'realization.details', 'details', 'handovers.department', 'handovers.items'])->latest()->paginate(10);
         $buildings = Building::orderBy('name')->get();
         $rooms = Room::orderBy('name')->get();
         $faculties = Faculty::orderBy('name')->get();
@@ -436,5 +438,85 @@ class RabController extends Controller
         ]);
 
         $asset->update(['asset_code_ypt' => $code]);
+    }
+
+    public function storeHandover(Request $request, Rab $rab)
+    {
+        $request->validate([
+            'handover_date' => 'required|date',
+            'handed_by'     => 'required|string|max:255',
+            'items'         => 'required|array',
+        ]);
+
+        $items = collect($request->items)->filter(fn($i) => isset($i['include']) && $i['include']);
+
+        if ($items->isEmpty()) {
+            Alert::warning('Peringatan', 'Pilih minimal satu barang untuk diserahterimakan.');
+            return back();
+        }
+
+        $grouped = $items->groupBy('dept_id');
+        if ($grouped->has('') || $grouped->has(null)) {
+            Alert::warning('Peringatan', 'Semua barang yang dipilih harus memiliki unit tujuan.');
+            return back();
+        }
+
+        DB::beginTransaction();
+        try {
+            $year      = now()->year;
+            $seq       = RabHandover::whereYear('created_at', $year)->count();
+            $createdHandovers = [];
+
+            foreach ($grouped as $deptId => $deptItems) {
+                $seq++;
+                $docNum   = 'BAST-RAB/' . $year . '/' . str_pad($seq, 4, '0', STR_PAD_LEFT);
+                $received = $request->input('received_by.' . $deptId);
+
+                $handover = RabHandover::create([
+                    'rab_id'          => $rab->id,
+                    'department_id'   => $deptId,
+                    'document_number' => $docNum,
+                    'handover_date'   => $request->handover_date,
+                    'handed_by'       => $request->handed_by,
+                    'received_by'     => $received,
+                ]);
+
+                foreach ($deptItems as $item) {
+                    RabHandoverItem::create([
+                        'rab_handover_id' => $handover->id,
+                        'uraian'          => $item['uraian'],
+                        'qty'             => $item['qty'] ?? null,
+                        'spesifikasi'     => $item['spesifikasi'] ?? null,
+                        'keterangan'      => $item['keterangan'] ?? null,
+                    ]);
+                }
+
+                $createdHandovers[] = $docNum;
+            }
+
+            DB::commit();
+
+            $docList = implode(', ', $createdHandovers);
+            Alert::success('Berhasil!', count($createdHandovers) . ' BAST dibuat: ' . $docList);
+            return redirect()->route('rab.index');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Alert::error('Gagal!', 'Terjadi kesalahan: ' . $e->getMessage());
+            return back();
+        }
+    }
+
+    public function downloadHandoverBast(Rab $rab, RabHandover $handover)
+    {
+        $handover->load(['rab.academicYear', 'department', 'items']);
+        $rab->load('headmaster');
+        $kopSurat  = \App\Models\Setting::get('kop_surat');
+        $headmaster = Employee::where('is_headmaster', true)->first();
+
+        $pdf = Pdf::loadView('pages.rab.handover-bast-pdf', compact('rab', 'handover', 'kopSurat', 'headmaster'))
+                   ->setPaper('a4', 'portrait');
+
+        $filename = 'BAST_' . str_replace('/', '-', $handover->document_number) . '.pdf';
+        return $pdf->download($filename);
     }
 }

@@ -55,4 +55,9 @@ class Rab extends Model
     {
         return $this->hasOne(RabRealization::class);
     }
+
+    public function handovers()
+    {
+        return $this->hasMany(RabHandover::class);
+    }
 }

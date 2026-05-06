@@ -1,4 +1,4 @@
-<x-app-layout x-data="rabPage()">
+<x-app-layout x-data="rabPage()" x-init="initDeptMap(@json($departments->pluck('name', 'id')))"  >
     <x-slot name="header">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
@@ -73,6 +73,32 @@
                                                 class="p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-purple-600 rounded-xl transition-all shadow-sm" title="Konversi ke Daftar Aset">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8m0 0V9m0-2L14 5m4 4l-2 2M6 17H2m0 0v2m0-2l2-2m-2 2l2 2m16-6h-4m0 0v2m0-2l2-2m-2 2l2 2" /></svg>
                                             </button>
+                                            @php
+                                                $handoverItems = $rab->realization
+                                                    ? $rab->realization->details->where('qty', '>', 0)->values()
+                                                        ->map(fn($d) => ['uraian' => $d->uraian, 'qty' => $d->qty, 'spesifikasi' => $d->spesifikasi ?? ''])
+                                                    : collect([]);
+                                                $existingHandovers = $rab->handovers->map(fn($h) => [
+                                                    'id'     => $h->id,
+                                                    'docNum' => $h->document_number,
+                                                    'dept'   => $h->department->name ?? '-',
+                                                    'date'   => $h->handover_date->format('d/m/Y'),
+                                                    'count'  => $h->items->count(),
+                                                ]);
+                                            @endphp
+                                            @if($rab->realization && $handoverItems->count() > 0)
+                                                <button @click="openHandoverModal({{ $rab->id }}, '{{ addslashes($rab->name) }}', {{ $handoverItems }})"
+                                                    class="p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-orange-600 rounded-xl transition-all shadow-sm" title="Serah Terima Barang">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+                                                </button>
+                                            @endif
+                                            @if($rab->handovers->count() > 0)
+                                                <button @click="openBastListModal('{{ addslashes($rab->name) }}', {{ $existingHandovers }}, {{ $rab->id }})"
+                                                    class="relative p-2.5 bg-orange-100 dark:bg-orange-900/30 text-orange-600 hover:bg-orange-200 rounded-xl transition-all shadow-sm" title="Lihat BAST">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                                    <span class="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 text-white text-[8px] font-black rounded-full flex items-center justify-center">{{ $rab->handovers->count() }}</span>
+                                                </button>
+                                            @endif
                                             <a href="{{ route('rab.edit', $rab->id) }}"
                                                 class="p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-blue-600 rounded-xl transition-all shadow-sm" title="Edit RAB">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
@@ -467,6 +493,201 @@
                 </div>
             </div>
         </template>
+
+        {{-- Modal Serah Terima Barang --}}
+        <template x-teleport="body">
+            <div x-show="showHandoverModal"
+                class="fixed inset-0 z-[9999] overflow-y-auto"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                style="display:none;">
+                <div class="flex items-center justify-center min-h-screen p-4">
+                    <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm"></div>
+
+                    <div class="relative bg-white dark:bg-gray-950 rounded-[40px] shadow-2xl w-full max-w-5xl overflow-hidden border border-gray-100 dark:border-gray-800"
+                        x-transition:enter="transition ease-out duration-300"
+                        x-transition:enter-start="opacity-0 translate-y-8 scale-95"
+                        x-transition:enter-end="opacity-100 translate-y-0 scale-100">
+
+                        <form :action="`/rab/${handoverRab.id}/handover`" method="POST">
+                            @csrf
+                            <div class="flex flex-col" style="max-height:90vh;">
+
+                                {{-- Header --}}
+                                <div class="p-8 border-b border-gray-50 dark:border-gray-900 flex items-center justify-between shrink-0 bg-gray-50/30 dark:bg-gray-900/20">
+                                    <div>
+                                        <h3 class="text-2xl font-black text-gray-800 dark:text-white tracking-tight">Serah Terima Barang</h3>
+                                        <p class="text-sm text-gray-400 mt-1" x-text="'RAB: ' + handoverRab.name"></p>
+                                    </div>
+                                    <button type="button" @click="showHandoverModal = false" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-full text-gray-400 transition-colors">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                                    </button>
+                                </div>
+
+                                <div class="overflow-y-auto p-8 space-y-8">
+                                    {{-- Info Global --}}
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Tanggal Serah Terima</label>
+                                            <input type="date" name="handover_date" x-model="handoverDate" required
+                                                class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-orange-500 focus:ring-orange-500 text-sm font-bold">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Nama Penyerah (Pihak Pertama)</label>
+                                            <input type="text" name="handed_by" x-model="handoverHandedBy" required placeholder="Nama pengelola/penyerah barang"
+                                                class="w-full px-4 py-3 rounded-2xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 focus:border-orange-500 focus:ring-orange-500 text-sm font-bold">
+                                        </div>
+                                    </div>
+
+                                    {{-- Tabel Barang --}}
+                                    <div>
+                                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Pilih Barang & Tentukan Unit Tujuan</div>
+                                        <div class="overflow-x-auto rounded-3xl border border-gray-100 dark:border-gray-800">
+                                            <table class="w-full text-left">
+                                                <thead>
+                                                    <tr class="bg-gray-50/50 dark:bg-gray-900/50">
+                                                        <th class="p-4 text-[10px] font-black text-gray-400 uppercase tracking-widest w-10">
+                                                            <input type="checkbox" @change="toggleAllHandover($event.target.checked)"
+                                                                class="w-4 h-4 rounded text-orange-500 border-gray-300 focus:ring-orange-400">
+                                                        </th>
+                                                        <th class="p-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Uraian Barang</th>
+                                                        <th class="p-4 text-[10px] font-black text-gray-400 uppercase tracking-widest w-20 text-center">Qty</th>
+                                                        <th class="p-4 text-[10px] font-black text-gray-400 uppercase tracking-widest w-44">Spesifikasi</th>
+                                                        <th class="p-4 text-[10px] font-black text-gray-400 uppercase tracking-widest w-52">Unit / Bagian Tujuan</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="divide-y divide-gray-50 dark:divide-gray-900">
+                                                    <template x-for="(item, idx) in handoverItems" :key="idx">
+                                                        <tr class="hover:bg-gray-50/30 dark:hover:bg-gray-900/30 transition-colors">
+                                                            <td class="p-4">
+                                                                <input type="checkbox" x-model="item.include"
+                                                                    class="w-4 h-4 rounded text-orange-500 border-gray-300 focus:ring-orange-400">
+                                                                {{-- Hidden fields submitted only when checked --}}
+                                                                <template x-if="item.include">
+                                                                    <span>
+                                                                        <input type="hidden" :name="'items[' + idx + '][include]'" value="1">
+                                                                        <input type="hidden" :name="'items[' + idx + '][uraian]'" :value="item.uraian">
+                                                                        <input type="hidden" :name="'items[' + idx + '][qty]'" :value="item.qty">
+                                                                        <input type="hidden" :name="'items[' + idx + '][spesifikasi]'" :value="item.spesifikasi">
+                                                                        <input type="hidden" :name="'items[' + idx + '][dept_id]'" :value="item.deptId">
+                                                                    </span>
+                                                                </template>
+                                                            </td>
+                                                            <td class="p-4 text-sm font-bold text-gray-700 dark:text-gray-200" x-text="item.uraian"></td>
+                                                            <td class="p-4 text-center text-sm font-black text-gray-600" x-text="item.qty ? Number(item.qty) : '-'"></td>
+                                                            <td class="p-4 text-xs text-gray-500" x-text="item.spesifikasi || '-'"></td>
+                                                            <td class="p-4">
+                                                                <select x-model="item.deptId"
+                                                                    :disabled="!item.include"
+                                                                    class="w-full px-3 py-2 rounded-xl border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 text-xs font-bold focus:border-orange-500 focus:ring-orange-400 disabled:opacity-40">
+                                                                    <option value="">— Pilih Unit —</option>
+                                                                    @foreach($departments as $dept)
+                                                                        <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </td>
+                                                        </tr>
+                                                    </template>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    {{-- Nama Penerima per Unit --}}
+                                    <div x-show="getUniqueDepts().length > 0">
+                                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Nama Penerima per Unit (Pihak Kedua)</div>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <template x-for="deptId in getUniqueDepts()" :key="deptId">
+                                                <div class="p-4 bg-orange-50 dark:bg-orange-900/10 rounded-2xl border border-orange-100 dark:border-orange-800/30">
+                                                    <label class="block text-[10px] font-black text-orange-600 uppercase tracking-widest mb-2"
+                                                        x-text="departmentMap[deptId] || ('Unit #' + deptId)"></label>
+                                                    <input type="text"
+                                                        :name="'received_by[' + deptId + ']'"
+                                                        x-model="handoverReceivedBy[deptId]"
+                                                        placeholder="Nama penerima dari unit ini"
+                                                        class="w-full px-3 py-2 rounded-xl border-orange-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 text-sm font-bold focus:border-orange-500 focus:ring-orange-400">
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Footer --}}
+                                <div class="p-8 border-t border-gray-50 dark:border-gray-900 bg-gray-50/50 dark:bg-gray-950/50 flex items-center justify-between shrink-0">
+                                    <div class="flex items-center text-orange-600">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                        <span class="text-[10px] font-black uppercase tracking-widest">Satu RAB dapat menghasilkan beberapa BAST sesuai unit tujuan</span>
+                                    </div>
+                                    <div class="flex gap-4">
+                                        <button type="button" @click="showHandoverModal = false" class="px-8 py-3 bg-gray-100 dark:bg-gray-800 text-gray-500 font-black rounded-2xl transition-all uppercase tracking-widest text-xs">
+                                            Batal
+                                        </button>
+                                        <button type="submit" class="px-10 py-3 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 transition-all transform hover:-translate-y-1 uppercase tracking-widest text-xs flex items-center gap-2">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4" /></svg>
+                                            Simpan & Buat BAST
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        {{-- Modal Daftar BAST --}}
+        <template x-teleport="body">
+            <div x-show="showBastListModal"
+                class="fixed inset-0 z-[9999] overflow-y-auto"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                style="display:none;">
+                <div class="flex items-center justify-center min-h-screen p-4">
+                    <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" @click="showBastListModal = false"></div>
+
+                    <div class="relative bg-white dark:bg-gray-950 rounded-[40px] shadow-2xl w-full max-w-xl overflow-hidden border border-gray-100 dark:border-gray-800"
+                        x-transition:enter="transition ease-out duration-300"
+                        x-transition:enter-start="opacity-0 translate-y-8 scale-95"
+                        x-transition:enter-end="opacity-100 translate-y-0 scale-100">
+
+                        <div class="p-8 border-b border-gray-50 dark:border-gray-900 flex items-center justify-between bg-gray-50/30 dark:bg-gray-900/20">
+                            <div>
+                                <h3 class="text-xl font-black text-gray-800 dark:text-white tracking-tight">Daftar BAST</h3>
+                                <p class="text-sm text-gray-400 mt-1" x-text="bastListRabName"></p>
+                            </div>
+                            <button type="button" @click="showBastListModal = false" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-full text-gray-400 transition-colors">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+
+                        <div class="p-8 space-y-3 max-h-[60vh] overflow-y-auto">
+                            <template x-for="(bast, idx) in bastList" :key="bast.id">
+                                <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-orange-200 dark:hover:border-orange-800 transition-colors">
+                                    <div>
+                                        <p class="text-sm font-black text-gray-800 dark:text-white" x-text="bast.docNum"></p>
+                                        <p class="text-[10px] text-gray-400 mt-0.5" x-text="bast.dept + ' · ' + bast.count + ' barang · ' + bast.date"></p>
+                                    </div>
+                                    <a :href="`/rab/${bastListRabId}/handover/${bast.id}/pdf`"
+                                        class="p-2.5 bg-orange-100 dark:bg-orange-900/30 text-orange-600 hover:bg-orange-200 rounded-xl transition-all" title="Unduh BAST PDF">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                    </a>
+                                </div>
+                            </template>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </template>
     </div>
 
     @push('scripts')
@@ -559,6 +780,60 @@
                         details.forEach(d => { this.conversionSelected[d.id] = false; });
                         this.activeConversionItem = details.length > 0 ? details[0].id : null;
                         this.showConversionModal = true;
+                    },
+
+                    // ── Serah Terima ────────────────────────────────────────────
+                    showHandoverModal: false,
+                    handoverRab: { id: null, name: '' },
+                    handoverItems: [],
+                    handoverDate: new Date().toISOString().split('T')[0],
+                    handoverHandedBy: '',
+                    handoverReceivedBy: {},
+                    departmentMap: {},
+
+                    initDeptMap(map) {
+                        this.departmentMap = map;
+                    },
+
+                    openHandoverModal(id, name, items) {
+                        this.handoverRab = { id, name };
+                        this.handoverDate = new Date().toISOString().split('T')[0];
+                        this.handoverHandedBy = '';
+                        this.handoverReceivedBy = {};
+                        this.handoverItems = items.map(i => ({
+                            uraian: i.uraian,
+                            qty: i.qty ? Number(i.qty) : null,
+                            spesifikasi: i.spesifikasi || '',
+                            include: false,
+                            deptId: '',
+                        }));
+                        this.showHandoverModal = true;
+                    },
+
+                    toggleAllHandover(checked) {
+                        this.handoverItems.forEach(i => { i.include = checked; });
+                    },
+
+                    getUniqueDepts() {
+                        const ids = [...new Set(
+                            this.handoverItems
+                                .filter(i => i.include && i.deptId)
+                                .map(i => String(i.deptId))
+                        )];
+                        return ids;
+                    },
+
+                    // ── Daftar BAST ─────────────────────────────────────────────
+                    showBastListModal: false,
+                    bastListRabName: '',
+                    bastListRabId: null,
+                    bastList: [],
+
+                    openBastListModal(rabName, handovers, rabId) {
+                        this.bastListRabName = rabName;
+                        this.bastListRabId = rabId;
+                        this.bastList = handovers;
+                        this.showBastListModal = true;
                     },
                 }
             }
