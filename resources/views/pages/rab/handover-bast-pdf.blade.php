@@ -52,8 +52,12 @@
             text-align: center;
             vertical-align: top;
         }
-        .sign-name { margin-top: 50px; font-weight: bold; text-decoration: underline; }
+        .sign-img-wrap { height: 52px; display: flex; align-items: center; justify-content: center; margin: 4px 0; }
+        .sign-img-wrap img { max-height: 48px; max-width: 110px; object-fit: contain; }
+        .sign-space { height: 52px; }
+        .sign-name { font-weight: bold; text-decoration: underline; }
         .sign-role { font-size: 9px; color: #555; margin-top: 3px; }
+        .digital-badge { font-size: 7px; color: #4f46e5; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 4px; padding: 1px 4px; margin-top: 2px; display: inline-block; }
     </style>
 </head>
 <body>
@@ -195,21 +199,34 @@
     </div>
 
     {{-- Tanda Tangan --}}
+    @php
+        use App\Models\UserDigitalSignature;
+        $headmasterUser = $headmaster?->user ?? null;
+        $headmasterSig  = $headmasterUser ? UserDigitalSignature::where('user_id', $headmasterUser->id)->first() : null;
+    @endphp
     <div class="sign-container">
         <table class="sign-table">
             <tr>
                 <td>
                     <div>PIHAK PERTAMA,</div>
+                    <div class="sign-space"></div>
                     <div class="sign-name">{{ $handover->handed_by }}</div>
                     <div class="sign-role">{{ $handover->handed_by_jabatan ?: 'Pengelola Sarana Prasarana' }}</div>
                 </td>
                 <td>
                     <div>PIHAK KEDUA,</div>
+                    <div class="sign-space"></div>
                     <div class="sign-name">{{ $handover->received_by ?: '......................................................' }}</div>
                     <div class="sign-role">{{ $handover->received_by_jabatan ?: ($handover->department->name ?? 'Unit Penerima') }}</div>
                 </td>
                 <td>
                     <div>MENGETAHUI,</div>
+                    @if($headmasterSig && $headmasterSig->ttd_image_path)
+                        <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $headmasterSig->ttd_image_path) }}"></div>
+                        <div class="digital-badge">&#10003; TTD Digital</div>
+                    @else
+                        <div class="sign-space"></div>
+                    @endif
                     <div class="sign-name">{{ $headmaster ? $headmaster->name : '......................................................' }}</div>
                     <div class="sign-role">Kepala Sekolah</div>
                 </td>

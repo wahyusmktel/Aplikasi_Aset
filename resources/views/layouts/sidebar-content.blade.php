@@ -151,9 +151,24 @@
         {{ __('Sistem') }}
     </div>
 
+    <!-- Tanda Tangan Digital -->
+    <x-sidebar-link :href="route('tanda-tangan.index')" :active="request()->routeIs('tanda-tangan.*')" icon="badge-check">
+        {{ __('Tanda Tangan Digital') }}
+    </x-sidebar-link>
+
     <!-- Pengaturan -->
     <x-sidebar-link :href="route('settings.index')" :active="request()->routeIs('settings.*')" icon="cog">
         {{ __('Pengaturan Sistem') }}
+    </x-sidebar-link>
+    @endif
+
+    {{-- Menu Tanda Tangan untuk semua user yang login --}}
+    @if(!$isAdmin)
+    <div class="mt-6 mb-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider" x-show="sidebarOpen">
+        {{ __('Akun Saya') }}
+    </div>
+    <x-sidebar-link :href="route('tanda-tangan.index')" :active="request()->routeIs('tanda-tangan.*')" icon="badge-check">
+        {{ __('Tanda Tangan Digital') }}
     </x-sidebar-link>
     @endif
 </nav>

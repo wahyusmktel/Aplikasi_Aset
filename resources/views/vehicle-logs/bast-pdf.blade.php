@@ -60,14 +60,36 @@
 
         .signatures table {
             width: 100%;
-            border: none;
+            border-collapse: collapse;
+            border: 1px dotted #999;
         }
 
         .signatures td {
-            border: none;
+            border: 1px dotted #999;
             text-align: center;
             width: 33.33%;
-            padding-top: 70px;
+            padding: 10px 8px;
+            vertical-align: top;
+        }
+
+        .sign-img-wrap {
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 4px auto;
+        }
+        .sign-img-wrap img { max-height: 48px; max-width: 110px; object-fit: contain; }
+        .sign-space { height: 50px; }
+        .digital-badge {
+            font-size: 7px;
+            color: #4f46e5;
+            background: #eef2ff;
+            border: 1px solid #c7d2fe;
+            border-radius: 4px;
+            padding: 1px 4px;
+            margin-top: 2px;
+            display: inline-block;
         }
 
         .qr-code {
@@ -186,29 +208,50 @@
         </table>
     </div>
 
+    @php
+        use App\Models\UserDigitalSignature;
+        $headmasterUser  = $headmaster?->user ?? null;
+        $headmasterSig   = $headmasterUser ? UserDigitalSignature::where('user_id', $headmasterUser->id)->first() : null;
+        $approverUser    = $approver?->user ?? null;
+        $approverSig     = $approverUser ? UserDigitalSignature::where('user_id', $approverUser->id)->first() : null;
+    @endphp
+
     <div class="signatures">
         <table>
             <tr>
-                <td>Mengetahui,<br>Kepala Sekolah<br>
-                    @if(isset($kepsekQrCode))
-                        <br><img src="{{ $kepsekQrCode }}" width="60px" height="60px"><br>
+                <td>
+                    Mengetahui,<br>Kepala Sekolah
+                    @if($headmasterSig && $headmasterSig->ttd_image_path)
+                        <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $headmasterSig->ttd_image_path) }}"></div>
+                        <div class="digital-badge">&#10003; TTD Digital</div>
+                    @elseif(isset($kepsekQrCode))
+                        <br><img src="{{ $kepsekQrCode }}" width="55px" height="55px"><br>
                     @else
-                        <br><br><br><br><br><br>
+                        <div class="sign-space"></div>
                     @endif
                     <strong>{{ $headmaster->name ?? '(Nama Kepala Sekolah)' }}</strong><br>
                     NIP. {{ $headmaster->nip ?? '-' }}
                 </td>
-                <td>Menyetujui,<br>{{ $approverTitle }}<br>
-                    @if(isset($wakaQrCode))
-                        <br><img src="{{ $wakaQrCode }}" width="60px" height="60px"><br>
+                <td>
+                    Menyetujui,<br>{{ $approverTitle }}
+                    @if($approverSig && $approverSig->ttd_image_path)
+                        <div class="sign-img-wrap"><img src="{{ public_path('storage/' . $approverSig->ttd_image_path) }}"></div>
+                        <div class="digital-badge">&#10003; TTD Digital</div>
+                    @elseif(isset($wakaQrCode))
+                        <br><img src="{{ $wakaQrCode }}" width="55px" height="55px"><br>
                     @else
-                        <br><br><br><br><br><br>
+                        <div class="sign-space"></div>
                     @endif
                     <strong>{{ $approver->name ?? '(Nama ' . $approverTitle . ')' }}</strong><br>
                     NIP. {{ $approver->nip ?? '-' }}
                 </td>
-                <td>Pengguna,<br>
-                    <br><img src="{{ $userQrCode }}" width="60px" height="60px"><br>
+                <td>
+                    Pengguna,
+                    @if(isset($userQrCode))
+                        <br><img src="{{ $userQrCode }}" width="55px" height="55px"><br>
+                    @else
+                        <div class="sign-space"></div>
+                    @endif
                     <strong>{{ $log->borrower_name }}</strong><br>
                     NIP. {{ $log->borrower_nip ?? '-' }}
                 </td>
@@ -217,7 +260,7 @@
     </div>
 
     <div class="qr-code">
-        <img src="{{ $qrCode }}" width="80px" height="80px">
+        <img src="{{ $qrCode }}" width="75px" height="75px">
         <p style="font-size:9px; text-align:center; margin-top:2px; color:#555;">Scan untuk verifikasi dokumen</p>
     </div>
 </body>

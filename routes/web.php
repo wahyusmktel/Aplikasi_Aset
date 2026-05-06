@@ -323,7 +323,23 @@ Route::middleware('auth')->group(function () {
         Route::post('/{borrowRequest}/reject', [BorrowRequestController::class, 'reject'])->name('reject');
         Route::post('/{borrowRequest}/returned', [BorrowRequestController::class, 'markReturned'])->name('returned');
     });
+
+    // ============================================================
+    // Tanda Tangan Digital
+    // ============================================================
+    Route::prefix('tanda-tangan')->name('tanda-tangan.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\DigitalSignatureController::class, 'index'])->name('index');
+        Route::post('/setup', [\App\Http\Controllers\DigitalSignatureController::class, 'setup'])->name('setup');
+        Route::post('/import-sisfo', [\App\Http\Controllers\DigitalSignatureController::class, 'importFromSisfo'])->name('import-sisfo');
+        Route::post('/revoke', [\App\Http\Controllers\DigitalSignatureController::class, 'revoke'])->name('revoke');
+        Route::post('/revoke-selected', [\App\Http\Controllers\DigitalSignatureController::class, 'revokeSelected'])->name('revoke-selected');
+        Route::post('/revoke-all', [\App\Http\Controllers\DigitalSignatureController::class, 'revokeAll'])->name('revoke-all');
+    });
 });
+
+// Verifikasi token tanda tangan digital (publik)
+Route::get('/verify/signature/{token}', [\App\Http\Controllers\DigitalSignatureController::class, 'verifyPublic'])
+    ->name('tanda-tangan.verify');
 
 
 

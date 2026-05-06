@@ -46,4 +46,8 @@ return [
         'redirect' => env('APP_URL') . '/auth/google/callback', // Otomatis pakai APP_URL
     ],
 
+    'sisfo' => [
+        'url' => env('SISFO_URL', 'https://sisfo.smktelkom-lpg.id'),
+    ],
+
 ];

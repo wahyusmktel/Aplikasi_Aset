@@ -62,8 +62,20 @@
             text-align: center;
             vertical-align: top;
         }
+        .sign-img-wrap {
+            height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 4px 0;
+        }
+        .sign-img-wrap img {
+            max-height: 50px;
+            max-width: 120px;
+            object-fit: contain;
+        }
+        .sign-space { height: 55px; }
         .sign-name {
-            margin-top: 50px;
             font-weight: bold;
             text-decoration: underline;
         }
@@ -71,6 +83,23 @@
             font-size: 9px;
             color: #666;
             margin-top: 2px;
+        }
+        .digital-badge {
+            font-size: 7px;
+            color: #4f46e5;
+            background: #eef2ff;
+            border: 1px solid #c7d2fe;
+            border-radius: 4px;
+            padding: 1px 4px;
+            margin-top: 3px;
+            display: inline-block;
+        }
+        .qr-cell {
+            width: 80px;
+            text-align: center;
+            vertical-align: middle;
+            border: 1px dotted #999;
+            padding: 8px;
         }
     </style>
 </head>
@@ -212,27 +241,109 @@
             <p>Demikian Berita Acara ini dibuat dalam rangkap 2 (dua) untuk dipergunakan sebagaimana mestinya.</p>
         </div>
 
-        <!-- Clean Dotted Signature Table -->
+        <!-- Signature Table with Digital Signatures -->
+        @php
+            use App\Models\UserDigitalSignature;
+            use App\Models\DigitalDocument;
+
+            // Cari penandatangan (Waka Sarpra / user saat ini) berdasarkan $wakaSarpra
+            $schoolSignerUser = $wakaSarpra?->user ?? null;
+            $schoolSig = $schoolSignerUser
+                ? UserDigitalSignature::where('user_id', $schoolSignerUser->id)->first()
+                : null;
+
+            // Cari tanda tangan kepala sekolah
+            $headmasterUser = $headmaster?->user ?? null;
+            $headmasterSig = $headmasterUser
+                ? UserDigitalSignature::where('user_id', $headmasterUser->id)->first()
+                : null;
+
+            // Cari digital document record untuk BAST ini
+            $bastType = 'BAST_PROCUREMENT_' . strtoupper($type);
+            $digitalDoc = DigitalDocument::where('document_type', $bastType)
+                ->where('reference_id', $handover->id)
+                ->where('is_valid', true)
+                ->first();
+        @endphp
+
         <div class="sign-container">
             <table class="sign-table">
                 <tr>
+                    {{-- PIHAK PERTAMA --}}
                     <td>
                         <div>PIHAK PERTAMA,</div>
+                        @if($type == 'vendor_to_school')
+                            <div class="sign-space"></div>
+                        @else
+                            @if($schoolSig && $schoolSig->ttd_image_path)
+                                <div class="sign-img-wrap">
+                                    <img src="{{ public_path('storage/' . $schoolSig->ttd_image_path) }}">
+                                </div>
+                                <div class="digital-badge">&#10003; Tanda Tangan Digital</div>
+                            @else
+                                <div class="sign-space"></div>
+                            @endif
+                        @endif
                         <div class="sign-name">{{ $type == 'vendor_to_school' ? $handover->from_name : $schoolRepName }}</div>
                         <div class="sign-role">{{ $type == 'vendor_to_school' ? 'Pihak Rekanan' : $schoolRepPosition }}</div>
                     </td>
+
+                    {{-- PIHAK KEDUA --}}
                     <td>
                         <div>PIHAK KEDUA,</div>
+                        @if($type == 'vendor_to_school')
+                            @if($schoolSig && $schoolSig->ttd_image_path)
+                                <div class="sign-img-wrap">
+                                    <img src="{{ public_path('storage/' . $schoolSig->ttd_image_path) }}">
+                                </div>
+                                <div class="digital-badge">&#10003; Tanda Tangan Digital</div>
+                            @else
+                                <div class="sign-space"></div>
+                            @endif
+                        @else
+                            <div class="sign-space"></div>
+                        @endif
                         <div class="sign-name">{{ $type == 'vendor_to_school' ? $schoolRepName : $handover->to_name }}</div>
                         <div class="sign-role">{{ $type == 'vendor_to_school' ? $schoolRepPosition : $p2_jabatan }}</div>
                     </td>
+
+                    {{-- MENGETAHUI --}}
                     <td>
                         <div>MENGETAHUI,</div>
+                        @if($headmasterSig && $headmasterSig->ttd_image_path)
+                            <div class="sign-img-wrap">
+                                <img src="{{ public_path('storage/' . $headmasterSig->ttd_image_path) }}">
+                            </div>
+                            <div class="digital-badge">&#10003; Tanda Tangan Digital</div>
+                        @else
+                            <div class="sign-space"></div>
+                        @endif
                         <div class="sign-name">{{ $headmaster ? $headmaster->name : '.........................................' }}</div>
                         <div class="sign-role">Kepala Sekolah</div>
                     </td>
                 </tr>
             </table>
+
+            @if($digitalDoc)
+            <table style="width:100%; margin-top:10px; border-collapse:collapse;">
+                <tr>
+                    <td style="font-size:8px; color:#555; vertical-align:middle; padding-right:8px;">
+                        <strong style="color:#4f46e5;">&#10003; Dokumen ini telah ditandatangani secara digital</strong><br>
+                        Penandatangan: {{ $digitalDoc->signer_name }}
+                        {{ $digitalDoc->signer_nip ? ' · NIP: ' . $digitalDoc->signer_nip : '' }}<br>
+                        Waktu: {{ \Carbon\Carbon::parse($digitalDoc->signed_at)->format('d/m/Y H:i') }} WIB<br>
+                        Token: <span style="font-family:monospace; font-size:7px;">{{ $digitalDoc->token }}</span><br>
+                        Verifikasi: <span style="font-family:monospace; font-size:7px;">{{ url('/verify/signature/' . $digitalDoc->token) }}</span>
+                    </td>
+                    @if(isset($qrCode))
+                    <td class="qr-cell">
+                        <img src="{{ $qrCode }}" width="65" height="65">
+                        <div style="font-size:7px; color:#666; margin-top:2px;">Scan untuk verifikasi</div>
+                    </td>
+                    @endif
+                </tr>
+            </table>
+            @endif
         </div>
     </div>
 </body>
