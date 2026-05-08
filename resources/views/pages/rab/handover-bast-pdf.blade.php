@@ -202,6 +202,7 @@
     {{-- Tanda Tangan --}}
     @php
         use App\Models\DigitalDocument;
+        use App\Models\Employee;
 
         $docType    = 'BAST_RAB_HANDOVER';
         $docTitle   = 'BAST Serah Terima RAB #' . $handover->document_number;
@@ -213,20 +214,40 @@
             array_merge($hashBase, [$headmaster?->name ?? '', 'KEPSEK'])
         );
 
-        $hasAnyDigital = $kepsekData['doc'] !== null;
+        $p1Employee = Employee::where('name', $handover->handed_by)->first();
+        $p1Data     = DigitalDocument::bastSignerData(
+            $p1Employee, $docType . '_P1', $docTitle, $refId,
+            array_merge($hashBase, [$handover->handed_by ?? '', 'P1'])
+        );
+
+        $p2Employee = Employee::where('name', $handover->received_by)->first();
+        $p2Data     = DigitalDocument::bastSignerData(
+            $p2Employee, $docType . '_P2', $docTitle, $refId,
+            array_merge($hashBase, [$handover->received_by ?? '', 'P2'])
+        );
+
+        $hasAnyDigital = $kepsekData['doc'] !== null || $p1Data['doc'] !== null || $p2Data['doc'] !== null;
     @endphp
     <div class="sign-container">
         <table class="sign-table">
             <tr>
                 <td>
                     <div class="sign-label">PIHAK PERTAMA,</div>
-                    <div class="sign-space"></div>
+                    @if($p1Data['qr'])
+                        <div class="sign-qr"><img src="{{ $p1Data['qr'] }}"></div>
+                    @else
+                        <div class="sign-space"></div>
+                    @endif
                     <div class="sign-name">{{ $handover->handed_by }}</div>
                     <div class="sign-role">{{ $handover->handed_by_jabatan ?: 'Pengelola Sarana Prasarana' }}</div>
                 </td>
                 <td>
                     <div class="sign-label">PIHAK KEDUA,</div>
-                    <div class="sign-space"></div>
+                    @if($p2Data['qr'])
+                        <div class="sign-qr"><img src="{{ $p2Data['qr'] }}"></div>
+                    @else
+                        <div class="sign-space"></div>
+                    @endif
                     <div class="sign-name">{{ $handover->received_by ?: '......................................................' }}</div>
                     <div class="sign-role">{{ $handover->received_by_jabatan ?: ($handover->department->name ?? 'Unit Penerima') }}</div>
                 </td>
