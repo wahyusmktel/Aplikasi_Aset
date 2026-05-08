@@ -191,6 +191,7 @@
 
     @php
         use App\Models\DigitalDocument;
+        use App\Models\Employee;
 
         $docType      = $isCheckin ? 'BAST_VEHICLE_CHECKIN' : 'BAST_VEHICLE_CHECKOUT';
         $docNum       = $isCheckin ? $log->checkin_doc_number : $log->checkout_doc_number;
@@ -207,7 +208,14 @@
             array_merge($hashBase, [$approver?->name ?? '', 'APPROVER'])
         );
 
-        $hasAnyDigital = $kepsekData['doc'] || $approverData['doc'];
+        // Cari Employee dari user_id log agar akurat (bukan fallback employee_id)
+        $borrowerEmployee = Employee::where('user_id', $log->user_id)->first();
+        $borrowerData     = DigitalDocument::bastSignerData(
+            $borrowerEmployee, $docType . '_BORROWER', $docTitle, $refId,
+            array_merge($hashBase, [$borrowerEmployee?->name ?? $log->borrower_name ?? '', 'BORROWER'])
+        );
+
+        $hasAnyDigital = $kepsekData['doc'] || $approverData['doc'] || $borrowerData['doc'];
     @endphp
 
     <div class="signatures">
@@ -241,7 +249,11 @@
                 </td>
                 <td>
                     <div class="sign-label">Pengguna,</div>
-                    <div class="sign-space"></div>
+                    @if($borrowerData['qr'])
+                        <div class="sign-qr"><img src="{{ $borrowerData['qr'] }}"></div>
+                    @else
+                        <div class="sign-space"></div>
+                    @endif
                     <div class="sign-name">{{ $log->borrower_name }}</div>
                     <div class="sign-role">Pengguna Kendaraan</div>
                     @if($log->borrower_nip)
