@@ -9,7 +9,7 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
             {{-- ── Panel Konfigurasi Auto-Approval ─────────────────────────────── --}}
-            @if(auth()->user()->role === 'admin')
+            @if(auth()->user()->role === 'admin' || auth()->user()->employee?->is_sarpra_it_lab || auth()->user()->employee?->is_kaur_it || auth()->user()->employee?->is_headmaster)
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6">
                     <div class="flex items-center gap-3 mb-4">
