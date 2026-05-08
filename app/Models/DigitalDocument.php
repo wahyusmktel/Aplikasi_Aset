@@ -22,6 +22,7 @@ class DigitalDocument extends Model
         'signer_role',
         'signed_at',
         'is_valid',
+        'status',
         'revoked_at',
         'revoke_reason',
     ];
@@ -86,6 +87,7 @@ class DigitalDocument extends Model
             'signer_role'    => $user->employee?->position ?? ($user->isAdmin() ? 'Administrator' : 'Staff'),
             'signed_at'      => now(),
             'is_valid'       => true,
+            'status'         => 'signed',
             'revoked_at'     => null,
             'revoke_reason'  => null,
         ];
@@ -125,21 +127,52 @@ class DigitalDocument extends Model
         string $refId,
         array $hashParts
     ): array {
-        if (!$employee) {
-            return ['sig' => null, 'doc' => null, 'qr' => null];
-        }
+        if (!$employee) return ['sig' => null, 'doc' => null, 'qr' => null];
 
         $user = $employee->user;
-        if (!$user) {
-            return ['sig' => null, 'doc' => null, 'qr' => null];
-        }
+        if (!$user) return ['sig' => null, 'doc' => null, 'qr' => null];
 
         $sig = UserDigitalSignature::where('user_id', $user->id)->first();
-        if (!$sig || !$sig->isReady()) {
-            return ['sig' => null, 'doc' => null, 'qr' => null];
-        }
+        if (!$sig || !$sig->isReady()) return ['sig' => null, 'doc' => null, 'qr' => null];
 
-        $doc = self::signOrUpdate($user, $docType, $docTitle, $refId, $hashParts);
+        // Cek apakah sudah ada record sebelumnya
+        $existing = self::where('document_type', $docType)
+            ->where('reference_id', $refId)
+            ->where('signed_by', $user->id)
+            ->first();
+
+        // Jika sudah signed & valid, langsung kembalikan QR (berlaku untuk auto & manual)
+        if ($existing && ($existing->status ?? 'signed') === 'signed' && $existing->is_valid) {
+            $doc = $existing;
+        } elseif (!($sig->auto_sign_bast ?? true)) {
+            // Mode manual: buat record pending jika belum ada
+            if (!$existing) {
+                $hash = self::generateHash($hashParts);
+                self::create([
+                    'document_type'  => $docType,
+                    'document_title' => $docTitle,
+                    'reference_id'   => $refId,
+                    'document_hash'  => $hash,
+                    'hmac_signature' => self::generateHmac($hash),
+                    'signed_by'      => $user->id,
+                    'signer_name'    => $user->name,
+                    'signer_nip'     => $user->employee?->nip,
+                    'signer_role'    => $user->employee?->position ?? 'Staff',
+                    'signed_at'      => null,
+                    'is_valid'       => false,
+                    'status'         => 'pending',
+                ]);
+            }
+            return ['sig' => $sig, 'doc' => null, 'qr' => null];
+        } else {
+            // Mode otomatis: sign/update record
+            $doc = self::signOrUpdate($user, $docType, $docTitle, $refId, $hashParts);
+            // Transisi dari pending ke signed jika perlu
+            if (($doc->status ?? 'signed') !== 'signed') {
+                $doc->update(['status' => 'signed', 'signed_at' => now(), 'is_valid' => true]);
+                $doc->refresh();
+            }
+        }
 
         $verifyUrl = url('/verify/signature/' . $doc->token);
         $options   = new QROptions([

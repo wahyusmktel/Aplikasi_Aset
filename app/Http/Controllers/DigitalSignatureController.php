@@ -9,19 +9,57 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class DigitalSignatureController extends Controller
 {
     public function index()
     {
-        $user       = Auth::user();
-        $signature  = UserDigitalSignature::where('user_id', $user->id)->first();
-        $documents  = DigitalDocument::where('signed_by', $user->id)
+        $user         = Auth::user();
+        $signature    = UserDigitalSignature::where('user_id', $user->id)->first();
+        $documents    = DigitalDocument::where('signed_by', $user->id)
+            ->where('status', 'signed')
             ->orderByDesc('signed_at')
             ->paginate(10);
-        $validCount = DigitalDocument::where('signed_by', $user->id)->where('is_valid', true)->count();
+        $validCount   = DigitalDocument::where('signed_by', $user->id)->where('is_valid', true)->count();
+        $pendingCount = DigitalDocument::where('signed_by', $user->id)->where('status', 'pending')->count();
 
-        return view('pages.tanda-tangan.index', compact('signature', 'documents', 'validCount'));
+        return view('pages.tanda-tangan.index', compact('signature', 'documents', 'validCount', 'pendingCount'));
+    }
+
+    public function queue()
+    {
+        $user        = Auth::user();
+        $pendingDocs = DigitalDocument::where('signed_by', $user->id)
+            ->where('status', 'pending')
+            ->orderBy('created_at')
+            ->paginate(20);
+
+        return view('pages.tanda-tangan.antrian', compact('pendingDocs'));
+    }
+
+    public function signPending(Request $request, DigitalDocument $doc)
+    {
+        if ($doc->signed_by !== Auth::id()) abort(403);
+
+        if (($doc->status ?? 'pending') !== 'pending') {
+            return back()->with('error', 'Dokumen ini bukan dalam status menunggu tanda tangan.');
+        }
+
+        $request->validate(['pin' => 'required|string']);
+
+        $sig = UserDigitalSignature::where('user_id', Auth::id())->firstOrFail();
+        if (!$sig->verifyPin($request->pin)) {
+            return back()->with('error', 'PIN salah. Tanda tangan gagal.');
+        }
+
+        $doc->update([
+            'status'    => 'signed',
+            'signed_at' => now(),
+            'is_valid'  => true,
+        ]);
+
+        return back()->with('success', 'Dokumen "' . Str::limit($doc->document_title, 60) . '" berhasil ditandatangani.');
     }
 
     public function setup(Request $request)
@@ -45,7 +83,8 @@ class DigitalSignatureController extends Controller
             $signature->pin_hash = Hash::make($request->pin);
         }
 
-        $signature->is_active = true;
+        $signature->is_active      = true;
+        $signature->auto_sign_bast = $request->boolean('auto_sign_bast');
         $signature->save();
 
         return back()->with('success', 'Tanda tangan digital berhasil diperbarui.');
@@ -196,6 +235,29 @@ class DigitalSignatureController extends Controller
     public function verifyPublic(string $token)
     {
         $doc = DigitalDocument::where('token', $token)->first();
+
+        if (request()->expectsJson()) {
+            if (!$doc) {
+                return response()->json(['found' => false, 'message' => 'Token tidak ditemukan.']);
+            }
+            $hmacValid = $doc->verifyHmac();
+            return response()->json([
+                'found'         => true,
+                'valid'         => $doc->is_valid && $hmacValid,
+                'hmac_ok'       => $hmacValid,
+                'token'         => $doc->token,
+                'signer_name'   => $doc->signer_name,
+                'signer_nip'    => $doc->signer_nip,
+                'signer_role'   => $doc->signer_role,
+                'signed_at'     => $doc->signed_at?->format('d/m/Y H:i:s') . ' WIB',
+                'document_type' => $doc->document_type,
+                'document_title'=> $doc->document_title,
+                'is_valid'      => $doc->is_valid,
+                'revoked_at'    => $doc->revoked_at?->format('d/m/Y H:i:s'),
+                'revoke_reason' => $doc->revoke_reason,
+            ]);
+        }
+
         return view('public.signature-verify', compact('doc', 'token'));
     }
 }

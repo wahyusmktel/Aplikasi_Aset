@@ -48,7 +48,16 @@
                             Tanda tangani dokumen BAST secara digital. Terlindungi dengan kriptografi SHA-256 + HMAC dan dapat diverifikasi secara online.
                         </p>
                     </div>
-                    <div class="flex-shrink-0">
+                    <div class="flex items-center gap-3 flex-shrink-0">
+                        @if($pendingCount > 0)
+                            <a href="{{ route('tanda-tangan.antrian') }}"
+                               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-amber-900 text-sm font-bold shadow transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                {{ $pendingCount }} Menunggu TTD
+                            </a>
+                        @endif
                         @if($signature && $signature->isReady())
                             <span class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-indigo-700 text-sm font-bold shadow">
                                 <span class="relative flex h-2.5 w-2.5">
@@ -171,6 +180,32 @@
                                                 class="w-full rounded-xl border-gray-200 text-sm font-mono tracking-widest focus:ring-indigo-500 focus:border-indigo-500">
                                         </div>
                                     </div>
+                                </div>
+
+                                {{-- Toggle Mode Tanda Tangan Otomatis --}}
+                                <div class="border-t border-gray-100 pt-4">
+                                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Mode Tanda Tangan BAST</p>
+                                    <label class="flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors
+                                        {{ ($signature && ($signature->auto_sign_bast ?? true)) ? 'border-emerald-300 bg-emerald-50' : 'border-gray-200 bg-gray-50' }}">
+                                        <div class="relative mt-0.5 shrink-0">
+                                            <input type="checkbox" name="auto_sign_bast" value="1"
+                                                {{ ($signature && ($signature->auto_sign_bast ?? true)) ? 'checked' : '' }}
+                                                class="sr-only peer">
+                                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer
+                                                peer-checked:after:translate-x-full peer-checked:after:border-white
+                                                after:content-[''] after:absolute after:top-[2px] after:left-[2px]
+                                                after:bg-white after:border-gray-300 after:border after:rounded-full
+                                                after:h-5 after:w-5 after:transition-all
+                                                peer-checked:bg-emerald-500"></div>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-bold text-gray-800">Tanda Tangan Otomatis</p>
+                                            <p class="text-xs text-gray-500 mt-0.5">
+                                                Jika aktif, dokumen BAST langsung ditandatangani saat dicetak.
+                                                Jika nonaktif, dokumen masuk antrian — Anda harus tanda tangan manual.
+                                            </p>
+                                        </div>
+                                    </label>
                                 </div>
 
                                 <button type="submit"

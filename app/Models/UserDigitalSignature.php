@@ -12,13 +12,15 @@ class UserDigitalSignature extends Model
         'ttd_image_path',
         'pin_hash',
         'is_active',
+        'auto_sign_bast',
         'sisfo_token',
     ];
 
     protected $hidden = ['pin_hash', 'sisfo_token'];
 
     protected $casts = [
-        'is_active' => 'boolean',
+        'is_active'      => 'boolean',
+        'auto_sign_bast' => 'boolean',
     ];
 
     public function user()

@@ -335,12 +335,19 @@ Route::middleware('auth')->group(function () {
         Route::post('/revoke', [\App\Http\Controllers\DigitalSignatureController::class, 'revoke'])->name('revoke');
         Route::post('/revoke-selected', [\App\Http\Controllers\DigitalSignatureController::class, 'revokeSelected'])->name('revoke-selected');
         Route::post('/revoke-all', [\App\Http\Controllers\DigitalSignatureController::class, 'revokeAll'])->name('revoke-all');
+        Route::get('/antrian', [\App\Http\Controllers\DigitalSignatureController::class, 'queue'])->name('antrian');
+        Route::post('/antrian/{doc}/sign', [\App\Http\Controllers\DigitalSignatureController::class, 'signPending'])->name('sign-pending');
     });
 });
 
 // Verifikasi token tanda tangan digital (publik)
 Route::get('/verify/signature/{token}', [\App\Http\Controllers\DigitalSignatureController::class, 'verifyPublic'])
     ->name('tanda-tangan.verify');
+
+// Halaman verifikasi dokumen PDF publik (upload & scan QR)
+Route::get('/verifikasi-dokumen', function () {
+    return view('public.verify-document');
+})->name('public.verify-document');
 
 
 
