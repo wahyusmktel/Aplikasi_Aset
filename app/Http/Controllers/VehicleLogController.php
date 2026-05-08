@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Asset;
 use App\Models\VehicleLog;
 use App\Models\Employee;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -121,7 +122,25 @@ class VehicleLogController extends Controller
             })
             ->latest('departure_time')->paginate(15)->withQueryString();
 
-        return view('vehicle-logs.index', compact('logs', 'totalLogs', 'activeLogs', 'chartLabels', 'chartData'));
+        $autoApproveWaka   = (bool) Setting::get('vehicle_auto_approve_waka', false);
+        $autoApproveKepsek = (bool) Setting::get('vehicle_auto_approve_kepsek', false);
+
+        return view('vehicle-logs.index', compact(
+            'logs', 'totalLogs', 'activeLogs', 'chartLabels', 'chartData',
+            'autoApproveWaka', 'autoApproveKepsek'
+        ));
+    }
+
+    /**
+     * Simpan konfigurasi auto-approval kendaraan.
+     */
+    public function saveSettings(Request $request)
+    {
+        Setting::set('vehicle_auto_approve_waka',   $request->boolean('auto_approve_waka'),   'vehicle');
+        Setting::set('vehicle_auto_approve_kepsek', $request->boolean('auto_approve_kepsek'), 'vehicle');
+
+        alert()->success('Tersimpan!', 'Konfigurasi auto-approval kendaraan berhasil diperbarui.');
+        return back();
     }
 
     /**

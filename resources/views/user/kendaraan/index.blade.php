@@ -55,6 +55,33 @@
         </div>
         @endif
 
+        {{-- Banner Status Auto-Approval --}}
+        @if($autoApproveWaka || $autoApproveKepsek)
+        <div class="mb-6 flex items-start gap-3 px-5 py-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700 rounded-2xl">
+            <div class="shrink-0 mt-0.5">
+                <svg class="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+            </div>
+            <div>
+                <p class="text-sm font-bold text-emerald-800 dark:text-emerald-300">
+                    @if($autoApproveWaka && $autoApproveKepsek)
+                        Pengajuan Langsung Disetujui Otomatis
+                    @else
+                        Persetujuan Waka/Kaur Otomatis Aktif
+                    @endif
+                </p>
+                <p class="text-xs text-emerald-700 dark:text-emerald-400 mt-0.5">
+                    @if($autoApproveWaka && $autoApproveKepsek)
+                        Saat ini pengajuan peminjaman kendaraan akan <strong>langsung disetujui penuh</strong> tanpa perlu menunggu persetujuan manual. Kendaraan langsung berstatus <em>Sedang Jalan</em>.
+                    @else
+                        Saat ini persetujuan Waka Bid. Sarpra IT &amp; Lab / Kaur IT berjalan <strong>otomatis</strong>. Pengajuan Anda hanya memerlukan persetujuan akhir dari Kepala Sekolah.
+                    @endif
+                </p>
+            </div>
+        </div>
+        @endif
+
         {{-- Daftar Kendaraan --}}
         <div class="mb-8">
             <h3 class="text-lg font-black text-gray-800 dark:text-white mb-4">Kendaraan Tersedia</h3>

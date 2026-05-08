@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Asset;
 use App\Models\Category;
 use App\Models\Employee;
+use App\Models\Setting;
 use App\Models\VehicleLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -34,7 +35,10 @@ class UserVehicleController extends Controller
             ->latest('departure_time')
             ->paginate(10);
 
-        return view('user.kendaraan.index', compact('vehicles', 'employees', 'myLogs'));
+        $autoApproveWaka   = (bool) Setting::get('vehicle_auto_approve_waka', false);
+        $autoApproveKepsek = (bool) Setting::get('vehicle_auto_approve_kepsek', false);
+
+        return view('user.kendaraan.index', compact('vehicles', 'employees', 'myLogs', 'autoApproveWaka', 'autoApproveKepsek'));
     }
 
     /**
@@ -93,8 +97,35 @@ class UserVehicleController extends Controller
 
         $asset->update(['current_status' => 'Pengajuan']);
 
+        // ── Auto-approval ────────────────────────────────────────────────────────
+        $autoWaka   = (bool) Setting::get('vehicle_auto_approve_waka', false);
+        $autoKepsek = (bool) Setting::get('vehicle_auto_approve_kepsek', false);
+
+        if ($autoWaka) {
+            $log->update([
+                'status'          => 'menunggu_kepsek',
+                'waka_approved_at' => now(),
+            ]);
+            $asset->update(['current_status' => 'Menunggu Kepsek']);
+
+            if ($autoKepsek) {
+                $log->update([
+                    'status'             => 'disetujui',
+                    'kepsek_approved_at' => now(),
+                ]);
+                $asset->update(['current_status' => 'Digunakan']);
+            }
+        }
+        // ────────────────────────────────────────────────────────────────────────
+
+        $statusMsg = match(true) {
+            $autoWaka && $autoKepsek => 'disetujui otomatis oleh sistem.',
+            $autoWaka                => 'disetujui Waka/Kaur secara otomatis, menunggu persetujuan Kepala Sekolah.',
+            default                  => 'menunggu persetujuan.',
+        };
+
         return redirect()->route('user.kendaraan.index')
-            ->with('success', "Pengajuan peminjaman kendaraan \"{$asset->name}\" berhasil dikirim dan menunggu persetujuan. No. Dokumen: {$docNumber}");
+            ->with('success', "Pengajuan peminjaman \"{$asset->name}\" berhasil dikirim dan {$statusMsg} No. Dokumen: {$docNumber}");
     }
 
     /**
