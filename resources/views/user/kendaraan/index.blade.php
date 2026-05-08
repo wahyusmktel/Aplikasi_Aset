@@ -66,16 +66,20 @@
             <div>
                 <p class="text-sm font-bold text-emerald-800 dark:text-emerald-300">
                     @if($autoApproveWaka && $autoApproveKepsek)
-                        Pengajuan Langsung Disetujui Otomatis
-                    @else
+                        Semua Persetujuan Berjalan Otomatis
+                    @elseif($autoApproveWaka)
                         Persetujuan Waka/Kaur Otomatis Aktif
+                    @else
+                        Persetujuan Kepala Sekolah Otomatis Aktif
                     @endif
                 </p>
                 <p class="text-xs text-emerald-700 dark:text-emerald-400 mt-0.5">
                     @if($autoApproveWaka && $autoApproveKepsek)
-                        Saat ini pengajuan peminjaman kendaraan akan <strong>langsung disetujui penuh</strong> tanpa perlu menunggu persetujuan manual. Kendaraan langsung berstatus <em>Sedang Jalan</em>.
-                    @else
+                        Saat ini persetujuan <strong>Waka Bid. Sarpra IT &amp; Lab / Kaur IT</strong> berjalan otomatis. Persetujuan <strong>Kepala Sekolah</strong> juga berjalan otomatis — pengajuan Anda akan <strong>langsung disetujui penuh</strong> tanpa menunggu persetujuan manual apapun.
+                    @elseif($autoApproveWaka)
                         Saat ini persetujuan Waka Bid. Sarpra IT &amp; Lab / Kaur IT berjalan <strong>otomatis</strong>. Pengajuan Anda hanya memerlukan persetujuan akhir dari Kepala Sekolah.
+                    @else
+                        Saat ini persetujuan <strong>Kepala Sekolah</strong> berjalan otomatis. Pengajuan Anda masih memerlukan persetujuan manual dari Waka Bid. Sarpra IT &amp; Lab / Kaur IT terlebih dahulu.
                     @endif
                 </p>
             </div>

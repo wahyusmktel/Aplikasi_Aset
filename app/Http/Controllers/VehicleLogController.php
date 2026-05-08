@@ -136,8 +136,18 @@ class VehicleLogController extends Controller
      */
     public function saveSettings(Request $request)
     {
-        Setting::set('vehicle_auto_approve_waka',   $request->boolean('auto_approve_waka'),   'vehicle');
-        Setting::set('vehicle_auto_approve_kepsek', $request->boolean('auto_approve_kepsek'), 'vehicle');
+        $user     = auth()->user();
+        $employee = $user->employee;
+        $isAdmin  = $user->role === 'admin';
+        $isWaka   = $employee?->is_sarpra_it_lab || $employee?->is_kaur_it;
+        $isKepsek = $employee?->is_headmaster;
+
+        if ($isAdmin || $isWaka) {
+            Setting::set('vehicle_auto_approve_waka', $request->boolean('auto_approve_waka'), 'vehicle');
+        }
+        if ($isAdmin || $isKepsek) {
+            Setting::set('vehicle_auto_approve_kepsek', $request->boolean('auto_approve_kepsek'), 'vehicle');
+        }
 
         alert()->success('Tersimpan!', 'Konfigurasi auto-approval kendaraan berhasil diperbarui.');
         return back();
