@@ -29,7 +29,8 @@
                         @csrf
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                            {{-- Toggle: Waka / Kaur IT --}}
+                            {{-- Toggle: Waka / Kaur IT (admin, Waka Sarpra IT Lab, Kaur IT) --}}
+                            @if(auth()->user()->role === 'admin' || auth()->user()->employee?->is_sarpra_it_lab || auth()->user()->employee?->is_kaur_it)
                             <label class="flex items-start gap-4 p-4 rounded-2xl border cursor-pointer transition-colors
                                 {{ $autoApproveWaka ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/20' : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/40' }}">
                                 <div class="relative mt-0.5 shrink-0">
@@ -57,8 +58,10 @@
                                     </p>
                                 </div>
                             </label>
+                            @endif
 
-                            {{-- Toggle: Kepala Sekolah --}}
+                            {{-- Toggle: Kepala Sekolah (admin, Kepala Sekolah) --}}
+                            @if(auth()->user()->role === 'admin' || auth()->user()->employee?->is_headmaster)
                             <label class="flex items-start gap-4 p-4 rounded-2xl border cursor-pointer transition-colors
                                 {{ $autoApproveKepsek ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/20' : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/40' }}">
                                 <div class="relative mt-0.5 shrink-0">
@@ -86,6 +89,7 @@
                                     </p>
                                 </div>
                             </label>
+                            @endif
 
                         </div>
 
