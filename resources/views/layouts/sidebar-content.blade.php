@@ -21,6 +21,15 @@
     </x-sidebar-link>
     @endif
 
+    @if($isApprover && !$isAdmin)
+    <!-- Data Dapodik (Waka/Kaur IT/Kepsek) -->
+    @if(auth()->user()->employee)
+    <x-sidebar-link :href="route('user.dapodik.index')" :active="request()->routeIs('user.dapodik.*')" icon="identification">
+        {{ __('Data Dapodik Saya') }}
+    </x-sidebar-link>
+    @endif
+    @endif
+
     @if($isRegularUser)
     <div class="mt-8 mb-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider" x-show="sidebarOpen">
         {{ __('Menu') }}
@@ -35,6 +44,13 @@
     <x-sidebar-link :href="route('user.kendaraan.index')" :active="request()->routeIs('user.kendaraan.*')" icon="truck">
         {{ __('Peminjaman Kendaraan') }}
     </x-sidebar-link>
+
+    <!-- Data Dapodik Saya (Regular User) -->
+    @if(auth()->user()->employee)
+    <x-sidebar-link :href="route('user.dapodik.index')" :active="request()->routeIs('user.dapodik.*')" icon="identification">
+        {{ __('Data Dapodik Saya') }}
+    </x-sidebar-link>
+    @endif
     @endif
 
     @if($isAdmin)
@@ -150,6 +166,19 @@
     <div class="my-4 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider" x-show="sidebarOpen">
         {{ __('Sistem') }}
     </div>
+
+    <!-- Pengajuan Dapodik (Operator Review) -->
+    @php $pendingDapodik = \App\Models\DapodikChangeRequest::where('status', 'pending')->count(); @endphp
+    <x-sidebar-link :href="route('operator.dapodik.index')" :active="request()->routeIs('operator.dapodik.*')" icon="clipboard-list">
+        <span class="flex items-center justify-between w-full">
+            {{ __('Pengajuan Dapodik') }}
+            @if($pendingDapodik > 0)
+            <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-500 text-white text-[9px] font-black shadow">
+                {{ $pendingDapodik > 99 ? '99+' : $pendingDapodik }}
+            </span>
+            @endif
+        </span>
+    </x-sidebar-link>
 
     <!-- Tanda Tangan Digital -->
     <x-sidebar-link :href="route('tanda-tangan.index')" :active="request()->routeIs('tanda-tangan.*')" icon="badge-check">

@@ -326,6 +326,24 @@ Route::middleware('auth')->group(function () {
     });
 
     // ============================================================
+    // Dapodik Pegawai (Self-service)
+    // ============================================================
+    Route::prefix('dapodik-saya')->name('user.dapodik.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\UserDapodikController::class, 'index'])->name('index');
+        Route::post('/ajukan', [\App\Http\Controllers\UserDapodikController::class, 'submitRequest'])->name('submit');
+    });
+
+    // ============================================================
+    // Dapodik Operator (Review Pengajuan)
+    // ============================================================
+    Route::prefix('operator/dapodik')->name('operator.dapodik.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\OperatorDapodikController::class, 'index'])->name('index');
+        Route::get('/{changeRequest}', [\App\Http\Controllers\OperatorDapodikController::class, 'show'])->name('show');
+        Route::post('/{changeRequest}/approve', [\App\Http\Controllers\OperatorDapodikController::class, 'approve'])->name('approve');
+        Route::post('/{changeRequest}/reject', [\App\Http\Controllers\OperatorDapodikController::class, 'reject'])->name('reject');
+    });
+
+    // ============================================================
     // Tanda Tangan Digital
     // ============================================================
     Route::prefix('tanda-tangan')->name('tanda-tangan.')->group(function () {

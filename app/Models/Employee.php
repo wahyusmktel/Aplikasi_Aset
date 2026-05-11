@@ -17,7 +17,40 @@ class Employee extends Model
         'is_sarpra_it_lab',
         'is_headmaster',
         'is_kaur_it',
+        // Dapodik fields
+        'jenis_kelamin',
+        'tempat_lahir',
+        'tanggal_lahir',
+        'agama',
+        'status_perkawinan',
+        'nuptk',
+        'status_kepegawaian',
+        'golongan_pangkat',
+        'tmt_pengangkatan',
+        'pendidikan_terakhir',
+        'bidang_studi',
+        'lembaga_pendidikan',
+        'alamat',
+        'no_hp',
     ];
+
+    protected $casts = [
+        'tanggal_lahir'    => 'date',
+        'tmt_pengangkatan' => 'date',
+        'is_sarpra_it_lab' => 'boolean',
+        'is_headmaster'    => 'boolean',
+        'is_kaur_it'       => 'boolean',
+    ];
+
+    public function dapodikChangeRequests()
+    {
+        return $this->hasMany(DapodikChangeRequest::class);
+    }
+
+    public function pendingChangeRequest()
+    {
+        return $this->hasOne(DapodikChangeRequest::class)->where('status', 'pending')->latest();
+    }
 
     public function assignments()
     {
