@@ -30,6 +30,7 @@ use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\EmployeeAccountController;
 use App\Http\Controllers\AssetMappingController;
 use App\Http\Controllers\Auth\SocialLoginController;
+use App\Http\Controllers\Auth\SsoLoginController;
 use App\Http\Controllers\MaintenanceScheduleController;
 use App\Http\Controllers\VendorController;
 use App\Http\Controllers\ProcurementController;
@@ -48,6 +49,9 @@ Route::get('/auth/google/redirect', [SocialLoginController::class, 'redirectToGo
     ->name('auth.google.redirect'); // <-- Ini yang dipanggil tombol di login.blade.php
 
 Route::get('/auth/google/callback', [SocialLoginController::class, 'handleGoogleCallback']);
+
+Route::get('/auth/sso/redirect', [SsoLoginController::class, 'redirect'])->name('auth.sso.redirect');
+Route::get('/auth/sso/callback', [SsoLoginController::class, 'callback'])->name('auth.sso.callback');
 
 // Rute untuk halaman publik
 Route::get('/aset/{asset_code_ypt}', [PublicAssetController::class, 'show'])->name('public.assets.show');

@@ -145,6 +145,14 @@
                         <svg class="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
                         <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity"></div>
                     </button>
+
+                    <a href="{{ route('auth.sso.redirect') }}" class="w-full flex justify-center items-center gap-3 py-4 px-6 bg-gray-950 hover:bg-gray-900 text-white font-black rounded-2xl shadow-lg shadow-gray-900/15 transition-all active:scale-[0.98]">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M12 3 4 7v6c0 4.2 2.8 6.8 8 8 5.2-1.2 8-3.8 8-8V7l-8-4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                            <path d="m8.5 12 2.2 2.2 4.8-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>Login SSO STELLA</span>
+                    </a>
                 </form>
 
                 <div class="relative py-4">
