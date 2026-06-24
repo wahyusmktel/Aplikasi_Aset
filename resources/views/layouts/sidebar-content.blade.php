@@ -97,9 +97,8 @@
     </x-sidebar-link>
 
     <!-- Lab -->
-    <x-sidebar-link :href="route('labs.index')" :active="request()->routeIs('labs.*')" icon="academic-cap">
-        {{ __('Lab') }}
-    </x-sidebar-link>
+    <x-sidebar-link :href="route('labs.inventory')" :active="request()->routeIs('labs.inventory')" icon="academic-cap">{{ __('Inventaris Lab') }}</x-sidebar-link>
+    <x-sidebar-link :href="route('labs.index')" :active="request()->routeIs('labs.index')" icon="academic-cap">{{ __('Lab') }}</x-sidebar-link>
 
     <!-- Inventaris Dropdown -->
     @php

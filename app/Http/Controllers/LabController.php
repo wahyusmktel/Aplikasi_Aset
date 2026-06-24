@@ -11,6 +11,9 @@ use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
+use App\Models\Lab;
+use App\Models\LabAsset;
+use App\Models\Asset;
 
 class LabController extends Controller
 {
@@ -249,4 +252,104 @@ class LabController extends Controller
         $safeFilename = str_replace('/', '-', $docNumber);
         return $pdf->download($safeFilename . '.pdf');
     }
+// ----------------------
+    // Lab Inventory CRUD
+    // ----------------------
+
+    // Show list of labs (inventory overview)
+    public function labsIndex()
+    {
+        $labs = \App\Models\Lab::with(['room', 'department', 'personInCharge'])->orderBy('name')->get();
+        return view('labs.inventory-index', compact('labs'));
+    }
+
+    // Show create form
+    public function create()
+    {
+        $rooms = \App\Models\Room::orderBy('name')->get();
+        $departments = \App\Models\Department::orderBy('name')->get();
+        $persons = \App\Models\PersonInCharge::orderBy('name')->get();
+        return view('labs.create', compact('rooms', 'departments', 'persons'));
+    }
+
+    // Store new lab
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'room_id' => 'required|exists:rooms,id',
+            'department_id' => 'required|exists:departments,id',
+            'person_in_charge_id' => 'required|exists:persons_in_charge,id',
+        ]);
+        \App\Models\Lab::create($request->only(['name', 'room_id', 'department_id', 'person_in_charge_id']));
+        alert()->success('Berhasil', 'Lab berhasil ditambahkan.');
+        return redirect()->route('labs.index');
+    }
+
+    // Show edit form
+    public function edit(Lab $lab)
+    {
+        $rooms = \App\Models\Room::orderBy('name')->get();
+        $departments = \App\Models\Department::orderBy('name')->get();
+        $persons = \App\Models\PersonInCharge::orderBy('name')->get();
+        return view('labs.edit', compact('lab', 'rooms', 'departments', 'persons'));
+    }
+
+    // Update lab
+    public function update(Request $request, Lab $lab)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'room_id' => 'required|exists:rooms,id',
+            'department_id' => 'required|exists:departments,id',
+            'person_in_charge_id' => 'required|exists:persons_in_charge,id',
+        ]);
+        $lab->update($request->only(['name', 'room_id', 'department_id', 'person_in_charge_id']));
+        alert()->success('Berhasil', 'Lab berhasil diperbarui.');
+        return redirect()->route('labs.index');
+    }
+
+    // Delete lab
+    public function destroy(Lab $lab)
+    {
+        $lab->delete();
+        alert()->success('Berhasil', 'Lab berhasil dihapus.');
+        return back();
+    }
+
+    // Show form to add asset to a lab
+    public function addAsset(Lab $lab)
+    {
+        return view('labs.assets.create', compact('lab'));
+    }
+
+    // Store lab asset
+    public function storeAsset(Request $request, Lab $lab)
+    {
+        $request->validate([
+            'asset_name' => 'required|string',
+            'specifications' => 'required|array',
+            'quantity' => 'required|integer|min:1',
+        ]);
+        // Create or find asset in main assets table (simplified)
+        $asset = \App\Models\Asset::firstOrCreate(['name' => $request->asset_name]);
+        \App\Models\LabAsset::create([
+            'lab_id' => $lab->id,
+            'asset_id' => $asset->id,
+            'quantity' => $request->quantity,
+            'specifications' => $request->specifications,
+        ]);
+        alert()->success('Berhasil', 'Aset berhasil ditambahkan ke lab.');
+        return redirect()->route('labs.show', $lab);
+    }
+
+    // Export lab assets to PDF
+    public function exportPdf(Lab $lab)
+    {
+        $labAssets = $lab->labAssets()->with('asset')->get();
+        $pdf = Pdf::loadView('labs.pdf', compact('lab', 'labAssets'));
+        return $pdf->download('lab-assets-' . $lab->id . '.pdf');
+    }
+
 }
+

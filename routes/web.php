@@ -249,6 +249,14 @@ Route::middleware('auth')->group(function () {
     Route::delete('/labs/schedule/{schedule}', [LabController::class, 'destroySchedule'])->name('labs.schedule.destroy');
     Route::post('/labs/log/checkin', [LabController::class, 'storeLog'])->name('labs.log.store');
     Route::post('/labs/log/{log}/checkout', [LabController::class, 'checkoutLog'])->name('labs.log.checkout');
+        // Lab inventory overview
+        Route::get('/labs/inventory', [LabController::class, 'labsIndex'])->name('labs.inventory');
+        // Lab Inventory CRUD routes
+        Route::resource('labs', LabController::class);
+        // Asset management within a lab
+        Route::get('labs/{lab}/assets/create', [LabController::class, 'addAsset'])->name('labs.assets.create');
+        Route::post('labs/{lab}/assets', [LabController::class, 'storeAsset'])->name('labs.assets.store');
+        Route::get('labs/{lab}/export-pdf', [LabController::class, 'exportPdf'])->name('labs.exportPdf');
 
     Route::get('/labs/history', [LabController::class, 'history'])->name('labs.history');
     Route::get('/labs/history/excel', [LabController::class, 'exportExcel'])->name('labs.exportExcel');
