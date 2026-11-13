@@ -39,8 +39,8 @@
         </div>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8 pb-24">
+    <div class="py-4">
+        <div class="w-full space-y-8 pb-24">
             
             {{-- Quick Stats --}}
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">

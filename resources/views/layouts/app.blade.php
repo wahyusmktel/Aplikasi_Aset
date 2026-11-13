@@ -32,7 +32,7 @@
             @include('layouts.navigation')
 
             <main class="flex-grow">
-                <div class="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
+                <div class="px-4 sm:px-6 lg:px-8 py-8 w-full mx-auto">
                     @isset($header)
                         <div class="mb-8">
                             {{ $header }}

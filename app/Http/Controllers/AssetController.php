@@ -581,12 +581,13 @@ class AssetController extends Controller
      */
     public function exportActiveExcel(Request $request)
     {
-        // Langkah 4A: dukung banyak include & exclude
+        // Mendukung multi include & exclude kategori, tahun, dan pencarian
         $include = array_values(array_filter(array_map('intval', \Illuminate\Support\Arr::wrap($request->input('category_ids', [])))));
         $exclude = array_values(array_filter(array_map('intval', \Illuminate\Support\Arr::wrap($request->input('exclude_category_ids', [])))));
         $year    = $request->input('purchase_year');
+        $search  = $request->input('search');
 
-        // Nama file dinamis
+        // Nama file dinamis informatif
         $fileName = 'daftar-aset-aktif';
 
         if (!empty($include)) {
@@ -598,43 +599,12 @@ class AssetController extends Controller
             if ($names) $fileName .= '-exc-' . \Illuminate\Support\Str::slug(implode('-', $names));
         }
         if ($year && $year !== 'all') $fileName .= "-{$year}";
-        $fileName .= '.xlsx';
+        $fileName .= '-' . now()->format('Ymd') . '.xlsx';
 
-        // Pass filter via session/closure ke exporter (paling cepat: inline export)
-        $query = Asset::query()
-            ->whereNull('disposal_date')
-            ->when(!empty($include), fn($q) => $q->whereIn('category_id', $include))
-            ->when(empty($include) && !empty($exclude), fn($q) => $q->whereNotIn('category_id', $exclude))
-            ->when($year && $year !== 'all', fn($q) => $q->where('purchase_year', $year))
-            ->with(['category', 'building', 'room', 'personInCharge'])
-            ->orderBy('asset_code_ypt', 'asc');
-
-        $rows = $query->get()->map(function ($a) {
-            return [
-                'Kode Aset YPT'        => $a->asset_code_ypt,
-                'Nama'                 => $a->name,
-                'Tahun'                => $a->purchase_year,
-                'Kategori'             => optional($a->category)->name,
-                'Gedung/Ruang'         => optional($a->building)->name . ' / ' . optional($a->room)->name,
-                'PIC'                  => optional($a->personInCharge)->name,
-                'Status'               => $a->status,
-                'Nilai Akuisisi (Rp)'  => $a->purchase_cost,
-            ];
-        });
-
-        $export = new class($rows->toArray()) implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings {
-            public function __construct(private array $data) {}
-            public function array(): array
-            {
-                return $this->data;
-            }
-            public function headings(): array
-            {
-                return array_keys($this->data[0] ?? ['Data' => 'Kosong']);
-            }
-        };
-
-        return \Maatwebsite\Excel\Facades\Excel::download($export, $fileName);
+        return Excel::download(
+            new ActiveAssetsExport($include, $exclude, $year, $search),
+            $fileName
+        );
     }
 
     /**
@@ -737,6 +707,15 @@ class AssetController extends Controller
             COALESCE(purchase_cost,0) as purchase_cost
         ');
 
+        $driver = DB::connection()->getDriverName();
+        if ($driver === 'sqlite') {
+            $pdo = DB::connection()->getPdo();
+            if (method_exists($pdo, 'sqliteCreateFunction')) {
+                $pdo->sqliteCreateFunction('MD5', 'md5');
+                $pdo->sqliteCreateFunction('CONCAT', fn(...$args) => implode('', $args));
+            }
+        }
+
         $wrapped = \Illuminate\Support\Facades\DB::query()->fromSub($base, 't');
 
         $groups = $wrapped
@@ -768,8 +747,17 @@ class AssetController extends Controller
     }
     public function summaryShow(string $group)
     {
+        $driver = DB::connection()->getDriverName();
+        if ($driver === 'sqlite') {
+            $pdo = DB::connection()->getPdo();
+            if (method_exists($pdo, 'sqliteCreateFunction')) {
+                $pdo->sqliteCreateFunction('MD5', 'md5');
+                $pdo->sqliteCreateFunction('CONCAT', fn(...$args) => implode('', $args));
+            }
+        }
+
         $items = \App\Models\Asset::query()
-            ->whereRaw('MD5(CONCAT(`name`,"|", COALESCE(purchase_year,0))) = ?', [$group])
+            ->whereRaw('MD5(CONCAT(name,"|", COALESCE(purchase_year,0))) = ?', [$group])
             ->orderBy('sequence_number')
             ->orderBy('id')
             ->get();
@@ -789,52 +777,13 @@ class AssetController extends Controller
         $statuses   = array_filter((array) $request->input('status', []));
         $search     = trim((string) $request->get('q'));
 
-        // Ambil data sesuai filter (bukan grouped; export detail biar lengkap)
-        $query = \App\Models\Asset::query()
-            ->with(['category', 'building', 'room', 'personInCharge'])
-            ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
-            ->when($yearFilter !== null && $yearFilter !== '', fn($q) => $q->where('purchase_year', $yearFilter))
-            ->when(!empty($statuses), fn($q) => $q->whereIn('status', $statuses))
-            ->when($search !== '', function ($q) use ($search) {
-                $q->where(function ($qq) use ($search) {
-                    $qq->where('name', 'like', "%{$search}%")
-                        ->orWhere('asset_code_ypt', 'like', "%{$search}%");
-                    if (\Illuminate\Support\Facades\Schema::hasColumn('assets', 'description')) {
-                        $qq->orWhere('description', 'like', "%{$search}%");
-                    }
-                });
-            })
-            ->orderBy('asset_code_ypt', 'asc');
+        $include = $categoryId ? [(int) $categoryId] : [];
+        $file = 'export-ringkasan-aset-' . now()->format('Ymd_His') . '.xlsx';
 
-        // Exporter minimalis inline (tanpa bikin file class baru)
-        $rows = $query->get()->map(function ($a) {
-            return [
-                'Kode Aset YPT' => $a->asset_code_ypt,
-                'Nama'          => $a->name,
-                'Tahun'         => $a->purchase_year,
-                'Kategori'      => optional($a->category)->name,
-                'Gedung/Ruang'  => optional($a->building)->name . ' / ' . optional($a->room)->name,
-                'PIC'           => optional($a->personInCharge)->name,
-                'Status'        => $a->status,
-                'Nilai Akuisisi (Rp)' => $a->purchase_cost,
-            ];
-        });
-
-        // Pakai FromArray (tanpa class), supaya cepat
-        $export = new class($rows->toArray()) implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings {
-            public function __construct(private array $data) {}
-            public function array(): array
-            {
-                return $this->data;
-            }
-            public function headings(): array
-            {
-                return array_keys($this->data[0] ?? ['Data' => 'Kosong']);
-            }
-        };
-
-        $file = 'export-ringkasan-' . now()->format('Ymd_His') . '.xlsx';
-        return Excel::download($export, $file);
+        return Excel::download(
+            new ActiveAssetsExport($include, [], $yearFilter, $search, $statuses),
+            $file
+        );
     }
 
     public function summaryExportPdf(\Illuminate\Http\Request $request)
