@@ -214,13 +214,38 @@
                                 </div>
                             </div>
 
-                            <div class="md:col-span-2" x-data="{ open: false }">
+                            {{-- Sumber Dana (Custom Selection) --}}
+                            <div class="md:col-span-1" x-data="{ open: false }">
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Sumber Dana</label>
+                                <div class="relative" @click.away="open = false">
+                                    <div @click="open = !open"
+                                        class="h-[56px] w-full px-5 py-4 rounded-2xl border border-gray-100 dark:border-gray-800 dark:bg-gray-900 flex items-center justify-between cursor-pointer group shadow-sm transition-all focus-within:border-red-500">
+                                        <span class="text-xs font-black text-gray-700 dark:text-gray-300 uppercase tracking-tight truncate" 
+                                            x-text="selectedFunding === 'all' ? 'Semua Sumber Dana' : (allFundingSources.find(f => f.id == selectedFunding)?.name || 'Semua Sumber Dana')"></span>
+                                        <svg class="w-4 h-4 text-gray-400 group-hover:text-red-600 transition-transform shrink-0 ml-2" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" /></svg>
+                                    </div>
+                                    <div x-show="open" x-transition class="absolute z-[100] mt-3 w-full bg-white dark:bg-gray-950 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-2xl p-2">
+                                        <div class="max-h-60 overflow-y-auto custom-scrollbar">
+                                            <div @click="selectedFunding = 'all'; open = false" 
+                                                class="px-4 py-3 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900 text-xs font-black uppercase tracking-tight transition-all"
+                                                :class="selectedFunding === 'all' ? 'text-red-500 bg-red-50 dark:bg-red-900/20' : 'text-gray-600 dark:text-gray-400'">Semua Sumber Dana</div>
+                                            @foreach ($fundingSources as $fs)
+                                                <div @click="selectedFunding = '{{ $fs->id }}'; open = false" 
+                                                    class="px-4 py-3 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900 text-xs font-black uppercase tracking-tight transition-all"
+                                                    :class="selectedFunding == '{{ $fs->id }}' ? 'text-red-500 bg-red-50 dark:bg-red-900/20' : 'text-gray-600 dark:text-gray-400'">{{ $fs->name }}</div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="md:col-span-1" x-data="{ open: false }">
                                 <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Jumlah Per Halaman</label>
                                 <div class="relative" @click.away="open = false">
                                     <div @click="open = !open"
-                                        class="h-[56px] w-full px-6 py-4 rounded-2xl border border-gray-100 dark:border-gray-800 dark:bg-gray-900 flex items-center justify-between cursor-pointer group shadow-sm">
-                                        <span class="text-sm font-black text-gray-700 dark:text-gray-300 uppercase underline decoration-red-500/30 underline-offset-4" x-text="perPage + ' ITEM PER HALAMAN'"></span>
-                                        <svg class="w-4 h-4 text-gray-400 group-hover:text-red-600 transition-all" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" /></svg>
+                                        class="h-[56px] w-full px-5 py-4 rounded-2xl border border-gray-100 dark:border-gray-800 dark:bg-gray-900 flex items-center justify-between cursor-pointer group shadow-sm">
+                                        <span class="text-xs font-black text-gray-700 dark:text-gray-300 uppercase underline decoration-red-500/30 underline-offset-4 truncate" x-text="perPage + ' ITEM / HALAMAN'"></span>
+                                        <svg class="w-4 h-4 text-gray-400 group-hover:text-red-600 transition-all shrink-0 ml-2" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" /></svg>
                                     </div>
                                     <div x-show="open" x-transition class="absolute z-[100] mt-3 w-full bg-white dark:bg-gray-950 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-2xl p-2">
                                         @foreach ($allowedPerPages as $option)
@@ -551,7 +576,7 @@
                     showImportBatchModal: false,
                     showBulkEditModal: false,
                     searchQuery: '{{ request('search') }}',
-                    expanded: {{ (request('exclude_category_ids') || $perPage != 12) ? 'true' : 'false' }},
+                    expanded: {{ (request('exclude_category_ids') || (request('funding_source_id') && request('funding_source_id') !== 'all') || $perPage != 12) ? 'true' : 'false' }},
                     apply: {
                         name: false,
                         funding: false,
@@ -561,9 +586,11 @@
                     },
 
                     allCategories: @json($categories->map(fn($c) => ['id' => $c->id, 'name' => $c->name])),
+                    allFundingSources: @json($fundingSources->map(fn($f) => ['id' => $f->id, 'name' => $f->name])),
                     selectedCategories: @json(request()->input('category_ids', [])).map(String),
                     selectedExcludeCategories: @json(request()->input('exclude_category_ids', [])).map(String),
                     selectedYear: '{{ request('purchase_year', 'all') }}',
+                    selectedFunding: '{{ request('funding_source_id', 'all') }}',
                     perPage: '{{ $perPage }}',
 
                     init() {
@@ -580,6 +607,9 @@
                         (this.selectedCategories || []).forEach(id => url.searchParams.append('category_ids[]', id));
                         (this.selectedExcludeCategories || []).forEach(id => url.searchParams.append('exclude_category_ids[]', id));
                         url.searchParams.set('purchase_year', this.selectedYear);
+                        if (this.selectedFunding && this.selectedFunding !== 'all') {
+                            url.searchParams.set('funding_source_id', this.selectedFunding);
+                        }
                         if(this.searchQuery) url.searchParams.set('search', this.searchQuery);
                         return url.toString();
                     },
@@ -606,6 +636,9 @@
                             if(id) url.searchParams.append('exclude_category_ids[]', id);
                         });
                         url.searchParams.set('purchase_year', this.selectedYear);
+                        if (this.selectedFunding && this.selectedFunding !== 'all') {
+                            url.searchParams.set('funding_source_id', this.selectedFunding);
+                        }
                         url.searchParams.set('per_page', this.perPage);
                         if (this.searchQuery) url.searchParams.set('search', this.searchQuery);
                         window.location.href = url.toString();

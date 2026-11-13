@@ -110,6 +110,7 @@ class AssetController extends Controller
         $excludeCategoryIds = array_values(array_filter(array_map('intval', $excludeCategoryIdsRaw)));
 
         $purchaseYear = $request->input('purchase_year');
+        $fundingSourceId = $request->input('funding_source_id');
 
         // === REFACTOR: Logika Paginasi ===
         $allowedPerPages = [12, 25, 50, 100];
@@ -118,7 +119,7 @@ class AssetController extends Controller
             $perPage = 12;
         }
 
-        $assets = Asset::with(['category', 'institution', 'building', 'room'])
+        $assets = Asset::with(['category', 'institution', 'building', 'room', 'fundingSource'])
             ->whereNull('disposal_date')
 
             // Langkah 1: terapkan filter kategori (IN)
@@ -133,6 +134,10 @@ class AssetController extends Controller
 
             ->when($purchaseYear && $purchaseYear !== 'all', function ($query) use ($purchaseYear) {
                 return $query->where('purchase_year', $purchaseYear);
+            })
+
+            ->when($fundingSourceId && $fundingSourceId !== 'all', function ($query) use ($fundingSourceId) {
+                return $query->where('funding_source_id', $fundingSourceId);
             })
 
             // (Opsional) Rapikan pencarian agar orWhere tidak menabrak filter lain
@@ -585,6 +590,7 @@ class AssetController extends Controller
         $include = array_values(array_filter(array_map('intval', \Illuminate\Support\Arr::wrap($request->input('category_ids', [])))));
         $exclude = array_values(array_filter(array_map('intval', \Illuminate\Support\Arr::wrap($request->input('exclude_category_ids', [])))));
         $year    = $request->input('purchase_year');
+        $fundingSourceId = $request->input('funding_source_id');
         $search  = $request->input('search');
 
         // Nama file dinamis informatif
@@ -598,11 +604,15 @@ class AssetController extends Controller
             $names = Category::whereIn('id', $exclude)->pluck('name')->toArray();
             if ($names) $fileName .= '-exc-' . \Illuminate\Support\Str::slug(implode('-', $names));
         }
+        if ($fundingSourceId && $fundingSourceId !== 'all') {
+            $fs = FundingSource::find($fundingSourceId);
+            if ($fs) $fileName .= '-' . \Illuminate\Support\Str::slug($fs->name);
+        }
         if ($year && $year !== 'all') $fileName .= "-{$year}";
         $fileName .= '-' . now()->format('Ymd') . '.xlsx';
 
         return Excel::download(
-            new ActiveAssetsExport($include, $exclude, $year, $search),
+            new ActiveAssetsExport($include, $exclude, $year, $search, [], $fundingSourceId),
             $fileName
         );
     }
@@ -616,11 +626,13 @@ class AssetController extends Controller
         $include = array_values(array_filter(array_map('intval', \Illuminate\Support\Arr::wrap($request->input('category_ids', [])))));
         $exclude = array_values(array_filter(array_map('intval', \Illuminate\Support\Arr::wrap($request->input('exclude_category_ids', [])))));
         $year    = $request->input('purchase_year');
+        $fundingSourceId = $request->input('funding_source_id');
 
         $query = Asset::whereNull('disposal_date')
             ->with(['category', 'institution', 'building', 'room', 'department', 'personInCharge', 'assetFunction', 'fundingSource'])
             ->when(!empty($include), fn($q) => $q->whereIn('category_id', $include))
             ->when(empty($include) && !empty($exclude), fn($q) => $q->whereNotIn('category_id', $exclude))
+            ->when($fundingSourceId && $fundingSourceId !== 'all', fn($q) => $q->where('funding_source_id', $fundingSourceId))
             ->when($year && $year !== 'all', fn($q) => $q->where('purchase_year', $year))
             ->orderBy('asset_code_ypt', 'asc');
 

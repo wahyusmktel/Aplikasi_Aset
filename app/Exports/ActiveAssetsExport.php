@@ -28,6 +28,7 @@ class ActiveAssetsExport implements FromCollection, WithHeadings, WithMapping, W
     protected ?string $purchaseYear = null;
     protected ?string $search = null;
     protected array $statuses = [];
+    protected $fundingSourceId = null;
     
     protected $assets;
     protected int $rowNumber = 0;
@@ -39,7 +40,8 @@ class ActiveAssetsExport implements FromCollection, WithHeadings, WithMapping, W
         $excludeCategoryIds = [],
         ?string $purchaseYear = null,
         ?string $search = null,
-        array $statuses = []
+        array $statuses = [],
+        $fundingSourceId = null
     ) {
         if (is_numeric($includeCategoryIds)) {
             $this->includeCategoryIds = [(int) $includeCategoryIds];
@@ -54,6 +56,7 @@ class ActiveAssetsExport implements FromCollection, WithHeadings, WithMapping, W
         $this->purchaseYear = ($purchaseYear && $purchaseYear !== 'all') ? (string) $purchaseYear : null;
         $this->search = $search ? trim($search) : null;
         $this->statuses = array_filter($statuses);
+        $this->fundingSourceId = ($fundingSourceId && $fundingSourceId !== 'all') ? $fundingSourceId : null;
 
         // Fetch collection eagerly so metrics and counts can be calculated for summary cards
         $this->loadAssets();
@@ -76,6 +79,7 @@ class ActiveAssetsExport implements FromCollection, WithHeadings, WithMapping, W
             ->when(!empty($this->includeCategoryIds), fn($q) => $q->whereIn('category_id', $this->includeCategoryIds))
             ->when(empty($this->includeCategoryIds) && !empty($this->excludeCategoryIds), fn($q) => $q->whereNotIn('category_id', $this->excludeCategoryIds))
             ->when($this->purchaseYear, fn($q) => $q->where('purchase_year', $this->purchaseYear))
+            ->when($this->fundingSourceId, fn($q) => $q->where('funding_source_id', $this->fundingSourceId))
             ->when(!empty($this->statuses), fn($q) => $q->whereIn('status', $this->statuses)->orWhereIn('current_status', $this->statuses))
             ->when($this->search, function ($q) {
                 $s = $this->search;
