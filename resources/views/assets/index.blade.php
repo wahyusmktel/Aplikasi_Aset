@@ -388,9 +388,9 @@
                 </div>
 
                 {{-- Pagination --}}
-                <div class="p-10 border-t border-gray-50 dark:border-gray-900 bg-gray-50/20 dark:bg-gray-900/10 flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div class="text-sm font-bold text-gray-400">
-                        Menampilkan <span class="text-gray-800 dark:text-white">{{ $assets->firstItem() ?? 0 }}</span> - <span class="text-gray-800 dark:text-white">{{ $assets->lastItem() ?? 0 }}</span> dari <span class="text-gray-800 dark:text-white">{{ $assets->total() }}</span> Aset
+                <div class="px-6 py-5 border-t border-slate-100 bg-slate-50/40 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div class="text-xs sm:text-sm font-medium text-slate-500">
+                        Menampilkan <span class="font-bold text-slate-800">{{ $assets->firstItem() ?? 0 }}</span> - <span class="font-bold text-slate-800">{{ $assets->lastItem() ?? 0 }}</span> dari <span class="font-bold text-slate-800">{{ number_format($assets->total()) }}</span> Aset
                     </div>
                     <div>
                         {{ $assets->links() }}
