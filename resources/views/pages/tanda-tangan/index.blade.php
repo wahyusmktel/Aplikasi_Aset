@@ -90,14 +90,14 @@
                         </div>
                         <div class="p-6 space-y-3">
                             <div class="flex justify-between items-center text-sm">
-                                <span class="text-gray-500 font-medium">Gambar Tanda Tangan</span>
-                                @if($signature && $signature->ttd_image_path)
+                                <span class="text-gray-500 font-medium">Tanda Tangan Digital (QR)</span>
+                                @if($signature && $signature->isReady())
                                     <span class="text-green-600 font-bold flex items-center gap-1">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                        Tersedia
+                                        Siap Digunakan
                                     </span>
                                 @else
-                                    <span class="text-gray-400 font-medium">Belum diunggah</span>
+                                    <span class="text-amber-500 font-medium">Belum Aktif</span>
                                 @endif
                             </div>
                             <div class="flex justify-between items-center text-sm">
@@ -120,16 +120,6 @@
                                 <span class="font-bold {{ $validCount > 0 ? 'text-green-700' : 'text-gray-400' }}">{{ $validCount }}</span>
                             </div>
                         </div>
-
-                        @if($signature && $signature->ttd_image_path)
-                            <div class="px-6 pb-5">
-                                <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Preview Tanda Tangan</p>
-                                <div class="ttd-preview rounded-xl p-3 border border-gray-200 flex justify-center items-center h-24">
-                                    <img src="{{ asset('storage/' . $signature->ttd_image_path) }}"
-                                        class="max-h-20 max-w-full object-contain" alt="TTD">
-                                </div>
-                            </div>
-                        @endif
                     </div>
 
                     {{-- Form Setup --}}
@@ -143,21 +133,9 @@
                             <h4 class="font-bold text-gray-800">Setup / Perbarui Identitas</h4>
                         </div>
                         <div class="p-6">
-                            <form action="{{ route('tanda-tangan.setup') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                            <form action="{{ route('tanda-tangan.setup') }}" method="POST" class="space-y-4">
                                 @csrf
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
-                                        Gambar Tanda Tangan
-                                        <span class="font-normal text-gray-400 lowercase">(PNG transparan terbaik)</span>
-                                    </label>
-                                    <input type="file" name="ttd_image" accept="image/jpeg,image/png"
-                                        class="w-full text-xs text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 border border-gray-200 rounded-xl cursor-pointer">
-                                    @error('ttd_image')
-                                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                                    @enderror
-                                </div>
-
-                                <div class="border-t border-gray-100 pt-4">
                                     <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
                                         {{ $signature && $signature->pin_hash ? 'Ganti PIN' : 'Set PIN Keamanan' }}
                                     </p>

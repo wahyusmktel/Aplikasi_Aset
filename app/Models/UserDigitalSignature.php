@@ -35,6 +35,6 @@ class UserDigitalSignature extends Model
 
     public function isReady(): bool
     {
-        return $this->is_active && $this->pin_hash !== null && $this->ttd_image_path !== null;
+        return $this->is_active && $this->pin_hash !== null;
     }
 }

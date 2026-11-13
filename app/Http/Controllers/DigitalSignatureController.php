@@ -65,19 +65,11 @@ class DigitalSignatureController extends Controller
     public function setup(Request $request)
     {
         $request->validate([
-            'ttd_image'        => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'pin'              => 'nullable|digits_between:4,8|confirmed',
             'pin_confirmation' => 'nullable',
         ]);
 
         $signature = UserDigitalSignature::firstOrNew(['user_id' => Auth::id()]);
-
-        if ($request->hasFile('ttd_image')) {
-            if ($signature->ttd_image_path) {
-                Storage::disk('public')->delete($signature->ttd_image_path);
-            }
-            $signature->ttd_image_path = $request->file('ttd_image')->store('tanda-tangan', 'public');
-        }
 
         if ($request->filled('pin')) {
             $signature->pin_hash = Hash::make($request->pin);
@@ -87,7 +79,7 @@ class DigitalSignatureController extends Controller
         $signature->auto_sign_bast = $request->boolean('auto_sign_bast');
         $signature->save();
 
-        return back()->with('success', 'Tanda tangan digital berhasil diperbarui.');
+        return back()->with('success', 'Identitas digital dan PIN berhasil diperbarui.');
     }
 
     /**
@@ -103,30 +95,32 @@ class DigitalSignatureController extends Controller
         $sisfoUrl = rtrim(config('services.sisfo.url', 'https://sisfo.smktelkom-lpg.id'), '/');
 
         // Login ke SISFO
-        $loginRes = Http::post("{$sisfoUrl}/api/login", [
+        $loginRes = Http::withoutVerifying()->timeout(15)->post("{$sisfoUrl}/api/login", [
             'email'       => $request->sisfo_email,
             'password'    => $request->sisfo_password,
             'device_name' => 'sarpra-import',
         ]);
 
-        if (!$loginRes->successful() || !$loginRes->json('token')) {
-            return back()->with('error', 'Login ke SISFO gagal. Periksa email dan password.');
+        $sisfoToken = $loginRes->json('data.token') ?? $loginRes->json('token');
+
+        if (!$loginRes->successful() || !$sisfoToken) {
+            $msg = $loginRes->json('message') ?? 'Login ke SISFO gagal. Periksa email dan password.';
+            return back()->with('error', $msg);
         }
 
-        $sisfoToken = $loginRes->json('token');
-
         // Ambil URL gambar tanda tangan dari SISFO
-        $sigRes = Http::withToken($sisfoToken)
+        $sigRes = Http::withoutVerifying()->timeout(15)->withToken($sisfoToken)
             ->get("{$sisfoUrl}/api/signature/my-image");
 
         if (!$sigRes->successful() || !$sigRes->json('image_url')) {
-            return back()->with('error', 'Gagal mengambil tanda tangan dari SISFO. Pastikan sudah setup tanda tangan di SISFO terlebih dahulu.');
+            $msg = $sigRes->json('message') ?? 'Gagal mengambil tanda tangan dari SISFO. Pastikan sudah setup tanda tangan di SISFO terlebih dahulu.';
+            return back()->with('error', $msg);
         }
 
         $imageUrl = $sigRes->json('image_url');
 
         // Download gambar dan simpan lokal
-        $imgContent = Http::get($imageUrl);
+        $imgContent = Http::withoutVerifying()->timeout(15)->get($imageUrl);
         if (!$imgContent->successful()) {
             return back()->with('error', 'Gagal mengunduh gambar tanda tangan dari SISFO.');
         }
