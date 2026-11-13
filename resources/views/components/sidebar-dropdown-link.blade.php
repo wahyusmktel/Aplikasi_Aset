@@ -1,11 +1,16 @@
-@props(['active'])
+@props(['active' => false])
 
 @php
 $classes = ($active ?? false)
-            ? 'block py-2 px-4 text-sm font-medium text-primary-600 dark:text-primary-400 rounded-lg bg-primary-50 dark:bg-primary-900/20 transition-colors'
-            : 'block py-2 px-4 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors';
+            ? 'group relative flex items-center px-2.5 py-1.5 text-xs font-bold rounded-lg text-rose-700 bg-rose-50/90 shadow-2xs transition-all duration-150'
+            : 'group relative flex items-center px-2.5 py-1.5 text-xs font-medium rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100/70 transition-all duration-150';
+
+$dotClasses = ($active ?? false)
+            ? 'w-1.5 h-1.5 rounded-full mr-2 shrink-0 bg-rose-600 ring-2 ring-rose-200 transition-all'
+            : 'w-1.5 h-1.5 rounded-full mr-2 shrink-0 bg-slate-300 group-hover:bg-slate-400 group-hover:scale-125 transition-all';
 @endphp
 
 <a {{ $attributes->merge(['class' => $classes]) }}>
-    {{ $slot }}
+    <span class="{{ $dotClasses }}"></span>
+    <span class="truncate flex-1 tracking-tight">{{ $slot }}</span>
 </a>

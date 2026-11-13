@@ -1,4 +1,4 @@
-<nav class="px-3 space-y-1">
+<nav class="space-y-1">
     <!-- Dashboard -->
     <x-sidebar-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" icon="home">
         {{ __('Dashboard') }}
@@ -12,17 +12,14 @@
     @endphp
 
     @if($isApprover && !$isAdmin)
-    <div class="mt-8 mb-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider" x-show="sidebarOpen">
+    <div class="pt-4 pb-1.5 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider" x-show="sidebarOpen">
         {{ __('Persetujuan') }}
     </div>
 
     <x-sidebar-link :href="route('vehicleLogs.index')" :active="request()->routeIs('vehicleLogs.*')" icon="check-circle">
         {{ __('Approval Kendaraan') }}
     </x-sidebar-link>
-    @endif
 
-    @if($isApprover && !$isAdmin)
-    <!-- Data Dapodik (Waka/Kaur IT/Kepsek) -->
     @if(auth()->user()->employee)
     <x-sidebar-link :href="route('user.dapodik.index')" :active="request()->routeIs('user.dapodik.*')" icon="identification">
         {{ __('Data Dapodik Saya') }}
@@ -31,8 +28,8 @@
     @endif
 
     @if($isRegularUser)
-    <div class="mt-8 mb-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider" x-show="sidebarOpen">
-        {{ __('Menu') }}
+    <div class="pt-4 pb-1.5 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider" x-show="sidebarOpen">
+        {{ __('Layanan Pengguna') }}
     </div>
 
     <!-- Peminjaman Barang (User) -->
@@ -54,148 +51,178 @@
     @endif
 
     @if($isAdmin)
-    <div class="my-4 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider" x-show="sidebarOpen">
-        {{ __('Aset & Inventaris') }}
+    <div class="pt-4 pb-1.5 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider" x-show="sidebarOpen">
+        {{ __('Manajemen Sarpras') }}
     </div>
 
-    <!-- Aset -->
-    <x-sidebar-link :href="route('assets.index')" :active="request()->routeIs('assets.*')" icon="cube">
-        {{ __('Aset') }}
-    </x-sidebar-link>
-
-    <!-- Jadwal Pemeliharaan -->
-    <x-sidebar-link :href="route('maintenance-schedules.index')" :active="request()->routeIs('maintenance-schedules.*')" icon="calendar">
-        {{ __('Jadwal Pemeliharaan') }}
-    </x-sidebar-link>
-
-    <!-- Riwayat Disposal -->
-    <x-sidebar-link :href="route('disposedAssets.index')" :active="request()->routeIs('disposedAssets.index')" icon="trash">
-        {{ __('Riwayat Disposal') }}
-    </x-sidebar-link>
-
-    <!-- Lapor Kerusakan -->
-    <x-sidebar-link :href="route('asset-reports.index')" :active="request()->routeIs('asset-reports.*')" icon="exclamation-circle">
-        {{ __('Lapor Kerusakan') }}
-    </x-sidebar-link>
-
-    <!-- Peminjaman Aset (dari Aplikasi-Izin) -->
-    @php $pendingBorrows = \App\Models\AssetBorrowRequest::pending()->count(); @endphp
-    <x-sidebar-link :href="route('borrow-requests.index')" :active="request()->routeIs('borrow-requests.*')" icon="inbox">
-        <span class="flex items-center justify-between w-full">
-            {{ __('Peminjaman Aset') }}
-            @if($pendingBorrows > 0)
-            <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-[9px] font-black shadow">
-                {{ $pendingBorrows > 99 ? '99+' : $pendingBorrows }}
-            </span>
-            @endif
-        </span>
-    </x-sidebar-link>
-
-    <!-- Ringkasan Aset -->
-    <x-sidebar-link :href="route('assets.summary')" :active="request()->routeIs('assets.summary')" icon="chart-bar">
-        {{ __('Ringkasan Aset') }}
-    </x-sidebar-link>
-
-    <!-- Lab -->
-    <x-sidebar-link :href="route('labs.inventory')" :active="request()->routeIs('labs.inventory')" icon="academic-cap">{{ __('Inventaris Lab') }}</x-sidebar-link>
-    <x-sidebar-link :href="route('labs.index')" :active="request()->routeIs('labs.index')" icon="academic-cap">{{ __('Lab') }}</x-sidebar-link>
-
-    <!-- Inventaris Dropdown -->
+    <!-- Treeview: Manajemen Aset -->
     @php
-        $isInventarisActive = request()->routeIs(['assignedAssets.index', 'inventory.history', 'maintenance.history', 'inspection.history', 'vehicleLogs.index', 'books.index', 'asset-mapping.index', 'labs.history']);
+        $isAsetActive = request()->routeIs(['assets.*', 'assignedAssets.*', 'inventory.*', 'disposedAssets.*', 'books.*', 'asset-mapping.*']);
     @endphp
-    <x-sidebar-dropdown :active="$isInventarisActive" title="Inventaris" icon="collection">
-        <x-sidebar-dropdown-link :href="route('assignedAssets.index')" :active="request()->routeIs('assignedAssets.index')">{{ __('Inventaris Pegawai') }}</x-sidebar-dropdown-link>
-        <x-sidebar-dropdown-link :href="route('inventory.history')" :active="request()->routeIs('inventory.history')">{{ __('Riwayat Inventaris') }}</x-sidebar-dropdown-link>
-        <x-sidebar-dropdown-link :href="route('vehicleLogs.index')" :active="request()->routeIs('vehicleLogs.index')">{{ __('Log Kendaraan') }}</x-sidebar-dropdown-link>
-        <x-sidebar-dropdown-link :href="route('maintenance.history')" :active="request()->routeIs('maintenance.history')">{{ __('Riwayat Maintenance') }}</x-sidebar-dropdown-link>
-        <x-sidebar-dropdown-link :href="route('inspection.history')" :active="request()->routeIs('inspection.history')">{{ __('Riwayat Inspeksi') }}</x-sidebar-dropdown-link>
-        <x-sidebar-dropdown-link :href="route('books.index')" :active="request()->routeIs('books.index')">{{ __('Aset Buku') }}</x-sidebar-dropdown-link>
-        <x-sidebar-dropdown-link :href="route('asset-mapping.index')" :active="request()->routeIs('asset-mapping.index')">{{ __('Mapping Aset (AI)') }}</x-sidebar-dropdown-link>
-        <x-sidebar-dropdown-link :href="route('asset-reports.index')" :active="request()->routeIs('asset-reports.index')">{{ __('Laporan Saya') }}</x-sidebar-dropdown-link>
-        <x-sidebar-dropdown-link :href="route('admin.asset-reports.index')" :active="request()->routeIs('admin.asset-reports.index')">{{ __('Kelola Laporan Kerusakan') }}</x-sidebar-dropdown-link>
-        <x-sidebar-dropdown-link :href="route('labs.history')" :active="request()->routeIs('labs.history')">{{ __('Riwayat Penggunaan Lab') }}</x-sidebar-dropdown-link>
+    <x-sidebar-dropdown :active="$isAsetActive" title="Manajemen Aset" icon="cube">
+        <x-sidebar-dropdown-link :href="route('assets.index')" :active="request()->routeIs('assets.index', 'assets.create', 'assets.edit', 'assets.show')">
+            {{ __('Daftar Aset') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('assets.summary')" :active="request()->routeIs('assets.summary')">
+            {{ __('Ringkasan Aset') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('assignedAssets.index')" :active="request()->routeIs('assignedAssets.*')">
+            {{ __('Inventaris Pegawai') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('inventory.history')" :active="request()->routeIs('inventory.history')">
+            {{ __('Riwayat Mutasi Aset') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('disposedAssets.index')" :active="request()->routeIs('disposedAssets.*')">
+            {{ __('Riwayat Disposal') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('asset-mapping.index')" :active="request()->routeIs('asset-mapping.*')">
+            {{ __('Mapping Aset (AI)') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('books.index')" :active="request()->routeIs('books.*')">
+            {{ __('Aset Buku') }}
+        </x-sidebar-dropdown-link>
     </x-sidebar-dropdown>
 
-    <div class="my-4 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider" x-show="sidebarOpen">
-        {{ __('Pengadaan') }}
-    </div>
-
-    <!-- Pengadaan -->
-    <x-sidebar-link :href="route('procurements.index')" :active="request()->routeIs('procurements.*')" icon="shopping-cart">
-        {{ __('Pengadaan Aset') }}
-    </x-sidebar-link>
-
-    <!-- RKAS -->
-    <x-sidebar-link :href="route('rkas.index')" :active="request()->routeIs('rkas.*')" icon="calculator">
-        {{ __('RKAS') }}
-    </x-sidebar-link>
-
-    <!-- RAB -->
-    <x-sidebar-link :href="route('rab.index')" :active="request()->routeIs('rab.*')" icon="document-text">
-        {{ __('RAB') }}
-    </x-sidebar-link>
-
-    <!-- Rekanan -->
-    <x-sidebar-link :href="route('vendors.index')" :active="request()->routeIs('vendors.*')" icon="user-group">
-        {{ __('Rekanan/Vendor') }}
-    </x-sidebar-link>
-
-    <div class="my-4 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider" x-show="sidebarOpen">
-        {{ __('Data Master') }}
-    </div>
-
-    <!-- Data Referensi Dropdown -->
+    <!-- Treeview: Operasional & Layanan -->
     @php
-        $isDataReferensiActive = request()->routeIs(['institutions.index', 'employees.index', 'buildings.index', 'rooms.index', 'categories.index', 'faculties.index', 'departments.index', 'persons-in-charge.index', 'asset-functions.index', 'funding-sources.index']);
+        $pendingBorrows = \App\Models\AssetBorrowRequest::pending()->count();
+        $isOperasionalActive = request()->routeIs(['borrow-requests.*', 'maintenance-schedules.*', 'maintenance.history', 'inspection.history', 'vehicleLogs.*', 'asset-reports.*', 'admin.asset-reports.*']);
     @endphp
-    <x-sidebar-dropdown :active="$isDataReferensiActive" title="Data Referensi" icon="database">
-        <x-sidebar-dropdown-link :href="route('institutions.index')" :active="request()->routeIs('institutions.index')">{{ __('Lembaga') }}</x-sidebar-dropdown-link>
-        <x-sidebar-dropdown-link :href="route('employees.index')" :active="request()->routeIs('employees.index')">{{ __('Pegawai') }}</x-sidebar-dropdown-link>
-        <x-sidebar-dropdown-link :href="route('buildings.index')" :active="request()->routeIs('buildings.index')">{{ __('Gedung') }}</x-sidebar-dropdown-link>
-        <x-sidebar-dropdown-link :href="route('rooms.index')" :active="request()->routeIs('rooms.index')">{{ __('Ruangan') }}</x-sidebar-dropdown-link>
-        <x-sidebar-dropdown-link :href="route('categories.index')" :active="request()->routeIs('categories.index')">{{ __('Kategori') }}</x-sidebar-dropdown-link>
-        <x-sidebar-dropdown-link :href="route('faculties.index')" :active="request()->routeIs('faculties.index')">{{ __('Fakultas') }}</x-sidebar-dropdown-link>
-        <x-sidebar-dropdown-link :href="route('departments.index')" :active="request()->routeIs('departments.index')">{{ __('Prodi/Unit') }}</x-sidebar-dropdown-link>
-        <x-sidebar-dropdown-link :href="route('persons-in-charge.index')" :active="request()->routeIs('persons-in-charge.index')">{{ __('Penanggung Jawab') }}</x-sidebar-dropdown-link>
-        <x-sidebar-dropdown-link :href="route('asset-functions.index')" :active="request()->routeIs('asset-functions.index')">{{ __('Fungsi Barang') }}</x-sidebar-dropdown-link>
-        <x-sidebar-dropdown-link :href="route('funding-sources.index')" :active="request()->routeIs('funding-sources.index')">{{ __('Jenis Pendanaan') }}</x-sidebar-dropdown-link>
+    <x-sidebar-dropdown :active="$isOperasionalActive" title="Operasional & Layanan" icon="wrench">
+        @if($pendingBorrows > 0)
+            <x-slot:badge>
+                <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[9px] font-bold shadow-2xs">
+                    {{ $pendingBorrows > 99 ? '99+' : $pendingBorrows }}
+                </span>
+            </x-slot:badge>
+        @endif
+        <x-sidebar-dropdown-link :href="route('borrow-requests.index')" :active="request()->routeIs('borrow-requests.*')">
+            <span class="flex items-center justify-between w-full">
+                <span>{{ __('Peminjaman Aset') }}</span>
+                @if($pendingBorrows > 0)
+                <span class="inline-flex items-center justify-center px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-bold">
+                    {{ $pendingBorrows > 99 ? '99+' : $pendingBorrows }}
+                </span>
+                @endif
+            </span>
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('maintenance-schedules.index')" :active="request()->routeIs('maintenance-schedules.*')">
+            {{ __('Jadwal Pemeliharaan') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('maintenance.history')" :active="request()->routeIs('maintenance.history')">
+            {{ __('Riwayat Maintenance') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('inspection.history')" :active="request()->routeIs('inspection.history')">
+            {{ __('Riwayat Inspeksi') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('vehicleLogs.index')" :active="request()->routeIs('vehicleLogs.*')">
+            {{ __('Log Kendaraan') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('asset-reports.index')" :active="request()->routeIs('asset-reports.index', 'asset-reports.create', 'asset-reports.show')">
+            {{ __('Lapor Kerusakan') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('admin.asset-reports.index')" :active="request()->routeIs('admin.asset-reports.*')">
+            {{ __('Kelola Kerusakan') }}
+        </x-sidebar-dropdown-link>
     </x-sidebar-dropdown>
 
-    <div class="my-4 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider" x-show="sidebarOpen">
-        {{ __('Sistem') }}
+    <!-- Treeview: Laboratorium -->
+    @php
+        $isLabActive = request()->routeIs(['labs.*']);
+    @endphp
+    <x-sidebar-dropdown :active="$isLabActive" title="Laboratorium" icon="academic-cap">
+        <x-sidebar-dropdown-link :href="route('labs.index')" :active="request()->routeIs('labs.index', 'labs.create', 'labs.edit', 'labs.show')">
+            {{ __('Daftar Ruang Lab') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('labs.inventory')" :active="request()->routeIs('labs.inventory')">
+            {{ __('Inventaris Aset Lab') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('labs.history')" :active="request()->routeIs('labs.history')">
+            {{ __('Riwayat Penggunaan Lab') }}
+        </x-sidebar-dropdown-link>
+    </x-sidebar-dropdown>
+
+    <!-- Treeview: Pengadaan & Anggaran -->
+    @php
+        $isPengadaanActive = request()->routeIs(['procurements.*', 'rkas.*', 'rab.*', 'vendors.*']);
+    @endphp
+    <x-sidebar-dropdown :active="$isPengadaanActive" title="Pengadaan & Anggaran" icon="shopping-cart">
+        <x-sidebar-dropdown-link :href="route('procurements.index')" :active="request()->routeIs('procurements.*')">
+            {{ __('Pengadaan Aset') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('rkas.index')" :active="request()->routeIs('rkas.*')">
+            {{ __('RKAS') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('rab.index')" :active="request()->routeIs('rab.*')">
+            {{ __('RAB') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('vendors.index')" :active="request()->routeIs('vendors.*')">
+            {{ __('Rekanan / Vendor') }}
+        </x-sidebar-dropdown-link>
+    </x-sidebar-dropdown>
+
+    <div class="pt-4 pb-1.5 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider" x-show="sidebarOpen">
+        {{ __('Pengaturan & Master') }}
     </div>
 
-    <!-- Pengajuan Dapodik (Operator Review) -->
-    @php $pendingDapodik = \App\Models\DapodikChangeRequest::where('status', 'pending')->count(); @endphp
-    <x-sidebar-link :href="route('operator.dapodik.index')" :active="request()->routeIs('operator.dapodik.*')" icon="clipboard-list">
-        <span class="flex items-center justify-between w-full">
-            {{ __('Pengajuan Dapodik') }}
-            @if($pendingDapodik > 0)
-            <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-500 text-white text-[9px] font-black shadow">
-                {{ $pendingDapodik > 99 ? '99+' : $pendingDapodik }}
-            </span>
-            @endif
-        </span>
-    </x-sidebar-link>
+    <!-- Treeview: Data Master -->
+    @php
+        $isDataMasterActive = request()->routeIs([
+            'institutions.*', 'employees.*', 'buildings.*', 'rooms.*',
+            'categories.*', 'faculties.*', 'departments.*',
+            'persons-in-charge.*', 'asset-functions.*', 'funding-sources.*'
+        ]);
+    @endphp
+    <x-sidebar-dropdown :active="$isDataMasterActive" title="Data Master" icon="database">
+        <x-sidebar-dropdown-link :href="route('institutions.index')" :active="request()->routeIs('institutions.*')">
+            {{ __('Lembaga') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('employees.index')" :active="request()->routeIs('employees.*')">
+            {{ __('Pegawai') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('buildings.index')" :active="request()->routeIs('buildings.*')">
+            {{ __('Gedung') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('rooms.index')" :active="request()->routeIs('rooms.*')">
+            {{ __('Ruangan') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('categories.index')" :active="request()->routeIs('categories.*')">
+            {{ __('Kategori') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('faculties.index')" :active="request()->routeIs('faculties.*')">
+            {{ __('Fakultas') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('departments.index')" :active="request()->routeIs('departments.*')">
+            {{ __('Prodi / Unit') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('persons-in-charge.index')" :active="request()->routeIs('persons-in-charge.*')">
+            {{ __('Penanggung Jawab') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('asset-functions.index')" :active="request()->routeIs('asset-functions.*')">
+            {{ __('Fungsi Barang') }}
+        </x-sidebar-dropdown-link>
+        <x-sidebar-dropdown-link :href="route('funding-sources.index')" :active="request()->routeIs('funding-sources.*')">
+            {{ __('Sumber Pendanaan') }}
+        </x-sidebar-dropdown-link>
+    </x-sidebar-dropdown>
 
     <!-- Tanda Tangan Digital -->
-    <x-sidebar-link :href="route('tanda-tangan.index')" :active="request()->routeIs('tanda-tangan.*')" icon="badge-check">
+    <x-sidebar-link :href="route('tanda-tangan.index')" :active="request()->routeIs('tanda-tangan.*')" icon="signature">
         {{ __('Tanda Tangan Digital') }}
     </x-sidebar-link>
 
-    <!-- Pengaturan -->
+    <!-- Pengaturan Sistem -->
     <x-sidebar-link :href="route('settings.index')" :active="request()->routeIs('settings.*')" icon="cog">
         {{ __('Pengaturan Sistem') }}
     </x-sidebar-link>
     @endif
 
-    {{-- Menu Tanda Tangan untuk semua user yang login --}}
+    {{-- Menu Tanda Tangan untuk non-admin yang login --}}
     @if(!$isAdmin)
-    <div class="mt-6 mb-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider" x-show="sidebarOpen">
-        {{ __('Akun Saya') }}
+    <div class="pt-4 pb-1.5 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider" x-show="sidebarOpen">
+        {{ __('Akun & Tanda Tangan') }}
     </div>
-    <x-sidebar-link :href="route('tanda-tangan.index')" :active="request()->routeIs('tanda-tangan.*')" icon="badge-check">
+    <x-sidebar-link :href="route('tanda-tangan.index')" :active="request()->routeIs('tanda-tangan.*')" icon="signature">
         {{ __('Tanda Tangan Digital') }}
     </x-sidebar-link>
     @endif
